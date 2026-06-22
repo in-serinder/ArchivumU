@@ -3,7 +3,12 @@
         xmlns:vm="using:ArchivumU.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:i18n="using:ArchivumU.I18n"
+        xmlns:components="clr-namespace:ArchivumU.Views.Components"
+        mc:Ignorable="d" d:DesignWidth="1080" d:DesignHeight="720"
+        Width="1080" Height="720"
+        MinWidth="1000"
+        MinHeight="720"
         x:Class="ArchivumU.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
@@ -12,9 +17,190 @@
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
+        <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <DockPanel>
+        <!-- 顶部栏目 菜单 -->
+        <Menu DockPanel.Dock="Top" 
+              Background="#ffffff" 
+              BorderThickness="0 0 1 0"
+              BorderBrush="#e9ecef">
+            <Menu.Styles>
+                <Style Selector="Menu">
+                    <Setter Property="Padding" Value="8 0" />
+                </Style>
+                <Style Selector="MenuItem">
+                    <Setter Property="Padding" Value="12 8" />
+                    <Setter Property="FontSize" Value="13" />
+                    <Setter Property="Foreground" Value="#495057" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                </Style>
+                <Style Selector="MenuItem:pointerover">
+                    <Setter Property="Background" Value="#f8f9fa" />
+                    <Setter Property="Foreground" Value="#212529" />
+                </Style>
+                <Style Selector="MenuItem:selected">
+                    <Setter Property="Background" Value="#e9ecef" />
+                </Style>
+                <Style Selector="MenuItem > Menu">
+                    <Setter Property="Background" Value="#ffffff" />
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="BorderBrush" Value="#e9ecef" />
+                    <Setter Property="CornerRadius" Value="8" />
+                    <Setter Property="Padding" Value="4" />
+                </Style>
+                <Style Selector="MenuItem > Menu > MenuItem">
+                    <Setter Property="Padding" Value="12 10" />
+                    <Setter Property="FontSize" Value="12" />
+                </Style>
+                <Style Selector="Separator">
+                    <Setter Property="Background" Value="#e9ecef" />
+                    <Setter Property="Height" Value="1" />
+                </Style>
+            </Menu.Styles>
+            
+            <MenuItem Header="{x:Static i18n:Strings._File}">
+                <MenuItem Header="{x:Static i18n:Strings._Save}" />
+                <MenuItem Header="{x:Static i18n:Strings._SaveAs}" />
+                <MenuItem Header="{x:Static i18n:Strings._Exit}" />
+                <Separator />
+                <MenuItem Header="{x:Static i18n:Strings._Language}">
+                    <MenuItem Header="{x:Static i18n:Strings._English}" Command="{Binding SetEnglish}" />
+                    <MenuItem Header="{x:Static i18n:Strings._Chinese}" Command="{Binding SetChinese}" />
+                </MenuItem>
+                <Separator />
+                <MenuItem Header="{x:Static i18n:Strings._More}">
+                    <MenuItem Header="{x:Static i18n:Strings._Help}" />
+                    <MenuItem Header="{x:Static i18n:Strings._About}" />
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="{x:Static i18n:Strings._device}">
+                <MenuItem Header="{x:Static i18n:Strings._Refresh}" />
+                <MenuItem Header="{x:Static i18n:Strings._Add}" />
+                <MenuItem Header="{x:Static i18n:Strings._Remove}" />
+                <MenuItem Header="{x:Static i18n:Strings._Rename}" />
+                <MenuItem Header="{x:Static i18n:Strings._BackupToLocal}" />
+                <Separator />
+                <MenuItem Header="{x:Static i18n:Strings._config}">
+                    <CheckBox Content="{x:Static i18n:Strings._auto_connect}" Margin="4 0" />
+                    <CheckBox Content="{x:Static i18n:Strings._auto_backups}" Margin="4 0" />
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="{x:Static i18n:Strings._block}">
+                <MenuItem Header="{x:Static i18n:Strings._block_refresh}" />
+                <MenuItem Header="{x:Static i18n:Strings._block_refresh}" />
+                <MenuItem Header="{x:Static i18n:Strings._block_create}" />
+                <MenuItem Header="{x:Static i18n:Strings._block_rename}" />
+                <MenuItem Header="{x:Static i18n:Strings._block_del}" />
+                <MenuItem Header="{x:Static i18n:Strings._block_lformat}" />
+            </MenuItem>
+            <MenuItem Header="{x:Static i18n:Strings._key}">
+                <MenuItem Header="{x:Static i18n:Strings._key_create}" />
+                <MenuItem Header="{x:Static i18n:Strings._key_remove}" />
+            </MenuItem>
+        </Menu>
+        <!-- 应用区 -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <!-- 设备列表 - 可伸缩 -->
+                <ColumnDefinition Width="200" MinWidth="180" MaxWidth="300" />
+                <!-- 分界线 - GridSplitter -->
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <!-- 设备列表子集 - 占用剩余空间 -->
+                <ColumnDefinition Width="*" MinWidth="200" />
+            </Grid.ColumnDefinitions>
+            <!-- 设备列表 -->
+            <components:DeviceList Grid.Column="0" />
+            
+         
 
+            <!-- 可拖动分界线 -->
+            <GridSplitter Grid.Column="1"
+                          Width="6"
+                          HorizontalAlignment="Stretch"
+                          Background="#ccc"
+                          Cursor="SizeWestEast"
+                          ShowsPreview="False"
+                          ResizeDirection="Columns"
+                          />
+
+            <!-- 设备列表子集 - 使用DockPanel填充剩余空间 -->
+            <DockPanel Grid.Column="2" Background="#f8f9fa" LastChildFill="True">
+                <!-- 空间占用信息 - 停靠在顶部 -->
+                <Border DockPanel.Dock="Top" 
+                        Margin="8 8 8 4" 
+                        Padding="12"
+                        Background="White"
+                        CornerRadius="8"
+                        BorderThickness="1"
+                        BorderBrush="#e9ecef">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        
+                        <!-- 存储信息标签组 -->
+                        <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Spacing="4" Margin="0 0 16 0">
+                            <TextBlock Text="总空间:" FontSize="12" Foreground="#6c757d" />
+                            <TextBlock Text="100 GB" FontSize="12" FontWeight="500" Foreground="#212529" />
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" Spacing="4" Margin="0 0 16 0">
+                            <TextBlock Text="已用:" FontSize="12" Foreground="#6c757d" />
+                            <TextBlock Text="79 GB" FontSize="12" FontWeight="500" Foreground="#495057" />
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal" Spacing="4" Margin="0 0 16 0">
+                            <TextBlock Text="可用:" FontSize="12" Foreground="#6c757d" />
+                            <TextBlock Text="21 GB" FontSize="12" FontWeight="500" Foreground="#28a745" />
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Column="3" Grid.Row="0" Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="占比:" FontSize="12" Foreground="#6c757d" />
+                            <TextBlock Text="79%" FontSize="12" FontWeight="600" Foreground="#007bff" />
+                        </StackPanel>
+                        
+                        <!-- 进度条 -->
+                        <ProgressBar Grid.Column="0" Grid.ColumnSpan="5" Grid.Row="1" 
+                                     Margin="0 8 0 0"
+                                     Height="6"
+                                     Minimum="0"
+                                     Maximum="100"
+                                     Value="79"
+                                     Foreground="#007bff"
+                                     Background="#e9ecef"
+                                     CornerRadius="3" />
+                    </Grid>
+                </Border>
+                
+                <!-- 块列表 - 停靠在左侧 -->
+                <Border DockPanel.Dock="Left" Width="200" Margin="8 4 4 8" 
+                        Background="White"
+                        CornerRadius="8"
+                        BorderThickness="1"
+                        BorderBrush="#e9ecef">
+                    <components:BlockList />
+                </Border>
+                
+                <!-- 块列表子集 - 占用剩余空间（LastChildFill） -->
+                <Border Margin="4 4 8 8" 
+                        Background="White"
+                        CornerRadius="8"
+                        BorderThickness="1"
+                        BorderBrush="#e9ecef">
+                    <components:KeyValueMgr />
+                </Border>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
 </Window>

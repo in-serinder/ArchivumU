@@ -1,0 +1,79 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:components="clr-namespace:ArchivumU.Views.Components"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="ArchivumU.Views.Components.BlockList">
+    <DockPanel LastChildFill="True">
+        <!-- 顶部统计信息 -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4" Margin="0 0 0 4">
+            <TextBlock Text="已寻得块：" FontSize="12" Foreground="#6c757d" />
+            <TextBlock Text="0" FontSize="12" FontWeight="500" Foreground="#212529" VerticalAlignment="Center" />
+        </StackPanel>
+        
+        <!-- 分隔线 -->
+        <Separator DockPanel.Dock="Top" Margin="0 4" Background="#e9ecef" Height="1" />
+        
+        <!-- 底部操作按钮 -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="4 0 0 0">
+            <Button Content="添加新块 +" 
+                    FontSize="12" 
+                    Padding="10 4" 
+                    Background="#007bff" 
+                    Foreground="White" 
+                    BorderThickness="0" 
+                    CornerRadius="4" 
+                    Cursor="Hand" />
+            <Button Content="删除选中块 -" 
+                    FontSize="12" 
+                    Padding="10 4" 
+                    Background="#dc3545" 
+                    Foreground="White" 
+                    BorderThickness="0" 
+                    CornerRadius="4" 
+                    Cursor="Hand" />
+        </StackPanel>
+        
+        <!-- 块列表区域 -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0">
+            <ListBox Name="LBBlockList" 
+                     BorderThickness="0" 
+                     Background="Transparent" 
+                     Padding="2">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="components:BlockItem">
+                        <Border Margin="2 3" 
+                                Padding="6" 
+                                CornerRadius="4" 
+                                Background="#f8f9fa" 
+                                BorderThickness="1" 
+                                BorderBrush="#e9ecef">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Svg Path="../../Assets/diskette.svg" Width="18" Height="18" />
+                                <StackPanel Orientation="Vertical" Spacing="1">
+                                    <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="500" Foreground="#212529" />
+                                    <TextBlock Text="{Binding Address}" FontSize="10" Foreground="#6c757d" />
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="{Binding KeyNumber}" FontSize="10" Foreground="#495057" />
+                                        <TextBlock Text="·" FontSize="10" Foreground="#dee2e6" />
+                                        <TextBlock Text="{Binding SizeString}" FontSize="10" Foreground="#6c757d" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+                
+                <ListBox.Styles>
+                    <Style Selector="ListBoxItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="BorderThickness" Value="0" />
+                    </Style>
+                </ListBox.Styles>
+            </ListBox>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

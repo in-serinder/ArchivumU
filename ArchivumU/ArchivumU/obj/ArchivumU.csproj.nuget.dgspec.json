@@ -62,6 +62,10 @@
               "target": "Package",
               "version": "[11.3.0, )"
             },
+            "Avalonia.Svg.Skia": {
+              "target": "Package",
+              "version": "[11.3.0, )"
+            },
             "Avalonia.Themes.Fluent": {
               "target": "Package",
               "version": "[11.3.0, )"

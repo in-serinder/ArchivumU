@@ -1,0 +1,110 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:components="clr-namespace:ArchivumU.Views.Components"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg.Skia"
+             xmlns:svg1="clr-namespace:Svg;assembly=Svg.Custom"
+             x:Class="ArchivumU.Views.Components.DeviceList">
+    <DockPanel LastChildFill="True" >
+        <!-- 统计信息 - 固定在底部（必须放在前面声明） -->
+        <Border DockPanel.Dock="Bottom" 
+                Background="#f5f5f5" 
+                Padding="8 4"
+                BorderThickness="1 0 0 0"
+                BorderBrush="#e0e0e0">
+            <StackPanel Orientation="Horizontal" 
+                        Spacing="4"
+                        VerticalAlignment="Center">
+                <TextBlock Text="设备：" 
+                           FontSize="11" 
+                           Foreground="#9e9e9e" />
+                <TextBlock Text="0" 
+                           FontSize="11" 
+                           Foreground="#757575" 
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+        
+        <!-- 设备列表 - 填充剩余空间 -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="2" HorizontalScrollBarVisibility="Disabled">
+            <ListBox Name="LBDeviceList" 
+                     VerticalAlignment="Stretch"
+                     Padding="0"
+                     BorderThickness="0"
+                     Background="Transparent">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="components:ArchivumDevice">
+                        <Border Margin="2 4" 
+                                Padding="6"
+                                CornerRadius="6"
+                                Background="#f5f5f5"
+                                BorderThickness="1"
+                                BorderBrush="#e0e0e0"
+                                HorizontalAlignment="Stretch">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- 设备图标 -->
+                                <Svg Grid.Column="0" 
+                                     Path="../../Assets/usb.svg" 
+                                     Width="24" 
+                                     Height="24" 
+                                     Margin="0 0 6 0" />
+                                
+                                <!-- 设备信息 -->
+                                <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2">
+                                    <!-- 设备名 -->
+                                    <TextBlock Text="{Binding Name}" 
+                                               FontSize="13" 
+                                               FontWeight="500" 
+                                               Foreground="#212121" />
+                                    <!-- 设备类型 -->
+                                    <TextBlock Text="{Binding Type}" 
+                                               FontSize="11" 
+                                               Foreground="#757575" />
+                                    <!-- 状态和端口 -->
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{Binding Status}" 
+                                                   FontSize="10" 
+                                                   Foreground="#616161" />
+                                        <TextBlock Text="{Binding PortName}" 
+                                                   FontSize="10" 
+                                                   Foreground="#9e9e9e" />
+                                    </StackPanel>
+                                    <!-- 存储信息 -->
+                                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0 2 0 0">
+                                        <TextBlock Text="{Binding TotalSizeString}" 
+                                                   FontSize="10" 
+                                                   Foreground="#616161" />
+                                        <TextBlock Text="/" FontSize="10" Foreground="#e0e0e0" />
+                                        <TextBlock Text="{Binding UsedSizeString}" 
+                                                   FontSize="10" 
+                                                   Foreground="#424242" />
+                                        <TextBlock Text="{Binding AvailableSizePercentString }" 
+                                                   FontSize="10" 
+                                                   Foreground="#424242" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+                
+                <ListBox.Styles>
+                    <Style Selector="ListBoxItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="BorderThickness" Value="0" />
+                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                    </Style>
+                </ListBox.Styles>
+            </ListBox>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

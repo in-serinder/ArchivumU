@@ -7,13 +7,17 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using System.Linq;
 
+
 namespace ArchivumU
 {
     public partial class App : Application
     {
         public override void Initialize()
         {
+
             AvaloniaXamlLoader.Load(this);
+            
+ 
         }
 
         public override void OnFrameworkInitializationCompleted()

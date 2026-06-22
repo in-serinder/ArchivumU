@@ -67,3 +67,13 @@ F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\obj\Debug\net8.0\refin
 F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\obj\Debug\net8.0\ArchivumU.pdb
 F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\obj\Debug\net8.0\ArchivumU.genruntimeconfig.cache
 F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\obj\Debug\net8.0\ref\ArchivumU.dll
+F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\obj\Debug\net8.0\ArchivumU.I18n.Strings-zh_CN.resources
+F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\obj\Debug\net8.0\ArchivumU.I18n.Strings.resources
+F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\obj\Debug\net8.0\ArchivumU.csproj.GenerateResource.cache
+F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\bin\Debug\net8.0\Avalonia.Svg.Skia.dll
+F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\bin\Debug\net8.0\ExCSS.dll
+F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\bin\Debug\net8.0\ShimSkiaSharp.dll
+F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\bin\Debug\net8.0\SkiaSharp.HarfBuzz.dll
+F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\bin\Debug\net8.0\Svg.Custom.dll
+F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\bin\Debug\net8.0\Svg.Model.dll
+F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\ArchivumU\ArchivumU\bin\Debug\net8.0\Svg.Skia.dll

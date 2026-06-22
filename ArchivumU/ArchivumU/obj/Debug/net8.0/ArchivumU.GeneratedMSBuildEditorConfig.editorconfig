@@ -22,5 +22,14 @@ build_property.EnableGeneratedComInterfaceComImportInterop =
 [F:/SYSFILE/DeskTop/Misc.Git/ArchivumU/ArchivumU/ArchivumU/App.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
+[F:/SYSFILE/DeskTop/Misc.Git/ArchivumU/ArchivumU/ArchivumU/Views/Components/BlockList.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[F:/SYSFILE/DeskTop/Misc.Git/ArchivumU/ArchivumU/ArchivumU/Views/Components/DeviceList.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[F:/SYSFILE/DeskTop/Misc.Git/ArchivumU/ArchivumU/ArchivumU/Views/Components/KeyValueMgr.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
 [F:/SYSFILE/DeskTop/Misc.Git/ArchivumU/ArchivumU/ArchivumU/Views/MainWindow.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml

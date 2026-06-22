@@ -1,0 +1,135 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:components="clr-namespace:ArchivumU.Views.Components"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="ArchivumU.Views.Components.KeyValueMgr">
+
+    <Grid>
+        <!-- 键值对列表 -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="6">
+            <ListBox Name="LBKeyValueList" 
+                     BorderThickness="0" 
+                     Background="Transparent" 
+                     Padding="4">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="components:KeyValueItem">
+                        <Border Margin="4" 
+                                Padding="8" 
+                                CornerRadius="6" 
+                                Background="#f8f9fa" 
+                                BorderThickness="1" 
+                                BorderBrush="#e9ecef">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                
+                                <!-- 键值对显示模式 -->
+                                <StackPanel x:Name="DisplayPanel" Grid.Row="0" 
+                                            Orientation="Horizontal" 
+                                            Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="Key:" FontSize="12" Foreground="#6c757d" />
+                                        <TextBlock Text="{Binding Key}" FontSize="12" FontWeight="500" Foreground="#212529" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="Value:" FontSize="12" Foreground="#6c757d" />
+                                        <TextBlock Text="{Binding Value}" FontSize="12" Foreground="#495057" />
+                                    </StackPanel>
+                                    <!-- 编辑按钮 -->
+                                    <Button Width="28" 
+                                            Height="28" 
+                                            Padding="0" 
+                                            Background="#6c757d" 
+                                            Foreground="White" 
+                                            BorderThickness="0" 
+                                            CornerRadius="4" 
+                                            HorizontalAlignment="Right"
+                                            Click="OnEditClick">
+                                        <Svg Path="../../Assets/edit.svg" Width="14" Height="14" />
+                                    </Button>
+                                </StackPanel>
+                                
+                                <!-- 编辑模式 -->
+                                <StackPanel x:Name="EditPanel" Grid.Row="0" 
+                                            Orientation="Horizontal" 
+                                            Spacing="6" 
+                                            IsVisible="False">
+                                    <TextBox x:Name="EditKey" 
+                                             Width="120" 
+                                             FontSize="12" 
+                                             Padding="6" 
+                                             CornerRadius="4" 
+                                             BorderThickness="1" 
+                                             BorderBrush="#ced4da" />
+                                    <TextBox x:Name="EditValue" 
+                                             Width="150" 
+                                             FontSize="12" 
+                                             Padding="6" 
+                                             CornerRadius="4" 
+                                             BorderThickness="1" 
+                                             BorderBrush="#ced4da" />
+                                    <Button Content="确认" 
+                                            FontSize="11" 
+                                            Padding="8 4" 
+                                            Background="#007bff" 
+                                            Foreground="White" 
+                                            BorderThickness="0" 
+                                            CornerRadius="4"
+                                            Click="OnConfirmClick" />
+                                </StackPanel>
+                                
+                                <!-- 分隔线 -->
+                                <Separator Grid.Row="1" Margin="0 6" Background="#e9ecef" Height="1" />
+                                
+                                <!-- 键信息属性 -->
+                                <StackPanel Grid.Row="2" 
+                                            Orientation="Horizontal" 
+                                            Spacing="12" 
+                                            HorizontalAlignment="Stretch">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="大小:" FontSize="11" Foreground="#6c757d" />
+                                        <TextBlock Text="{Binding SizeString}" FontSize="11" Foreground="#495057" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="长度:" FontSize="11" Foreground="#6c757d" />
+                                        <TextBlock Text="{Binding Length}" FontSize="11" Foreground="#495057" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="地址:" FontSize="11" Foreground="#6c757d" />
+                                        <TextBlock Text="{Binding Address}" FontSize="11" Foreground="#495057" />
+                                    </StackPanel>
+
+                                    
+                                    <!-- 删除按钮 -->
+                                    <Button Content="删除" 
+                                            FontSize="11" 
+                                            Padding="8 4" 
+                                            Background="#dc3545" 
+                                            Foreground="White" 
+                                            BorderThickness="0" 
+                                            CornerRadius="4" 
+                                            HorizontalAlignment="Right"
+                                            Click="OnDeleteClick" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+                
+                <ListBox.Styles>
+                    <Style Selector="ListBoxItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="BorderThickness" Value="0" />
+                    </Style>
+                </ListBox.Styles>
+            </ListBox>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
