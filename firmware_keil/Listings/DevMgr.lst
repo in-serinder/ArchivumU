@@ -1,0 +1,26 @@
+C51 COMPILER V9.59.0.0   DEVMGR                                                            06/23/2026 21:13:58 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DEVMGR
+OBJECT MODULE PLACED IN .\Objects\DevMgr.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE DevMgr.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\De
+                    -vMgr.lst) TABS(2) OBJECT(.\Objects\DevMgr.obj)
+
+line level    source
+
+   1          #include "DevMgr.h"
+*** WARNING C318 IN LINE 10 OF AI8G.h: can't open file 'cstdint'
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

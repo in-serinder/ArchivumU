@@ -1,0 +1,1 @@
+"DevMgr.c" OPTIMIZE (8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\DevMgr.lst) TABS (2) OBJECT(.\Objects\DevMgr.obj)

@@ -1,0 +1,5 @@
+".\Objects\main.obj",
+".\Objects\Serial.obj",
+".\Objects\24c64.obj" 
+TO ".\Objects\archu" 
+PRINT(".\Listings\archu.m51") RAMSIZE(256) 

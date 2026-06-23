@@ -1,0 +1,204 @@
+C51 COMPILER V9.59.0.0   24C64                                                             06/23/2026 21:13:58 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE 24C64
+OBJECT MODULE PLACED IN .\Objects\24c64.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE EEPROM\24c64.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listi
+                    -ngs\24c64.lst) TABS(2) OBJECT(.\Objects\24c64.obj)
+
+line level    source
+
+   1          #include "24c64.h"
+*** WARNING C318 IN LINE 10 OF AI8G.h: can't open file 'cstdint'
+   2          
+   3          // 延时函数
+   4          void I2C_Delay(void) {
+   5   1        // unsigned char i = 2;
+   6   1        unsigned char i = 100; // 低于100延时在解码中会出现多1字符解码问题（逻辑分析仪�
+             -�示FF）
+   7   1                               // 或许加个电阻同步阻抗会很好
+   8   1        while (i--)
+   9   1          ;
+  10   1      }
+  11          
+  12          // 初始化I2C总线
+  13          void I2C_Init(void) {
+  14   1        SDA = 1;
+  15   1        SCL = 1;
+  16   1      }
+  17          
+  18          // 发送起始信号
+  19          void I2C_Start(void) {
+  20   1        SDA = 1;
+  21   1        SCL = 1;
+  22   1        I2C_Delay();
+  23   1        SDA = 0;
+  24   1        I2C_Delay();
+  25   1        SCL = 0;
+  26   1      }
+  27          
+  28          // 发送停止信号
+  29          void I2C_Stop(void) {
+  30   1        SDA = 0;
+  31   1        SCL = 1;
+  32   1        I2C_Delay();
+  33   1        SDA = 1;
+  34   1        I2C_Delay();
+  35   1      }
+  36          
+  37          // 发送一个字节
+  38          void I2C_SendByte(unsigned char byte) {
+  39   1        unsigned char i;
+  40   1        for (i = 0; i < 8; i++) {
+  41   2          SDA = byte & 0x80;
+  42   2          byte <<= 1;
+  43   2          SCL = 1;
+  44   2          I2C_Delay();
+  45   2          SCL = 0;
+  46   2          I2C_Delay();
+  47   2        }
+  48   1      }
+  49          
+  50          // 接收一个字节
+  51          unsigned char I2C_ReceiveByte(void) {
+  52   1        unsigned char i, byte = 0;
+C51 COMPILER V9.59.0.0   24C64                                                             06/23/2026 21:13:58 PAGE 2   
+
+  53   1        SDA = 1;
+  54   1        for (i = 0; i < 8; i++) {
+  55   2          byte <<= 1;
+  56   2          SCL = 1;
+  57   2          I2C_Delay();
+  58   2          byte |= SDA;
+  59   2          SCL = 0;
+  60   2          I2C_Delay();
+  61   2        }
+  62   1        return byte;
+  63   1      }
+  64          
+  65          // 等待应答
+  66          bit I2C_WaitAck(void) {
+  67   1        bit ack;
+  68   1        SDA = 1;
+  69   1        I2C_Delay();
+  70   1        SCL = 1;
+  71   1        I2C_Delay();
+  72   1        ack = SDA;
+  73   1        SCL = 0;
+  74   1        I2C_Delay();
+  75   1        return ack;
+  76   1      }
+  77          
+  78          // 发送应答
+  79          void I2C_SendAck(bit ack) {
+  80   1        SDA = ack;
+  81   1        I2C_Delay();
+  82   1        SCL = 1;
+  83   1        I2C_Delay();
+  84   1        SCL = 0;
+  85   1        I2C_Delay();
+  86   1      }
+  87          
+  88          // 向EEPROM写入一个字节
+  89          void EEPROM_WriteByte(unsigned int addr, unsigned char dat) {
+  90   1        unsigned char wait_i = 255;
+  91   1        I2C_Start();
+  92   1        I2C_SendByte(EEPROM_ADDR);
+  93   1        if (I2C_WaitAck())
+  94   1          return;
+  95   1        I2C_SendByte(addr >> 8);
+  96   1        if (I2C_WaitAck())
+  97   1          return;
+  98   1        I2C_SendByte(addr & 0xFF);
+  99   1        if (I2C_WaitAck())
+ 100   1          return;
+ 101   1        I2C_SendByte(dat);
+ 102   1        if (I2C_WaitAck())
+ 103   1          return;
+ 104   1        I2C_Stop();
+ 105   1        // 等待写入完成
+ 106   1      
+ 107   1        while (wait_i--)
+ 108   1          ;
+ 109   1        ;
+ 110   1      }
+ 111          
+ 112          // 从EEPROM读取一个字节
+ 113          unsigned char EEPROM_ReadByte(unsigned int addr) {
+ 114   1        unsigned char dat;
+C51 COMPILER V9.59.0.0   24C64                                                             06/23/2026 21:13:58 PAGE 3   
+
+ 115   1        I2C_Start();
+ 116   1        I2C_SendByte(EEPROM_ADDR);
+ 117   1        if (I2C_WaitAck())
+ 118   1          return 0;
+ 119   1        I2C_SendByte(addr >> 8);
+ 120   1        if (I2C_WaitAck())
+ 121   1          return 0;
+ 122   1        I2C_SendByte(addr & 0xFF);
+ 123   1        if (I2C_WaitAck())
+ 124   1          return 0;
+ 125   1        I2C_Start();
+ 126   1        I2C_SendByte(EEPROM_ADDR | 0x01);
+ 127   1        if (I2C_WaitAck())
+ 128   1          return 0;
+ 129   1        dat = I2C_ReceiveByte();
+ 130   1        I2C_SendAck(1);
+ 131   1        I2C_Stop();
+ 132   1        return dat;
+ 133   1      }
+ 134          
+ 135          // 向EEPROM写入字符串
+ 136          void EEPROM_WriteString(unsigned int addr, unsigned char *str) {
+ 137   1        while (*str) {
+ 138   2          EEPROM_WriteByte(addr++, *str++);
+ 139   2        }
+ 140   1        EEPROM_WriteByte(addr, 0); // 写入结束符
+ 141   1      }
+ 142          
+ 143          // 从EEPROM读取字符串
+ 144          void EEPROM_ReadString(unsigned int addr, unsigned char *str,
+ 145                                 unsigned int len) {
+ 146   1        unsigned int read_str_i;
+ 147   1        for (read_str_i = 0; read_str_i < len; read_str_i++) {
+ 148   2          *str = EEPROM_ReadByte(addr++);
+ 149   2          if (*str == 0)
+ 150   2            break;
+ 151   2          str++;
+ 152   2        }
+ 153   1        *str = 0; // 确保字符串结束
+ 154   1      }
+ 155          
+ 156          // 读取EEPROM指定长度内容
+ 157          void EEPROM_ReadBuffer(unsigned int addr, unsigned char *buffer,
+ 158                                 unsigned int len) {
+ 159   1        unsigned int read_i;
+ 160   1        for (read_i = 0; read_i < len; read_i++) {
+ 161   2          buffer[read_i] = EEPROM_ReadByte(addr + read_i);
+ 162   2        }
+ 163   1      }
+ 164          
+ 165          // 清空EEPROM全部内容
+ 166          void EEPROM_ClearAll(void) {
+ 167   1        unsigned int clear_i;
+ 168   1        for (clear_i = 0; clear_i < 8192; clear_i++) // 24C64容量为8KB
+ 169   1        {
+ 170   2          EEPROM_WriteByte(clear_i, 0);
+ 171   2        }
+ 172   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    527    ----
+C51 COMPILER V9.59.0.0   24C64                                                             06/23/2026 21:13:58 PAGE 4   
+
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      27
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       2
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)
