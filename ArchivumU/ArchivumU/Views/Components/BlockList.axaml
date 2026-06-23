@@ -3,8 +3,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:components="clr-namespace:ArchivumU.Views.Components"
+             xmlns:viewmodels="clr-namespace:ArchivumU.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="ArchivumU.Views.Components.BlockList">
+             x:Class="ArchivumU.Views.Components.BlockList"
+             x:DataType="viewmodels:MainWindowViewModel">
+    
     <DockPanel LastChildFill="True">
         <!-- 顶部统计信息 -->
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4" Margin="0 0 0 4">
@@ -16,19 +19,23 @@
         <Separator DockPanel.Dock="Top" Margin="0 4" Background="#e9ecef" Height="1" />
         
         <!-- 底部操作按钮 -->
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="4 0 0 0">
-            <Button Content="添加新块 +" 
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Vertical" Spacing="4" Margin="4 0 0 0">
+            <Button Content="{Binding BlockCreate, StringFormat='{}{0}+'}" 
                     FontSize="12" 
                     Padding="10 4" 
                     Background="#007bff" 
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
                     Foreground="White" 
                     BorderThickness="0" 
                     CornerRadius="4" 
                     Cursor="Hand" />
-            <Button Content="删除选中块 -" 
+            <Button Content="{Binding SelectBlockDel, StringFormat='{}{0}-'}" 
                     FontSize="12" 
                     Padding="10 4" 
                     Background="#dc3545" 
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
                     Foreground="White" 
                     BorderThickness="0" 
                     CornerRadius="4" 

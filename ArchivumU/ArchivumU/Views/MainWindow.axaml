@@ -6,9 +6,9 @@
         xmlns:i18n="using:ArchivumU.I18n"
         xmlns:components="clr-namespace:ArchivumU.Views.Components"
         mc:Ignorable="d" d:DesignWidth="1080" d:DesignHeight="720"
-        Width="1080" Height="720"
-        MinWidth="1000"
-        MinHeight="720"
+        Width="900" Height="600"
+        MinWidth="700"
+        MinHeight="520"
         x:Class="ArchivumU.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
@@ -19,6 +19,10 @@
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel />
     </Design.DataContext>
+    
+    <Window.Resources>
+        <i18n:Strings x:Key="Strings"></i18n:Strings>
+    </Window.Resources>
 
     <DockPanel>
         <!-- 顶部栏目 菜单 -->
@@ -61,44 +65,45 @@
                 </Style>
             </Menu.Styles>
             
-            <MenuItem Header="{x:Static i18n:Strings._File}">
-                <MenuItem Header="{x:Static i18n:Strings._Save}" />
-                <MenuItem Header="{x:Static i18n:Strings._SaveAs}" />
-                <MenuItem Header="{x:Static i18n:Strings._Exit}" />
+            <MenuItem Header="{ Binding File}">
+                <MenuItem Header="{Binding Save}" />
+                <MenuItem Header="{Binding SaveAs}" />
+                <MenuItem Header="{Binding Exit}" />
                 <Separator />
-                <MenuItem Header="{x:Static i18n:Strings._Language}">
-                    <MenuItem Header="{x:Static i18n:Strings._English}" Command="{Binding SetEnglish}" />
-                    <MenuItem Header="{x:Static i18n:Strings._Chinese}" Command="{Binding SetChinese}" />
+                <MenuItem Header="{Binding Language}">
+                    <MenuItem Header="{Binding English}" Command="{Binding SetEnglish}" />
+                    <MenuItem Header="{Binding Chinese}" Command="{Binding SetChinese}" />
                 </MenuItem>
                 <Separator />
-                <MenuItem Header="{x:Static i18n:Strings._More}">
-                    <MenuItem Header="{x:Static i18n:Strings._Help}" />
-                    <MenuItem Header="{x:Static i18n:Strings._About}" />
+                <MenuItem Header="{Binding More}">
+                    <MenuItem Header="{Binding Help}" />
+                    <MenuItem Header="{Binding About}" />
                 </MenuItem>
             </MenuItem>
-            <MenuItem Header="{x:Static i18n:Strings._device}">
-                <MenuItem Header="{x:Static i18n:Strings._Refresh}" />
-                <MenuItem Header="{x:Static i18n:Strings._Add}" />
-                <MenuItem Header="{x:Static i18n:Strings._Remove}" />
-                <MenuItem Header="{x:Static i18n:Strings._Rename}" />
-                <MenuItem Header="{x:Static i18n:Strings._BackupToLocal}" />
+            <MenuItem Header="{Binding Device}">
+                <MenuItem Header="{Binding Refresh}" />
+                <MenuItem Header="{Binding Add}" />
+                <MenuItem Header="{Binding Remove}" />
+                <MenuItem Header="{Binding Rename}" />
+                <MenuItem Header="{Binding BackupToLocal}" />
                 <Separator />
-                <MenuItem Header="{x:Static i18n:Strings._config}">
-                    <CheckBox Content="{x:Static i18n:Strings._auto_connect}" Margin="4 0" />
-                    <CheckBox Content="{x:Static i18n:Strings._auto_backups}" Margin="4 0" />
+                <MenuItem Header="{Binding Config}">
+                    <CheckBox Content="{Binding AutoConnect}" Margin="4 0" />
+                    <CheckBox Content="{Binding AutoBackups}" Margin="4 0" />
                 </MenuItem>
             </MenuItem>
-            <MenuItem Header="{x:Static i18n:Strings._block}">
-                <MenuItem Header="{x:Static i18n:Strings._block_refresh}" />
-                <MenuItem Header="{x:Static i18n:Strings._block_refresh}" />
-                <MenuItem Header="{x:Static i18n:Strings._block_create}" />
-                <MenuItem Header="{x:Static i18n:Strings._block_rename}" />
-                <MenuItem Header="{x:Static i18n:Strings._block_del}" />
-                <MenuItem Header="{x:Static i18n:Strings._block_lformat}" />
+            <MenuItem Header="{Binding Block}">
+                <MenuItem Header="{Binding BlockRefresh}" />
+                <MenuItem Header="{Binding BlockCreate}" />
+                <MenuItem Header="{Binding BlockRename}" />
+                <MenuItem Header="{Binding BlockDel}" />
+                <MenuItem Header="{Binding BackupToLocal}" />
+                <MenuItem Header="{Binding BlockLformat}" />
+
             </MenuItem>
-            <MenuItem Header="{x:Static i18n:Strings._key}">
-                <MenuItem Header="{x:Static i18n:Strings._key_create}" />
-                <MenuItem Header="{x:Static i18n:Strings._key_remove}" />
+            <MenuItem Header="{Binding Key}">
+                <MenuItem Header="{Binding KeyCreate}" />
+                <MenuItem Header="{Binding KeyRemove}" />
             </MenuItem>
         </Menu>
         <!-- 应用区 -->
@@ -151,22 +156,22 @@
                         
                         <!-- 存储信息标签组 -->
                         <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Spacing="4" Margin="0 0 16 0">
-                            <TextBlock Text="总空间:" FontSize="12" Foreground="#6c757d" />
+                            <TextBlock Text="{Binding TotalStorage, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
                             <TextBlock Text="100 GB" FontSize="12" FontWeight="500" Foreground="#212529" />
                         </StackPanel>
-                        
+
                         <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" Spacing="4" Margin="0 0 16 0">
-                            <TextBlock Text="已用:" FontSize="12" Foreground="#6c757d" />
+                            <TextBlock Text="{Binding UsedStorage, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
                             <TextBlock Text="79 GB" FontSize="12" FontWeight="500" Foreground="#495057" />
                         </StackPanel>
-                        
+
                         <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal" Spacing="4" Margin="0 0 16 0">
-                            <TextBlock Text="可用:" FontSize="12" Foreground="#6c757d" />
+                            <TextBlock Text="{Binding AvailableStorage, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
                             <TextBlock Text="21 GB" FontSize="12" FontWeight="500" Foreground="#28a745" />
                         </StackPanel>
-                        
+
                         <StackPanel Grid.Column="3" Grid.Row="0" Orientation="Horizontal" Spacing="4">
-                            <TextBlock Text="占比:" FontSize="12" Foreground="#6c757d" />
+                            <TextBlock Text="{Binding Prop, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
                             <TextBlock Text="79%" FontSize="12" FontWeight="600" Foreground="#007bff" />
                         </StackPanel>
                         

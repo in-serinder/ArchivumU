@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using ArchivumU.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
@@ -21,6 +22,20 @@ public partial class KeyValueMgr : UserControl
         KeyValueItems.Add(new KeyValueItem("email","admin@example.com",10,"0x30000000"));
         LBKeyValueList.ItemsSource = KeyValueItems;
     }
+    
+    // protected override void OnDataContextChanged(EventArgs e)
+    // {
+    //     base.OnDataContextChanged(e);
+    //         
+    //     // 更新按钮文本
+    //     if (DataContext is MainWindowViewModel vm)
+    //     {
+    //         BTNKeyConfig.Content = vm.Confirm;
+    //         BTNKeyDel.Content = vm.Del;
+    //     }
+    // }
+    
+    
     
     // 编辑按钮点击事件
     private void OnEditClick(object sender, RoutedEventArgs e)

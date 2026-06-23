@@ -3,8 +3,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:components="clr-namespace:ArchivumU.Views.Components"
+             xmlns:viewmodels="clr-namespace:ArchivumU.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="ArchivumU.Views.Components.KeyValueMgr">
+             x:Class="ArchivumU.Views.Components.KeyValueMgr"
+             x:DataType="viewmodels:MainWindowViewModel">
 
     <Grid>
         <!-- 键值对列表 -->
@@ -32,11 +34,11 @@
                                 <StackPanel x:Name="DisplayPanel" Grid.Row="0" 
                                             Orientation="Horizontal" 
                                             Spacing="8">
-                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                                         <TextBlock Text="Key:" FontSize="12" Foreground="#6c757d" />
                                         <TextBlock Text="{Binding Key}" FontSize="12" FontWeight="500" Foreground="#212529" />
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                                         <TextBlock Text="Value:" FontSize="12" Foreground="#6c757d" />
                                         <TextBlock Text="{Binding Value}" FontSize="12" Foreground="#495057" />
                                     </StackPanel>
@@ -44,11 +46,12 @@
                                     <Button Width="28" 
                                             Height="28" 
                                             Padding="0" 
-                                            Background="#6c757d" 
+                                            Background="#f8f9fa" 
                                             Foreground="White" 
                                             BorderThickness="0" 
                                             CornerRadius="4" 
                                             HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
                                             Click="OnEditClick">
                                         <Svg Path="../../Assets/edit.svg" Width="14" Height="14" />
                                     </Button>
@@ -58,7 +61,14 @@
                                 <StackPanel x:Name="EditPanel" Grid.Row="0" 
                                             Orientation="Horizontal" 
                                             Spacing="6" 
-                                            IsVisible="False">
+                                            IsVisible="False"
+                                            VerticalAlignment="Center"
+                                            >
+                                    <Label
+                                        FontSize="11"
+                                        Foreground="#6c757d"
+                                        VerticalContentAlignment="Center"
+                                        >Key:</Label>
                                     <TextBox x:Name="EditKey" 
                                              Width="120" 
                                              FontSize="12" 
@@ -66,6 +76,11 @@
                                              CornerRadius="4" 
                                              BorderThickness="1" 
                                              BorderBrush="#ced4da" />
+                                    <Label
+                                        FontSize="11" 
+                                        Foreground="#6c757d"
+                                        VerticalContentAlignment="Center"
+                                        >Value:</Label>
                                     <TextBox x:Name="EditValue" 
                                              Width="150" 
                                              FontSize="12" 
@@ -73,7 +88,8 @@
                                              CornerRadius="4" 
                                              BorderThickness="1" 
                                              BorderBrush="#ced4da" />
-                                    <Button Content="确认" 
+                                    <Button Name="BTNKeyConfig"
+                                            Content="Confim"
                                             FontSize="11" 
                                             Padding="8 4" 
                                             Background="#007bff" 
@@ -92,21 +108,22 @@
                                             Spacing="12" 
                                             HorizontalAlignment="Stretch">
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="大小:" FontSize="11" Foreground="#6c757d" />
+                                        <TextBlock Text="Size" FontSize="11" Foreground="#6c757d" />
                                         <TextBlock Text="{Binding SizeString}" FontSize="11" Foreground="#495057" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="长度:" FontSize="11" Foreground="#6c757d" />
+                                        <TextBlock Text="Length" FontSize="11" Foreground="#6c757d" />
                                         <TextBlock Text="{Binding Length}" FontSize="11" Foreground="#495057" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="地址:" FontSize="11" Foreground="#6c757d" />
+                                        <TextBlock Text="Address" FontSize="11" Foreground="#6c757d" />
                                         <TextBlock Text="{Binding Address}" FontSize="11" Foreground="#495057" />
                                     </StackPanel>
 
                                     
                                     <!-- 删除按钮 -->
-                                    <Button Content="删除" 
+                                    <Button Name="BTNKeyDel"
+                                            Content="Delete"
                                             FontSize="11" 
                                             Padding="8 4" 
                                             Background="#dc3545" 

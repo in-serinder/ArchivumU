@@ -49,7 +49,7 @@
         <value>退出</value>
     </data>
     <data name="_English">
-        <value>英语</value>
+        <value>English</value>
     </data>
     <data name="_Chinese">
         <value>简体中文</value>
@@ -104,5 +104,95 @@
     </data>
     <data name="_Device">
         <value>设备</value>
+    </data>
+    <data name="_device_format" xml:space="preserve">
+        <value>格式化设备</value>
+    </data>
+    <data name="_device_backups" xml:space="preserve">
+        <value>备份设备</value>
+    </data>
+    <data name="_device_remove" xml:space="preserve">
+        <value>移除设备</value>
+    </data>
+    <data name="_device_backups_import" xml:space="preserve">
+        <value>设备备份还原</value>
+    </data>
+    <data name="_total_storage" xml:space="preserve">
+        <value>总空间</value>
+    </data>
+    <data name="_used_storge" xml:space="preserve">
+        <value>已用空间</value>
+    </data>
+    <data name="_availabe_storage" xml:space="preserve">
+        <value>可用</value>
+    </data>
+    <data name="_prop" xml:space="preserve">
+        <value>占比</value>
+    </data>
+    <data name="_select_block_del" xml:space="preserve">
+        <value>删除选中块</value>
+    </data>
+    <data name="_block_discover" xml:space="preserve">
+        <value>已寻得块</value>
+    </data>
+    <data name="_size" xml:space="preserve">
+        <value>大小</value>
+    </data>
+    <data name="_len" xml:space="preserve">
+        <value>长度</value>
+    </data>
+    <data name="_address" xml:space="preserve">
+        <value>地址</value>
+    </data>
+    <data name="_connected" xml:space="preserve">
+        <value>已连接</value>
+    </data>
+    <data name="_disconnected" xml:space="preserve">
+        <value>未连接</value>
+    </data>
+    <data name="_warn" xml:space="preserve">
+        <value>警告</value>
+    </data>
+    <data name="_err" xml:space="preserve">
+        <value>错误</value>
+    </data>
+    <data name="_confirm_formatting " xml:space="preserve">
+        <value>确认格式化</value>
+    </data>
+    <data name="_operation_cannot_be_recovered " xml:space="preserve">
+        <value> 操作无法恢复</value>
+    </data>
+    <data name="_open_backup_file" xml:space="preserve">
+        <value>打开备份文件</value>
+    </data>
+    <data name="_save_file_location" xml:space="preserve">
+        <value>保存文件位置</value>
+    </data>
+    <data name="_storage_fragment_defragmentation" xml:space="preserve">
+        <value> 存储碎片整理</value>
+    </data>
+    <data name="_fragment_defragmentation" xml:space="preserve">
+        <value>碎片整理（对存储块上内容全部读取后重新以顺序写入）</value>
+    </data>
+    <data name="_storage_abnormal" xml:space="preserve">
+        <value>存储异常</value>
+    </data>
+    <data name="_insufficient_space " xml:space="preserve">
+        <value>空间不足</value>
+    </data>
+    <data name="_address_error" xml:space="preserve">
+        <value>地址错误</value>
+    </data>
+    <data name="_chip_no_response" xml:space="preserve">
+        <value>芯片无响应</value>
+    </data>
+    <data name="_serial_port_disconnected" xml:space="preserve">
+        <value>串口断开</value>
+    </data>
+    <data name="_del" xml:space="preserve">
+        <value>删除</value>
+    </data>
+    <data name="_confim" xml:space="preserve">
+        <value>确定</value>
     </data>
 </root>

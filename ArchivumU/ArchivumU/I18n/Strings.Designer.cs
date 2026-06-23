@@ -26,6 +26,7 @@ namespace ArchivumU.I18n {
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
+
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         public Strings() {
@@ -50,12 +51,14 @@ namespace ArchivumU.I18n {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
+        public static event EventHandler CultureChanged;
         public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
             set {
                 resourceCulture = value;
+                CultureChanged?.Invoke(null, EventArgs.Empty); 
             }
         }
         

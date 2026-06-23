@@ -6,7 +6,10 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg.Skia"
              xmlns:svg1="clr-namespace:Svg;assembly=Svg.Custom"
-             x:Class="ArchivumU.Views.Components.DeviceList">
+             xmlns:viewmodels="clr-namespace:ArchivumU.ViewModels"
+             x:Class="ArchivumU.Views.Components.DeviceList"
+             x:DataType="viewmodels:MainWindowViewModel">
+        <!-- 需要额外添加viewmodels -->
     <DockPanel LastChildFill="True" >
         <!-- 统计信息 - 固定在底部（必须放在前面声明） -->
         <Border DockPanel.Dock="Bottom" 
@@ -17,7 +20,7 @@
             <StackPanel Orientation="Horizontal" 
                         Spacing="4"
                         VerticalAlignment="Center">
-                <TextBlock Text="设备：" 
+                <TextBlock Text="{Binding Device }" 
                            FontSize="11" 
                            Foreground="#9e9e9e" />
                 <TextBlock Text="0" 
