@@ -36,9 +36,11 @@
                      VerticalAlignment="Stretch"
                      Padding="0"
                      BorderThickness="0"
-                     Background="Transparent">
+                     Background="Transparent"
+                     SelectionMode="Single"
+                     SelectionChanged="OnDeviceSelected">
                 <ListBox.ItemTemplate>
-                    <DataTemplate DataType="components:ArchivumDevice">
+                    <DataTemplate DataType="components:ArchivumDevice" >
                         <Border Margin="2 4" 
                                 Padding="6"
                                 CornerRadius="6"
@@ -46,7 +48,7 @@
                                 BorderThickness="1"
                                 BorderBrush="#e0e0e0"
                                 HorizontalAlignment="Stretch">
-                            <Grid>
+                            <Grid >
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />

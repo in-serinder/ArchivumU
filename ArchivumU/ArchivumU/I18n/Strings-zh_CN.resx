@@ -22,7 +22,7 @@
         <value>语言</value>
     </data>
     <data name="_device">
-        <value>设备</value>
+        <value>串口设备</value>
     </data>
     <data name="_Refresh">
         <value>刷新</value>
@@ -76,7 +76,7 @@
         <value>自动备份</value>
     </data>
     <data name="_block" xml:space="preserve">
-        <value>块</value>
+        <value>存储块</value>
     </data>
     <data name="_block_lformat" xml:space="preserve">
         <value>低级格式化(写入0x00)</value>
@@ -100,7 +100,7 @@
         <value>重命名块</value>
     </data>
     <data name="_key" xml:space="preserve">
-        <value>键</value>
+        <value>键值对</value>
     </data>
     <data name="_Device">
         <value>设备</value>
@@ -194,5 +194,29 @@
     </data>
     <data name="_confim" xml:space="preserve">
         <value>确定</value>
+    </data>
+    <data name="_password" xml:space="preserve">
+        <value>密码</value>
+    </data>
+    <data name="_encryption" xml:space="preserve">
+        <value>加密</value>
+    </data>
+    <data name="_decryption" xml:space="preserve">
+        <value>解密</value>
+    </data>
+    <data name="_authentication" xml:space="preserve">
+        <value>身份认证</value>
+    </data>
+    <data name="_authentication_failed" xml:space="preserve">
+        <value>认证失败</value>
+    </data>
+    <data name="_cancel" xml:space="preserve">
+        <value>取消</value>
+    </data>
+    <data name="_cell" xml:space="preserve">
+        <value>存储单元</value>
+    </data>
+    <data name="_unknow" xml:space="preserve">
+        <value>未知</value>
     </data>
 </root>

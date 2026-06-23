@@ -11,7 +11,7 @@
         MinHeight="520"
         x:Class="ArchivumU.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/archu.ico"
         Title="ArchivumU">
 
     <Design.DataContext>

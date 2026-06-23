@@ -97,6 +97,12 @@ namespace ArchivumU.ViewModels
             OnPropertyChanged(nameof(BackupToLocal));
             OnPropertyChanged(nameof(Confirm));
             OnPropertyChanged(nameof(Del));
+            OnPropertyChanged(nameof(Password));
+            OnPropertyChanged(nameof(Encryption));
+            OnPropertyChanged(nameof(Decryption));
+            OnPropertyChanged(nameof(Cancel));
+            OnPropertyChanged(nameof(Cell));
+            OnPropertyChanged(nameof(Unknown));
             
             // 状态和错误
             OnPropertyChanged(nameof(Size));
@@ -117,6 +123,9 @@ namespace ArchivumU.ViewModels
             OnPropertyChanged(nameof(AddressError));
             OnPropertyChanged(nameof(ChipNoResponse));
             OnPropertyChanged(nameof(SerialPortDisconnected));
+            OnPropertyChanged(nameof(Authentication));
+            OnPropertyChanged(nameof(AuthenticationFailed));
+            
         }
 
         private string GetString(string key)
@@ -228,6 +237,14 @@ namespace ArchivumU.ViewModels
         public string BackupToLocal => GetString("_BackupToLocal");
         public string Confirm => GetString("_confirm");
         public string Del => GetString("_del");
+        public string Password => GetString("_password");
+        public string Encryption => GetString("_encryption");
+        public string Decryption => GetString("_decryption");
+        public string Authentication => GetString("_authentication");
+        public string AuthenticationFailed => GetString("_authentication_failed");
+        public string Cancel => GetString("_cancel");
+        public string Cell => GetString("_cell");
+        public string Unknown => GetString("_unknow");
         
         // 状态和错误
         public string Size => GetString("_size");
