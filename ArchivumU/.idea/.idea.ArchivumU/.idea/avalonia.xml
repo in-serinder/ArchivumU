@@ -4,6 +4,7 @@
     <option name="projectPerEditor">
       <map>
         <entry key="ArchivumU/App.axaml" value="ArchivumU/ArchivumU.csproj" />
+        <entry key="ArchivumU/Views/AuthWindow.axaml" value="ArchivumU/ArchivumU.csproj" />
         <entry key="ArchivumU/Views/Components/BlockList.axaml" value="ArchivumU/ArchivumU.csproj" />
         <entry key="ArchivumU/Views/Components/DeviceList.axaml" value="ArchivumU/ArchivumU.csproj" />
         <entry key="ArchivumU/Views/Components/KeyValueMgr.axaml" value="ArchivumU/ArchivumU.csproj" />

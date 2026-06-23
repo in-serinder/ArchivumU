@@ -1,20 +1,22 @@
-**ArchivumU — 基于 TC8G1K08A 的定制化离线密钥存储方案**
+**ArchivumU — Customized Offline Key Storage Solution Based on TC8G1K08A**
 
-### 项目概述
+[English](ReadME.md)/[中文](ReadME_CN.md)
 
-- **主控芯片**：TC8G1K08A 单片机
-- **存储介质**：两片 24C64 EEPROM，通过 I²C 总线通信，总容量 16 KB
-- **接口协议**：采用非标准 USB 通信协议，有别于常规大容量存储设备，操作系统原生文件管理器无法识别访问
-- **安全特性**：支持用户自定义加密算法，须配合专属上位机软件及授权访问密钥方可进行数据读写
+### Project Overview
 
-### 适用场景
+- **MCU**: TC8G1K08A microcontroller
+- **Storage**: Two 24C64 EEPROMs via I²C bus, total capacity 16 KB
+- **Interface Protocol**: Uses non-standard USB protocol, different from regular mass storage devices, not recognized by OS native file managers
+- **Security Features**: Supports user-defined encryption algorithms, requires dedicated host software and authorized access key for data read/write
 
-专为个人文本类私密数据打造，涵盖以下两类典型用途：
+### Application Scenarios
 
-- **轻量凭证**：密码、授权密钥、私密口令等短文本
-- **密集资料**：涉密文档、加密笔记、私密文本文件等较长内容
+Designed for personal text privacy data, covering two typical use cases:
 
-> 注：单次存储数据总大小上限为 16 KB，适合对安全性要求高于容量需求的离线存储场景。
+- **Lightweight Credentials**: Passwords, authorization keys, private passphrases and other short texts
+- **Dense Documents**: Classified documents, encrypted notes, private text files and other longer content
+
+> Note: Maximum single storage size is 16 KB, suitable for offline storage scenarios where security requirements exceed capacity needs.
 
 > [!WARNING]
-> **安全风险提示**：该设备架构相对简单，主要面向非常规离线存储场景，并未内置防篡改或物理攻击防护机制。若攻击者获取设备并具备修改主控固件或直接读取 EEPROM 的能力，则存在绕过访问密钥、直接提取原始数据的潜在风险。建议用户将设备存放于物理可控的安全环境中，并配合外部加密措施（如对存储内容进行二次加密）以提升整体安全性。
+> **Security Risk Warning**: The device architecture is relatively simple, mainly targeting unconventional offline storage scenarios, and does not have built-in anti-tampering or physical attack protection mechanisms. If an attacker obtains the device and has the ability to modify the MCU firmware or directly read the EEPROM, there is a potential risk of bypassing the access key and directly extracting raw data. Users are advised to store the device in a physically controlled secure environment and use external encryption measures (such as double encryption of stored content) to enhance overall security.
