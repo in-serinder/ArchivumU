@@ -65,45 +65,46 @@
                 </Style>
             </Menu.Styles>
             
-            <MenuItem Header="{ Binding File}">
-                <MenuItem Header="{Binding Save}" />
-                <MenuItem Header="{Binding SaveAs}" />
-                <MenuItem Header="{Binding Exit}" />
+            <MenuItem Header="{ Binding I18n.File}">
+                <MenuItem Header="{Binding I18n.Save}" />
+                <MenuItem Header="{Binding I18n.SaveAs}" />
+                <MenuItem Header="{Binding I18n.Exit}" />
                 <Separator />
-                <MenuItem Header="{Binding Language}">
-                    <MenuItem Header="{Binding English}" Command="{Binding SetEnglish}" />
-                    <MenuItem Header="{Binding Chinese}" Command="{Binding SetChinese}" />
+                <MenuItem Header="{Binding I18n.Language}">
+                    <MenuItem Header="{Binding I18n.English}" Command="{Binding SetEnglish}" />
+                    <MenuItem Header="{Binding I18n.Chinese}" Command="{Binding SetChinese}" />
                 </MenuItem>
                 <Separator />
-                <MenuItem Header="{Binding More}">
-                    <MenuItem Header="{Binding Help}" />
-                    <MenuItem Header="{Binding About}" />
-                </MenuItem>
-            </MenuItem>
-            <MenuItem Header="{Binding Device}">
-                <MenuItem Header="{Binding Refresh}" />
-                <MenuItem Header="{Binding Add}" />
-                <MenuItem Header="{Binding Remove}" />
-                <MenuItem Header="{Binding Rename}" />
-                <MenuItem Header="{Binding BackupToLocal}" />
-                <Separator />
-                <MenuItem Header="{Binding Config}">
-                    <CheckBox Content="{Binding AutoConnect}" Margin="4 0" />
-                    <CheckBox Content="{Binding AutoBackups}" Margin="4 0" />
+                <MenuItem Header="{Binding I18n.More}">
+                    <MenuItem Header="{Binding I18n.Help}" />
+                    <MenuItem Header="{Binding I18n.About}" />
                 </MenuItem>
             </MenuItem>
-            <MenuItem Header="{Binding Block}">
-                <MenuItem Header="{Binding BlockRefresh}" />
-                <MenuItem Header="{Binding BlockCreate}" />
-                <MenuItem Header="{Binding BlockRename}" />
-                <MenuItem Header="{Binding BlockDel}" />
-                <MenuItem Header="{Binding BackupToLocal}" />
-                <MenuItem Header="{Binding BlockLformat}" />
+            <MenuItem Header="{Binding I18n.Device}">
+                <MenuItem Header="{Binding I18n.Refresh}" />
+                <MenuItem Header="{Binding I18n.Add}" />
+                <MenuItem Header="{Binding I18n.Remove}" />
+                <MenuItem Header="{Binding I18n.Rename}" />
+                <MenuItem Header="{Binding I18n.BackupToLocal}" />
+                <MenuItem Header="{Binding I18n.DeviceClone}"  Name="MIDevClone" Click="MIDevClone_OnClick"/>
+                <Separator />
+                <MenuItem Header="{Binding I18n.Config}">
+                    <CheckBox Content="{Binding I18n.AutoConnect}" Margin="4 0" />
+                    <CheckBox Content="{Binding I18n.AutoBackups}" Margin="4 0" />
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="{Binding I18n.Block}">
+                <MenuItem Header="{Binding I18n.BlockRefresh}" />
+                <MenuItem Header="{Binding I18n.BlockCreate}" />
+                <MenuItem Header="{Binding I18n.BlockRename}" />
+                <MenuItem Header="{Binding I18n.Del}" />
+                <MenuItem Header="{Binding I18n.BackupToLocal}" />
+                <MenuItem Header="{Binding I18n.BlockLformat}" />
 
             </MenuItem>
-            <MenuItem Header="{Binding Key}">
-                <MenuItem Header="{Binding KeyCreate}" />
-                <MenuItem Header="{Binding KeyRemove}" />
+            <MenuItem Header="{Binding I18n.KeyValue}">
+                <MenuItem Header="{Binding I18n.KeyCreate}" />
+                <MenuItem Header="{Binding I18n.KeyRemove}" />
             </MenuItem>
         </Menu>
         <!-- 应用区 -->
@@ -156,22 +157,22 @@
                         
                         <!-- 存储信息标签组 -->
                         <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Spacing="4" Margin="0 0 16 0">
-                            <TextBlock Text="{Binding TotalStorage, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
+                            <TextBlock Text="{Binding I18n.TotalStorage, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
                             <TextBlock Text="100 GB" FontSize="12" FontWeight="500" Foreground="#212529" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" Spacing="4" Margin="0 0 16 0">
-                            <TextBlock Text="{Binding UsedStorage, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
+                            <TextBlock Text="{Binding I18n.UsedStorage, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
                             <TextBlock Text="79 GB" FontSize="12" FontWeight="500" Foreground="#495057" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal" Spacing="4" Margin="0 0 16 0">
-                            <TextBlock Text="{Binding AvailableStorage, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
+                            <TextBlock Text="{Binding I18n.AvailableStorage, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
                             <TextBlock Text="21 GB" FontSize="12" FontWeight="500" Foreground="#28a745" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="3" Grid.Row="0" Orientation="Horizontal" Spacing="4">
-                            <TextBlock Text="{Binding Prop, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
+                            <TextBlock Text="{Binding I18n.Prop, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
                             <TextBlock Text="79%" FontSize="12" FontWeight="600" Foreground="#007bff" />
                         </StackPanel>
                         

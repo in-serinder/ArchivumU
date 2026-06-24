@@ -20,7 +20,7 @@
             <StackPanel Orientation="Horizontal" 
                         Spacing="4"
                         VerticalAlignment="Center">
-                <TextBlock Text="{Binding Device }" 
+                <TextBlock Text="{Binding I18n.Device}" 
                            FontSize="11" 
                            Foreground="#9e9e9e" />
                 <TextBlock Text="0" 

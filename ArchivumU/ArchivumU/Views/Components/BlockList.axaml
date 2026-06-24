@@ -11,7 +11,7 @@
     <DockPanel LastChildFill="True">
         <!-- 顶部统计信息 -->
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4" Margin="0 0 0 4">
-            <TextBlock Text="已寻得块：" FontSize="12" Foreground="#6c757d" />
+            <TextBlock Text="{Binding I18n.BlockDiscover,StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
             <TextBlock Text="0" FontSize="12" FontWeight="500" Foreground="#212529" VerticalAlignment="Center" />
         </StackPanel>
         
@@ -20,7 +20,7 @@
         
         <!-- 底部操作按钮 -->
         <StackPanel DockPanel.Dock="Bottom" Orientation="Vertical" Spacing="4" Margin="4 0 0 0">
-            <Button Content="{Binding BlockCreate, StringFormat='{}{0}+'}" 
+            <Button Content="{Binding I18n.BlockCreate, StringFormat='{}{0}+'}" 
                     FontSize="12" 
                     Padding="10 4" 
                     Background="#007bff" 
@@ -30,7 +30,7 @@
                     BorderThickness="0" 
                     CornerRadius="4" 
                     Cursor="Hand" />
-            <Button Content="{Binding SelectBlockDel, StringFormat='{}{0}-'}" 
+            <Button Content="{Binding I18n.SelectBlockDel, StringFormat='{}{0}-'}" 
                     FontSize="12" 
                     Padding="10 4" 
                     Background="#dc3545" 

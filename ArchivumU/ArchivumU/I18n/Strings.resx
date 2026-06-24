@@ -225,4 +225,52 @@
         <value>Unknown</value>
     </data>
 
+    <data name="_clone" xml:space="preserve">
+        <value>Clone</value>
+    </data>
+    <data name="_device_clone" xml:space="preserve">
+        <value>Device Clone</value>
+    </data>
+    <data name="_source_dev_info" xml:space="preserve">
+        <value>Source Device Information</value>
+    </data>
+    <data name="_target_dev_info" xml:space="preserve">
+        <value>Target Device Information</value>
+    </data>
+    <data name="_zone" xml:space="preserve">
+        <value>Zone</value>
+    </data>
+    <data name="_type" xml:space="preserve">
+        <value>Type</value>
+    </data>
+    <data name="_source_dev" xml:space="preserve">
+        <value>Source Device</value>
+    </data>
+    <data name="_target_dev" xml:space="preserve">
+        <value>Target Device</value>
+    </data>
+    <data name="_clone_options" xml:space="preserve">
+        <value>Clone Options</value>
+    </data>
+    <data name="_clone_start" xml:space="preserve">
+        <value>Start Clone</value>
+    </data>
+    <data name="_save_source_file" xml:space="preserve">
+        <value>Save Source File</value>
+    </data>
+    <data name="_skip_existing" xml:space="preserve">
+        <value>Skip Existing</value>
+    </data>
+    <data name="_non_started" xml:space="preserve">
+        <value>Not Started Yet</value>
+    </data>
+    <data name="_value" xml:space="preserve">
+        <value>Value</value>
+    </data>
+    <data name="_key_value" xml:space="preserve">
+        <value>Key&amp;Value</value>
+    </data>
+    <data name="_count" xml:space="preserve">
+        <value>Count</value>
+    </data>
 </root>

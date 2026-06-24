@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "7rC3+JiT2y0=",
+  "dgSpecHash": "W8amdwx76ts=",
   "success": true,
   "projectFilePath": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\ArchivumU.csproj",
   "expectedPackageFiles": [
@@ -8,6 +8,7 @@
     "C:\\Users\\jyag\\.nuget\\packages\\avalonia.angle.windows.natives\\2.1.22045.20230930\\avalonia.angle.windows.natives.2.1.22045.20230930.nupkg.sha512",
     "C:\\Users\\jyag\\.nuget\\packages\\avalonia.buildservices\\0.0.31\\avalonia.buildservices.0.0.31.nupkg.sha512",
     "C:\\Users\\jyag\\.nuget\\packages\\avalonia.controls.colorpicker\\11.3.0\\avalonia.controls.colorpicker.11.3.0.nupkg.sha512",
+    "C:\\Users\\jyag\\.nuget\\packages\\avalonia.controls.datagrid\\11.3.0\\avalonia.controls.datagrid.11.3.0.nupkg.sha512",
     "C:\\Users\\jyag\\.nuget\\packages\\avalonia.desktop\\11.3.0\\avalonia.desktop.11.3.0.nupkg.sha512",
     "C:\\Users\\jyag\\.nuget\\packages\\avalonia.diagnostics\\11.3.0\\avalonia.diagnostics.11.3.0.nupkg.sha512",
     "C:\\Users\\jyag\\.nuget\\packages\\avalonia.fonts.inter\\11.3.0\\avalonia.fonts.inter.11.3.0.nupkg.sha512",

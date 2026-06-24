@@ -100,7 +100,7 @@
         <value>重命名块</value>
     </data>
     <data name="_key" xml:space="preserve">
-        <value>键值对</value>
+        <value>键</value>
     </data>
     <data name="_Device">
         <value>设备</value>
@@ -218,5 +218,53 @@
     </data>
     <data name="_unknow" xml:space="preserve">
         <value>未知</value>
+    </data>
+    <data name="_clone" xml:space="preserve">
+        <value>克隆</value>
+    </data>
+    <data name="_device_clone" xml:space="preserve">
+        <value>设备克隆</value>
+    </data>
+    <data name="_source_dev_info" xml:space="preserve">
+        <value>源设备属性</value>
+    </data>
+    <data name="_target_dev_info" xml:space="preserve">
+        <value>目标设备属性</value>
+    </data>
+    <data name="_zone" xml:space="preserve">
+        <value>区域</value>
+    </data>
+    <data name="_type" xml:space="preserve">
+        <value>类别</value>
+    </data>
+    <data name="_source_dev" xml:space="preserve">
+        <value>源设备</value>
+    </data>
+    <data name="_target_dev" xml:space="preserve">
+        <value>目标设备</value>
+    </data>
+    <data name="_clone_options" xml:space="preserve">
+        <value>克隆选项</value>
+    </data>
+    <data name="_clone_start" xml:space="preserve">
+        <value>开始克隆</value>
+    </data>
+    <data name="_save_source_file" xml:space="preserve">
+        <value>保留源文件</value>
+    </data>
+    <data name="_skip_existing" xml:space="preserve">
+        <value>跳过已有</value>
+    </data>
+    <data name="_non_started" xml:space="preserve">
+        <value>未开始</value>
+    </data>
+    <data name="_value" xml:space="preserve">
+        <value>值</value>
+    </data>
+    <data name="_key_value" xml:space="preserve">
+        <value>键值对</value>
+    </data>
+    <data name="_count" xml:space="preserve">
+        <value>计数</value>
     </data>
 </root>

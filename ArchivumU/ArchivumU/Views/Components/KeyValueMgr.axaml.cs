@@ -10,17 +10,12 @@ namespace ArchivumU.Views.Components;
 
 public partial class KeyValueMgr : UserControl
 {
-    public ObservableCollection<KeyValueItem> KeyValueItems { get; set; } = new ObservableCollection<KeyValueItem>();
     
     public KeyValueMgr()
     {
         InitializeComponent();
-        
-        // 添加示例数据
-        KeyValueItems.Add(new KeyValueItem("username","admin",10,"0x10000000"));
-        KeyValueItems.Add(new KeyValueItem("password","123456",10,"0x20000000"));
-        KeyValueItems.Add(new KeyValueItem("email","admin@example.com",10,"0x30000000"));
-        LBKeyValueList.ItemsSource = KeyValueItems;
+        DataContext = new KeyValueViewModel();
+
     }
     
     // protected override void OnDataContextChanged(EventArgs e)
@@ -152,27 +147,8 @@ public partial class KeyValueMgr : UserControl
         var item = button?.DataContext as KeyValueItem;
         if (item != null)
         {
-            KeyValueItems.Remove(item);
+            ((KeyValueViewModel)DataContext).KeyValueItems.Remove(item);
         }
     }
 }
 
-public class KeyValueItem
-{
-    public string Key { get; set; }
-    public string Value { get; set; }
-    public int Size { get; set; }
-    public int Length => Value?.Length ?? 0;
-    public string Address { get; set; }
-    public string SizeString => feature_string.formatSizeToString(Value?.Length ?? 0);
-
-    public KeyValueItem() { }
-    
-    public KeyValueItem(string key, string value, int size, string address)
-    {
-        Key = key;
-        Value = value;
-        Size = size;
-        Address = address;
-    }
-}

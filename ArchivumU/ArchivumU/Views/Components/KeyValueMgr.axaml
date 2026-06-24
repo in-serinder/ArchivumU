@@ -6,7 +6,7 @@
              xmlns:viewmodels="clr-namespace:ArchivumU.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="ArchivumU.Views.Components.KeyValueMgr"
-             x:DataType="viewmodels:MainWindowViewModel">
+             x:DataType="viewmodels:KeyValueViewModel">
 
     <Grid>
         <!-- 键值对列表 -->
@@ -14,9 +14,10 @@
             <ListBox Name="LBKeyValueList" 
                      BorderThickness="0" 
                      Background="Transparent" 
-                     Padding="4">
+                     Padding="4"
+                     ItemsSource="{Binding KeyValueItems}">
                 <ListBox.ItemTemplate>
-                    <DataTemplate DataType="components:KeyValueItem">
+                    <DataTemplate >
                         <Border Margin="4" 
                                 Padding="8" 
                                 CornerRadius="6" 
@@ -35,11 +36,11 @@
                                             Orientation="Horizontal" 
                                             Spacing="8">
                                     <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                        <TextBlock Text="Key:" FontSize="12" Foreground="#6c757d" />
+                                        <TextBlock Text="{Binding I18n.Key, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
                                         <TextBlock Text="{Binding Key}" FontSize="12" FontWeight="500" Foreground="#212529" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                        <TextBlock Text="Value:" FontSize="12" Foreground="#6c757d" />
+                                        <TextBlock Text="{Binding I18n.Value, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
                                         <TextBlock Text="{Binding Value}" FontSize="12" Foreground="#495057" />
                                     </StackPanel>
                                     <!-- 编辑按钮 -->
@@ -108,15 +109,15 @@
                                             Spacing="12" 
                                             HorizontalAlignment="Stretch">
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="Size" FontSize="11" Foreground="#6c757d" />
+                                        <TextBlock Text="{Binding I18n.Size, StringFormat='{}{0}:'}" FontSize="11" Foreground="#6c757d" />
                                         <TextBlock Text="{Binding SizeString}" FontSize="11" Foreground="#495057" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="Length" FontSize="11" Foreground="#6c757d" />
+                                        <TextBlock Text="{Binding I18n.Len, StringFormat='{}{0}:'}" FontSize="11" Foreground="#6c757d" />
                                         <TextBlock Text="{Binding Length}" FontSize="11" Foreground="#495057" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="Address" FontSize="11" Foreground="#6c757d" />
+                                        <TextBlock Text="{Binding I18n.Address, StringFormat='{}{0}:'}" FontSize="11" Foreground="#6c757d" />
                                         <TextBlock Text="{Binding Address}" FontSize="11" Foreground="#495057" />
                                     </StackPanel>
 

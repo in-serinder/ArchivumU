@@ -1,0 +1,263 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:ArchivumU.ViewModels"
+        xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg.Skia"
+        mc:Ignorable="d" d:DesignWidth="740" d:DesignHeight="520"
+        Width="740" Height="520"
+        MaxWidth="760" MaxHeight="520"
+        x:Class="ArchivumU.Views.DeviceCloneWindow"
+        x:DataType="vm:CloneViewModel"
+        Title="{Binding I18n.DeviceClone}"
+        Background="#F8F9FA"
+        Icon="../../Assets/clone.ico"
+        Padding="16">
+    <Window.DataContext>
+        <vm:CloneViewModel />
+    </Window.DataContext>
+    <Window.Styles>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#4A90D9" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        
+        <Style Selector="Button.Secondary">
+            <Setter Property="Background" Value="#E9ECEF" />
+            <Setter Property="Foreground" Value="#495057" />
+        </Style>
+        
+        <Style Selector="Label">
+            <Setter Property="Foreground" Value="#495057" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="500" />
+        </Style>
+        
+        <Style Selector="Label.DeviceHeader">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="600" />
+            <Setter Property="Padding" Value="0,4" />
+        </Style>
+        
+        <Style Selector="ComboBox">
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#DEE2E6" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Background" Value="White" />
+        </Style>
+        
+        <Style Selector="DataGrid">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+        
+        
+        
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#6C757D" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="600" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="BorderThickness" Value="0 0 1 0" />
+            <Setter Property="BorderBrush" Value="#E9ECEF" />
+        </Style>
+        
+        <Style Selector="DataGridRow">
+            <Setter Property="Height" Value="28" />
+        </Style>
+        
+        <Style Selector="ProgressBar">
+            <Setter Property="Height" Value="8" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Background" Value="#E9ECEF" />
+        </Style>
+    </Window.Styles>
+    
+    <Grid RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*,Auto,*" RowSpacing="16" ColumnSpacing="24">
+        <!-- 源设备选择 -->
+        <Border Grid.Row="0" Grid.Column="0" 
+                Background="White" 
+                CornerRadius="8" 
+                Padding="12" 
+                BorderThickness="1" 
+                BorderBrush="#E9ECEF">
+            <StackPanel Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Svg Path="../../Assets/usb.svg" Width="20" Height="20" />
+                    <Label Content="{Binding I18n.SourceDevice}" />  
+                </StackPanel>
+                <ComboBox Width="200" ItemsSource="{Binding TargetDevices}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Binding DeviceName}" FontSize="12" />
+                                <TextBlock Text="@" FontSize="12" Foreground="#6C757D" />
+                                <TextBlock Text="{Binding PortName}" FontSize="11" Foreground="#6C757D" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+        </Border>
+        <Border Grid.Row="0" Grid.Column="1" 
+                Background="Transparent"
+                Padding="0">
+            <Svg Path="../../Assets/switch.svg" Width="40" Height="28" />
+        </Border>
+        <!-- 目标设备选择 -->
+        <Border Grid.Row="0" Grid.Column="2" 
+                Background="White" 
+                CornerRadius="8" 
+                Padding="12" 
+                BorderThickness="1" 
+                BorderBrush="#E9ECEF">
+            <StackPanel Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Svg Path="../../Assets/usb.svg" Width="20" Height="20" />
+                    <Label Content="{Binding I18n.TargetDevice}" />  
+                </StackPanel>
+                <ComboBox Width="200" ItemsSource="{Binding SourceDevices}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Binding DeviceName}" FontSize="12" />
+                                <TextBlock Text="@" FontSize="12" Foreground="#6C757D" />
+                                <TextBlock Text="{Binding PortName}" FontSize="11" Foreground="#6C757D" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+        </Border>
+
+        <!-- 源设备属性 -->
+        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                Background="White" 
+                CornerRadius="8" 
+                Padding="12" 
+                BorderThickness="1" 
+                BorderBrush="#E9ECEF">
+            <StackPanel Spacing="8">
+                <Label Content="{Binding I18n.SourceDeviceInfo}" Foreground="#2563EB" Classes="DeviceHeader" />
+                <DataGrid ItemsSource="{Binding CloneSourceInfoList}" Height="120"
+                          AutoGenerateColumns="False"
+                          Name="DGCLONESD">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding I18n.Zone}" Binding="{Binding ItemName}" Width="*" />
+                        <DataGridTemplateColumn Header="{Binding I18n.Size}" Width="80">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding SizeStr}" Foreground="#059669" FontWeight="500" FontSize="11" Padding="4" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="{Binding I18n.Count}" Width="80">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Count}" Foreground="#D97706" FontWeight="500" FontSize="11" Padding="4" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </Border>
+        
+        <!-- 目标设备属性 -->
+        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                Background="White" 
+                CornerRadius="8" 
+                Padding="12" 
+                BorderThickness="1" 
+                BorderBrush="#E9ECEF">
+            <StackPanel Spacing="8">
+                <Label Content="{Binding I18n.TargetDeviceInfo}" Foreground="#D97706" Classes="DeviceHeader" />
+                <DataGrid ItemsSource="{Binding CloneTargetInfoList}" Height="120"
+                          AutoGenerateColumns="False"
+                          Name="DGTARGETD"
+                          Margin="0,4,0,0">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding I18n.Zone}" Binding="{Binding ItemName}" Width="*" />
+                        <DataGridTemplateColumn Header="{Binding I18n.Size}" Width="80">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding SizeStr}" Foreground="#059669" FontWeight="500" FontSize="11" Padding="4" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="{Binding I18n.Count}" Width="80">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Count}" Foreground="#D97706" FontWeight="500" FontSize="11" Padding="4" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </Border>
+        
+        <!-- 操作面板 -->
+        <!-- <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="2" -->
+        <!--         Background="White"  -->
+        <!--         CornerRadius="8"  -->
+        <!--         Padding="16"  -->
+        <!--         BorderThickness="1"  -->
+        <!--         BorderBrush="#E9ECEF"> -->
+        <!--     <StackPanel Spacing="16"> -->
+        <!--         <Label Content="克隆选项" /> -->
+        <!--         <StackPanel Spacing="8"> -->
+        <!--             <CheckBox Content="保留原文件" /> -->
+        <!--             <CheckBox Content="跳过已存在" /> -->
+        <!--         </StackPanel> -->
+        <!--         <Button Content="开始克隆" HorizontalAlignment="Stretch" /> -->
+        <!--         <Button Content="取消" HorizontalAlignment="Stretch" Classes="Secondary" /> -->
+        <!--     </StackPanel> -->
+        <!-- </Border> -->
+        <!-- -->
+        <!-- -->
+        <!-- ~1~ 进度条 @1@ -->
+        <!-- <ProgressBar Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Value="{Binding ProgressValue}" /> -->
+        <!-- <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding ProgressText}" HorizontalAlignment="Center" FontSize="11" Foreground="#6C757D" /> -->
+        <!-- 操作面板 -->
+        <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="2"
+                Background="White" 
+                CornerRadius="8" 
+                Padding="12" 
+                BorderThickness="1" 
+                BorderBrush="#E9ECEF">
+            <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="12">
+                <!-- 进度条区域 -->
+                <ProgressBar Grid.Row="0" Value="{Binding ProgressValue}" />
+                <TextBlock Grid.Row="1" Text="{Binding ProgressText}" HorizontalAlignment="Center" FontSize="10" Foreground="#6C757D" />
+                
+                <!-- 日志 -->
+                <TextBlock Grid.Row="2" Text="{Binding LogText}" HorizontalAlignment="Center" FontSize="10" Foreground="#6C757D" />
+                
+                <!-- 分隔线 -->
+                <Rectangle Grid.Row="3" Height="1" Fill="#E9ECEF" Margin="0,4" />
+                
+                <!-- 操作控件 -->
+                <StackPanel Grid.Row="4" Spacing="8">
+                    <Label Content="{Binding I18n.CloneOptions}" FontSize="12" FontWeight="500" />
+                    <StackPanel Spacing="5">
+                        <CheckBox Content="{Binding I18n.SaveSourceFile}" FontSize="11" />
+                        <CheckBox Content="{Binding I18n.NotClone}" FontSize="11" />
+                    </StackPanel>
+                    <Button Content="{Binding I18n.CloneStart}" HorizontalAlignment="Stretch" />
+                    <Button Content="{Binding I18n.Cancel}" HorizontalAlignment="Stretch" Classes="Secondary" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
