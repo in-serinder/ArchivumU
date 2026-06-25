@@ -8,6 +8,7 @@
         <entry key="ArchivumU/Views/Components/BlockList.axaml" value="ArchivumU/ArchivumU.csproj" />
         <entry key="ArchivumU/Views/Components/DeviceList.axaml" value="ArchivumU/ArchivumU.csproj" />
         <entry key="ArchivumU/Views/Components/KeyValueMgr.axaml" value="ArchivumU/ArchivumU.csproj" />
+        <entry key="ArchivumU/Views/DeviceClone.axaml" value="ArchivumU/ArchivumU.csproj" />
         <entry key="ArchivumU/Views/MainWindow.axaml" value="ArchivumU/ArchivumU.csproj" />
       </map>
     </option>

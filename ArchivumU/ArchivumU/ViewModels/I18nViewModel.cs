@@ -134,6 +134,7 @@ public class I18nViewModel : ViewModelBase
             OnPropertyChanged(nameof(Zone));
             OnPropertyChanged(nameof(Value));
             OnPropertyChanged(nameof(Count));
+            OnPropertyChanged(nameof(NoneContent));
             
             // 状态和错误
             OnPropertyChanged(nameof(Size));
@@ -291,6 +292,7 @@ public class I18nViewModel : ViewModelBase
         public string Zone => GetString("_zone");
         public string Value => GetString("_value");
         public string Count => GetString("_count");
+        public string NoneContent => GetString("_non_content");
         
         // 状态和错误
         public string Size => GetString("_size");

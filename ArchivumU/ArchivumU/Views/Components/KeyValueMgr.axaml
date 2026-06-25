@@ -149,5 +149,27 @@
                 </ListBox.Styles>
             </ListBox>
         </ScrollViewer>
+        <!-- 无内容时显示的占位提示 -->
+        <Border x:Name="EmptyPlaceholder" 
+                Background="Transparent"
+                IsVisible="False">
+            <StackPanel Orientation="Vertical" 
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Center" 
+                        Spacing="12">
+                <Svg Path="../../Assets/empty.svg" Width="48" Height="48"  />
+                <TextBlock Text="{Binding I18n.NoneContent, StringFormat='{}{0}'}"
+                           FontSize="13"
+                           Foreground="#6c757d"
+                           HorizontalAlignment="Center"
+                           FontWeight="400" />
+                <TextBlock Text="{Binding I18n.NoneContent}"
+                           FontSize="11"
+                           Foreground="#adb5bd"
+                           HorizontalAlignment="Center" 
+                           MaxWidth="200"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>

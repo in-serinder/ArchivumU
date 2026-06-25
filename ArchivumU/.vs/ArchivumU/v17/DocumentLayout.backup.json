@@ -3,8 +3,20 @@
   "WorkspaceRootPath": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|f:\\sysfile\\desktop\\misc.git\\archivumu\\archivumu\\archivumu\\views\\components\\keyvaluemgr.axaml||{62A225A0-D448-4681-8CB7-5F403067404B}",
+      "RelativeMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|solutionrelative:archivumu\\views\\components\\keyvaluemgr.axaml||{62A225A0-D448-4681-8CB7-5F403067404B}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|f:\\sysfile\\desktop\\misc.git\\archivumu\\archivumu\\archivumu\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|solutionrelative:archivumu\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|f:\\sysfile\\desktop\\misc.git\\archivumu\\archivumu\\archivumu\\viewmodels\\cloneviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|solutionrelative:archivumu\\viewmodels\\cloneviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|f:\\sysfile\\desktop\\misc.git\\archivumu\\archivumu\\archivumu\\archivumu.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|solutionrelative:archivumu\\archivumu.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
       "AbsoluteMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|f:\\sysfile\\desktop\\misc.git\\archivumu\\archivumu\\archivumu\\views\\mainwindow.axaml||{62A225A0-D448-4681-8CB7-5F403067404B}",
@@ -20,10 +32,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|f:\\sysfile\\desktop\\misc.git\\archivumu\\archivumu\\archivumu\\views\\components\\keyvaluemgr.axaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|solutionrelative:archivumu\\views\\components\\keyvaluemgr.axaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|f:\\sysfile\\desktop\\misc.git\\archivumu\\archivumu\\archivumu\\archivumu.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{EE688827-07ED-4CD5-BC5E-8E1BE57C0383}|ArchivumU\\ArchivumU.csproj|solutionrelative:archivumu\\archivumu.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     }
   ],
   "DocumentGroupContainers": [
@@ -33,7 +41,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 8,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Bookmark",
@@ -53,18 +61,44 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
+              "Title": "KeyValueMgr.axaml",
+              "DocumentMoniker": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\Views\\Components\\KeyValueMgr.axaml",
+              "RelativeDocumentMoniker": "ArchivumU\\Views\\Components\\KeyValueMgr.axaml",
+              "ToolTip": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\Views\\Components\\KeyValueMgr.axaml",
+              "RelativeToolTip": "ArchivumU\\Views\\Components\\KeyValueMgr.axaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-06-24T04:25:26.374Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "CloneViewModel.cs",
+              "DocumentMoniker": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\ViewModels\\CloneViewModel.cs",
+              "RelativeDocumentMoniker": "ArchivumU\\ViewModels\\CloneViewModel.cs",
+              "ToolTip": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\ViewModels\\CloneViewModel.cs",
+              "RelativeToolTip": "ArchivumU\\ViewModels\\CloneViewModel.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAArwB4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T15:20:55.726Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "MainWindow.axaml",
               "DocumentMoniker": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\Views\\MainWindow.axaml",
               "RelativeDocumentMoniker": "ArchivumU\\Views\\MainWindow.axaml",
               "ToolTip": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\Views\\MainWindow.axaml",
               "RelativeToolTip": "ArchivumU\\Views\\MainWindow.axaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-06-22T15:27:34.693Z"
+              "WhenOpened": "2026-06-22T15:27:34.693Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "Microsoft.Common.CurrentVersion.targets",
               "DocumentMoniker": "D:\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
               "ToolTip": "D:\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
@@ -74,7 +108,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 7,
               "Title": "KeyValueMgr.axaml.cs",
               "DocumentMoniker": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\Views\\Components\\KeyValueMgr.axaml.cs",
               "RelativeDocumentMoniker": "ArchivumU\\Views\\Components\\KeyValueMgr.axaml.cs",
@@ -86,32 +120,32 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 3,
               "Title": "ArchivumU.csproj",
               "DocumentMoniker": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\ArchivumU.csproj",
               "RelativeDocumentMoniker": "ArchivumU\\ArchivumU.csproj",
               "ToolTip": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\ArchivumU.csproj",
               "RelativeToolTip": "ArchivumU\\ArchivumU.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAADUAAAAKAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADYAAAAKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
               "WhenOpened": "2026-06-22T04:59:03.371Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Program.cs",
               "DocumentMoniker": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\Program.cs",
               "RelativeDocumentMoniker": "ArchivumU\\Program.cs",
               "ToolTip": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\Program.cs",
               "RelativeToolTip": "ArchivumU\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-22T02:26:33.14Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "MainWindowViewModel.cs",
               "DocumentMoniker": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\ArchivumU\\ArchivumU\\ViewModels\\MainWindowViewModel.cs",
               "RelativeDocumentMoniker": "ArchivumU\\ViewModels\\MainWindowViewModel.cs",
