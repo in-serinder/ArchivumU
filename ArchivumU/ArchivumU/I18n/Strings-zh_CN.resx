@@ -291,4 +291,10 @@
     <data name="_reset" xml:space="preserve">
         <value>重置</value>
     </data>
+    <data name="_allocate_the_number_of_keys_per_block " xml:space="preserve">
+        <value>分配每个块中键数量</value>
+    </data>
+    <data name="_block_name_size_limit " xml:space="preserve">
+        <value>块名大小限制</value>
+    </data>
 </root>

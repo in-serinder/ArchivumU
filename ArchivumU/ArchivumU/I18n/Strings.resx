@@ -297,4 +297,10 @@
     <data name="_reset" xml:space="preserve">
         <value>Reset</value>
     </data>
+    <data name="_allocate_the_number_of_keys_per_block " xml:space="preserve">
+        <value>Allocate the Number of Keys per Block</value>
+    </data>
+    <data name="_block_name_size_limit " xml:space="preserve">
+        <value>Block Name Size Limit</value>
+    </data>
 </root>

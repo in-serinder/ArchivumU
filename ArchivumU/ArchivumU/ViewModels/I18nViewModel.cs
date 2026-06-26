@@ -141,6 +141,9 @@ public class I18nViewModel : ViewModelBase
             OnPropertyChanged(nameof(Umount));
             OnPropertyChanged(nameof(Mount));
             OnPropertyChanged(nameof(Reset));
+            OnPropertyChanged(nameof(EnablePassword));
+            OnPropertyChanged(nameof(AllocateTheNumberOfKeysPerBlock));
+            OnPropertyChanged(nameof(BlockNameSizeLimit));
             
             // 状态和错误
             OnPropertyChanged(nameof(Size));
@@ -306,6 +309,9 @@ public class I18nViewModel : ViewModelBase
         public string Umount => GetString("_umount");
         public string Mount => GetString("_mount");
         public string Reset => GetString("_reset");
+        public string EnablePassword => GetString("_enable_password");
+        public string AllocateTheNumberOfKeysPerBlock => GetString("_allocate_the_number_of_keys_per_block ");
+        public string BlockNameSizeLimit => GetString("_block_name_size_limit ");
         
         // 状态和错误
         public string Size => GetString("_size");
