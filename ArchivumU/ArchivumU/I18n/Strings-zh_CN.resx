@@ -297,4 +297,7 @@
     <data name="_block_name_size_limit " xml:space="preserve">
         <value>块名大小限制</value>
     </data>
+    <data name="_enable_password" xml:space="preserve">
+        <value>启用密码</value>
+    </data>
 </root>

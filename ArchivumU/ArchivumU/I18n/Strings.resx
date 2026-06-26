@@ -303,4 +303,7 @@
     <data name="_block_name_size_limit " xml:space="preserve">
         <value>Block Name Size Limit</value>
     </data>
+    <data name="_enable_password" xml:space="preserve">
+        <value>Enable Password</value>
+    </data>
 </root>

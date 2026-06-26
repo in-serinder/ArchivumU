@@ -19,6 +19,8 @@ namespace ArchivumU.Views
             
            // 调试用
            // new DeviceClone().Show();
+           new DevInitWindow().Show();
+           
         }
 
 

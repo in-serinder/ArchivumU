@@ -2,8 +2,104 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:viewModels="clr-namespace:ArchivumU.ViewModels"
+        mc:Ignorable="d" 
+        d:DesignWidth="650" 
+        d:DesignHeight="420"
+        Width="650"
+        Height="420"
+        MinWidth="650"
+        MaxHeight="420"
+        MinHeight="420"
+        MaxWidth="650"
         x:Class="ArchivumU.Views.DevInitWindow"
-        Title="DevInitWindow">
-        
+        x:DataType="viewModels:DevInitViewModel"
+        Title="{Binding Title}">
+    
+    <Window.Styles>
+        <Style Selector="TextBlock.Label">
+            <Setter Property="Width" Value="250"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Width" Value="160"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="6 6 6 6"/>
+            <!-- <Setter Property="Margin" Value="100 0 0 0"/> -->
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Width" Value="85"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button.Primary">
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#3B82F6"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid Margin="24" RowDefinitions="Auto,10,Auto,16,Auto,10,Auto,10,Auto,16,Auto,20,Auto">
+        <!-- 标题区域 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="{Binding I18n.InitDev}" FontSize="16" FontWeight="Bold"/>
+            <TextBlock Text="{Binding Item.Portname}" FontSize="14" Foreground="#3B82F6"/>
+        </StackPanel>
+
+        <!-- 固件版本 -->
+        <TextBlock Grid.Row="2" Text="{Binding Item.FirmWareVersion}" FontSize="12" Foreground="#6B7280"/>
+
+        <!-- 设备名称 -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="12">
+            <TextBlock Classes="Label" Text="{Binding I18n.DevName,StringFormat='{}{0}:'}"/>
+            <TextBox Watermark="{Binding Item.DevName}" Text="{Binding Item.DevName}"/>
+        </StackPanel>
+
+        <!-- 每块密钥数量 -->
+        <StackPanel Grid.Row="6" Orientation="Horizontal" Spacing="12">
+            <TextBlock Classes="Label" Text="{Binding I18n.AllocateTheNumberOfKeysPerBlock,StringFormat='{}{0}:'}"/>
+            <TextBox Watermark="{Binding Item.KeyNumberInBlock}" Text="{Binding Item.KeyNumberInBlock}"/>
+        </StackPanel>
+
+        <!-- 块长度限制 -->
+        <StackPanel Grid.Row="8" Orientation="Horizontal" Spacing="12">
+            <TextBlock Classes="Label" Text="{Binding I18n.BlockNameSizeLimit,StringFormat='{}{0}:'}"/>
+            <TextBox Watermark="{Binding Item.BlockLengthLim}" Text="{Binding Item.BlockLengthLim}"/>
+        </StackPanel>
+
+        <!-- 密码区域 -->
+        <Border Grid.Row="10" BorderThickness="1" BorderBrush="#E5E7EB" Padding="14" CornerRadius="6">
+            <StackPanel Spacing="12">
+                <!-- 启用密码 -->
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Classes="Label" Text="{Binding I18n.EnablePassword,StringFormat='{}{0}:'}"/>
+                    <CheckBox IsChecked="{Binding Item.EnablePassword}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <!-- 密码输入框 -->
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Classes="Label" Text="{Binding I18n.Password,StringFormat='{}{0}:'}"/>
+                    <TextBox IsEnabled="{Binding Item.EnablePassword}" 
+                             Watermark="Max Length: 8 byte"
+                             Text="{Binding Item.Password}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 按钮区域 -->
+        <StackPanel Grid.Row="12" Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
+            <Button Content="{Binding I18n.Cancel}" Name="BTNDICancel"/>
+            <Button Content="{Binding I18n.Init}" Name="BTNDIInit" Classes="Primary"/>
+        </StackPanel>
+    </Grid>
 </Window>
