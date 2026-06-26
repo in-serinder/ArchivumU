@@ -276,4 +276,25 @@
     <data name="_non_content" xml:space="preserve">
         <value>None</value>
     </data>
+    <data name="_init" xml:space="preserve">
+        <value>Initialize</value>
+    </data>
+    <data name="_init_dev" xml:space="preserve">
+        <value>Initialize Device</value>
+    </data>
+    <data name="_name" xml:space="preserve">
+        <value>Name</value>
+    </data>
+    <data name="_dev_name" xml:space="preserve">
+        <value>Device Name</value>
+    </data>
+    <data name="_umount" xml:space="preserve">
+        <value>Unmount</value>
+    </data>
+    <data name="_mount" xml:space="preserve">
+        <value>Mount</value>
+    </data>
+    <data name="_reset" xml:space="preserve">
+        <value>Reset</value>
+    </data>
 </root>

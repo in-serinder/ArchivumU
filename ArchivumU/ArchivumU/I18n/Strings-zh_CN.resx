@@ -270,4 +270,25 @@
     <data name="_non_content" xml:space="preserve">
         <value>无内容</value>
     </data>
+    <data name="_init" xml:space="preserve">
+        <value>初始化</value>
+    </data>
+    <data name="_init_dev" xml:space="preserve">
+        <value>初始化设备</value>
+    </data>
+    <data name="_name" xml:space="preserve">
+        <value>命名</value>
+    </data>
+    <data name="_dev_name" xml:space="preserve">
+        <value>设备名</value>
+    </data>
+    <data name="_umount" xml:space="preserve">
+        <value>卸载</value>
+    </data>
+    <data name="_mount" xml:space="preserve">
+        <value>挂载</value>
+    </data>
+    <data name="_reset" xml:space="preserve">
+        <value>重置</value>
+    </data>
 </root>

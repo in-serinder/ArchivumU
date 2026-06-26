@@ -135,6 +135,12 @@ public class I18nViewModel : ViewModelBase
             OnPropertyChanged(nameof(Value));
             OnPropertyChanged(nameof(Count));
             OnPropertyChanged(nameof(NoneContent));
+            OnPropertyChanged(nameof(Init));
+            OnPropertyChanged(nameof(Name));
+            OnPropertyChanged(nameof(DevName));
+            OnPropertyChanged(nameof(Umount));
+            OnPropertyChanged(nameof(Mount));
+            OnPropertyChanged(nameof(Reset));
             
             // 状态和错误
             OnPropertyChanged(nameof(Size));
@@ -293,6 +299,13 @@ public class I18nViewModel : ViewModelBase
         public string Value => GetString("_value");
         public string Count => GetString("_count");
         public string NoneContent => GetString("_non_content");
+        public string Init => GetString("_init");
+        public string InitDev => GetString("_init_dev");
+        public string Name => GetString("_name");
+        public string DevName => GetString("_dev_name");
+        public string Umount => GetString("_umount");
+        public string Mount => GetString("_mount");
+        public string Reset => GetString("_reset");
         
         // 状态和错误
         public string Size => GetString("_size");
