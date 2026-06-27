@@ -43,11 +43,14 @@
         </StackPanel>
         
         <!-- 块列表区域 -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0"
+                      HorizontalAlignment="Center"
+                      Padding="5"
+                  >
             <ListBox Name="LBBlockList" 
                      BorderThickness="0" 
                      Background="Transparent" 
-                     HorizontalAlignment="Stretch"
+                     HorizontalAlignment="Center"
                      Padding="2">
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="components:BlockItem">
@@ -79,6 +82,7 @@
                         <Setter Property="Margin" Value="0" />
                         <Setter Property="Background" Value="Transparent" />
                         <Setter Property="BorderThickness" Value="0" />
+                        <Setter Property="HorizontalAlignment" Value="Stretch" /> 
                     </Style>
                 </ListBox.Styles>
                 

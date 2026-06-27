@@ -190,7 +190,7 @@
                 </Border>
                 
                 <!-- 块列表 - 停靠在左侧 -->
-                <Border DockPanel.Dock="Left" Width="200" Margin="8 4 4 8" 
+                <Border DockPanel.Dock="Left" Width="175" Margin="8 4 4 8" 
                         Background="White"
                         CornerRadius="8"
                         BorderThickness="1"
