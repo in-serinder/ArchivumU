@@ -47,6 +47,7 @@
             <ListBox Name="LBBlockList" 
                      BorderThickness="0" 
                      Background="Transparent" 
+                     HorizontalAlignment="Stretch"
                      Padding="2">
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="components:BlockItem">

@@ -15,6 +15,7 @@ public partial class KeyValueMgr : UserControl
     {
         InitializeComponent();
         DataContext = new KeyValueViewModel();
+        EmptyPlaceholderINKVMGR.IsVisible = false;
 
     }
     

@@ -55,7 +55,22 @@
                                             VerticalAlignment="Center"
                                             Click="OnEditClick">
                                         <Svg Path="../../Assets/edit.svg" Width="14" Height="14" />
+
                                     </Button>
+                                    <Button Width="28" 
+                                            Height="28" 
+                                            Padding="0" 
+                                            Background="#f8f9fa" 
+                                            Foreground="White" 
+                                            BorderThickness="0" 
+                                            CornerRadius="4" 
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            >
+                                        <Svg Path="../../Assets/copy.svg" Width="14" Height="14" />
+
+                                    </Button>
+
                                 </StackPanel>
                                 
                                 <!-- 编辑模式 -->
@@ -150,7 +165,7 @@
             </ListBox>
         </ScrollViewer>
         <!-- 无内容时显示的占位提示 -->
-        <Border x:Name="EmptyPlaceholder" 
+        <Border x:Name="EmptyPlaceholderINKVMGR" 
                 Background="Transparent"
                 IsVisible="False">
             <StackPanel Orientation="Vertical" 
