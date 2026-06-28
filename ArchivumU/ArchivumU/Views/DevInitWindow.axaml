@@ -94,12 +94,14 @@
                              Watermark="Max Length: 8 byte"
                              Text="{Binding Item.Password}"/>
                 </StackPanel>
+                <Separator
+                    BorderBrush="#D1D5DB" BorderThickness="1"></Separator>
                 <!-- 是否启用加密  -->
                 <StackPanel Orientation="Horizontal" Spacing="12">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Classes="Label" Text="{Binding I18n.EnableEncryption_i8n,StringFormat='{}{0}:'}"/>
                     </StackPanel>
-                    <CheckBox IsChecked="{Binding Item.EnableEncryption}" VerticalAlignment="Center"/>
+                    <!-- <CheckBox IsChecked="{Binding Item.EnableEncryption}" VerticalAlignment="Center"/> -->
                     <TextBlock
                         VerticalAlignment="Center"
                         Foreground="#666"
