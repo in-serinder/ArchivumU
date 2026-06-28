@@ -144,6 +144,9 @@ public class I18nViewModel : ViewModelBase
             OnPropertyChanged(nameof(EnablePassword));
             OnPropertyChanged(nameof(AllocateTheNumberOfKeysPerBlock));
             OnPropertyChanged(nameof(BlockNameSizeLimit));
+            OnPropertyChanged(nameof(EnableEncryption_i8n));
+            OnPropertyChanged(nameof(EnableEncryptionConfirm));
+            OnPropertyChanged(nameof(EncryptionAlgorithm));
             
             // 状态和错误
             OnPropertyChanged(nameof(Size));
@@ -312,6 +315,9 @@ public class I18nViewModel : ViewModelBase
         public string EnablePassword => GetString("_enable_password");
         public string AllocateTheNumberOfKeysPerBlock => GetString("_allocate_the_number_of_keys_per_block ");
         public string BlockNameSizeLimit => GetString("_block_name_size_limit ");
+        public string EnableEncryption_i8n => GetString("_enable_encryption");
+        public string EnableEncryptionConfirm => GetString("_enable_enc_confim");
+        public string EncryptionAlgorithm => GetString("_enc_argo");
         
         // 状态和错误
         public string Size => GetString("_size");

@@ -31,13 +31,15 @@
         </Border>
         
         <!-- 设备列表 - 填充剩余空间 -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="2" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="2" HorizontalScrollBarVisibility="Disabled"
+                      HorizontalAlignment="Stretch">
             <ListBox Name="LBDeviceList" 
                      VerticalAlignment="Stretch"
                      Padding="0"
                      BorderThickness="0"
                      Background="Transparent"
                      SelectionMode="Single"
+                     HorizontalAlignment="Stretch"
                      SelectionChanged="OnDeviceSelected">
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="components:ArchivumDevice" >
@@ -72,12 +74,15 @@
                                     <TextBlock Text="{Binding Type}" 
                                                FontSize="11" 
                                                Foreground="#757575" />
-                                    <!-- 状态和端口 -->
+                                    <!-- 状态和端口 加密类型  -->
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <TextBlock Text="{Binding Status}" 
                                                    FontSize="10" 
                                                    Foreground="#616161" />
                                         <TextBlock Text="{Binding PortName}" 
+                                                   FontSize="10" 
+                                                   Foreground="#9e9e9e" />
+                                        <TextBlock Text="{Binding EncryptionType}" 
                                                    FontSize="10" 
                                                    Foreground="#9e9e9e" />
                                     </StackPanel>

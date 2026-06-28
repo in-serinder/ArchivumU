@@ -1,4 +1,8 @@
-﻿namespace ArchivumU.ViewModels;
+﻿using System;
+using System.Collections.Generic;
+using ArchivumU.Views.Components;
+
+namespace ArchivumU.ViewModels;
 
 public class DevInitViewModel : ViewModelBase
 {
@@ -20,6 +24,15 @@ public class DevInitViewModel : ViewModelBase
 
 public class DevInitViewModelItem
 {
+    
+    public enum EncryptionType
+    {
+        NoneEncryption,
+        AES128,
+        XOR,
+        Caesar,
+        RC4
+    }
     public string Portname {get;set;} = "Unknow";
     public string FirmWareVersion {get;set;} = "Unknown";
     public string DevName {get;set;} = "ArchivumU";
@@ -27,14 +40,20 @@ public class DevInitViewModelItem
     public int KeyNumberInBlock {get;set;} = 16; //可更改
     public int  BlockLengthLim {get;set;} = 20; //块名最长20个字符
     public bool EnablePassword {get;set;} = false;
+    public bool EnableEncryption {get;set;} = false;
+    public EncryptionType EncryptionAlgorithm {get;set;} = EncryptionType.NoneEncryption;
+    
+    public List<EncryptionType> EncryptionAlgoritems {get;set;} = new List<EncryptionType>((EncryptionType[])Enum.GetValues(typeof(EncryptionType)));
+    
     public DevInitViewModelItem()
     {
         
     }
     
-    public  DevInitViewModelItem(string portname, string firmwareversion)
+    public  DevInitViewModelItem(string portname, string firmwareversion,EncryptionType encryptionType=EncryptionType.NoneEncryption)
     {
         Portname = portname;
         FirmWareVersion = firmwareversion;
+        EncryptionAlgorithm = encryptionType;
     }
 }

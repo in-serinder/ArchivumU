@@ -15,6 +15,15 @@ namespace ArchivumU.Views.Components;
 public partial class DeviceList : UserControl
 {
     private feature_string feature_string = new feature_string();
+
+    public enum EncryptionType
+    {
+        NoneEncryption,
+        AES128,
+        XOR,
+        Caesar,
+        RC4
+    }
     
     public ObservableCollection<ArchivumDevice> Devices { get; } = new ObservableCollection<ArchivumDevice>();
     // 设备选中事件 - 供外部订阅
@@ -81,6 +90,7 @@ public class ArchivumDevice
     public string PortName { get; set; }
     public long TotalSize { get; set; }
     public long UsedSize { get; set; }
+    public DeviceList.EncryptionType EncryptionType { get; set; } = DeviceList.EncryptionType.NoneEncryption;
     
     
     
@@ -94,7 +104,7 @@ public class ArchivumDevice
     }
     
     
-    public ArchivumDevice(string name, string type, string status, string portName, long totalSize, long usedSize)
+    public ArchivumDevice(string name, string type, string status, string portName, long totalSize, long usedSize, DeviceList.EncryptionType encryptionType = DeviceList.EncryptionType.NoneEncryption)
     {
         Name = name;
         Type = type;
@@ -102,5 +112,6 @@ public class ArchivumDevice
         PortName = portName;
         TotalSize = totalSize;
         UsedSize = usedSize;
+        EncryptionType = encryptionType;
     }
 }

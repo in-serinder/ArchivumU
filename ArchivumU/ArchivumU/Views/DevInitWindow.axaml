@@ -4,14 +4,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:ArchivumU.ViewModels"
         mc:Ignorable="d" 
-        d:DesignWidth="650" 
-        d:DesignHeight="420"
-        Width="650"
-        Height="420"
-        MinWidth="650"
-        MaxHeight="420"
-        MinHeight="420"
-        MaxWidth="650"
+        d:DesignWidth="680" 
+        d:DesignHeight="500"
+        Width="680"
+        Height="500"
+        MinWidth="680"
+        MaxHeight="500"
+        MinHeight="500"
+        MaxWidth="680"
         x:Class="ArchivumU.Views.DevInitWindow"
         x:DataType="viewModels:DevInitViewModel"
         Icon="../Assets/init.ico"
@@ -94,7 +94,32 @@
                              Watermark="Max Length: 8 byte"
                              Text="{Binding Item.Password}"/>
                 </StackPanel>
+                <!-- 是否启用加密  -->
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Classes="Label" Text="{Binding I18n.EnableEncryption_i8n,StringFormat='{}{0}:'}"/>
+                    </StackPanel>
+                    <CheckBox IsChecked="{Binding Item.EnableEncryption}" VerticalAlignment="Center"/>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="#666"
+                        FontSize="10"
+                        Text="{Binding I18n.EnableEncryptionConfirm}"></TextBlock>
+
+                </StackPanel>
+                <!-- 加密算法 -->
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Classes="Label" Text="{Binding I18n.EncryptionAlgorithm,StringFormat='{}{0}:'}"/>
+                    <ComboBox 
+                        ItemsSource="{Binding Item.EncryptionAlgoritems}" 
+                        SelectedItem="{Binding Item.EncryptionAlgorithm}"
+                        Width="160"
+                        MinHeight="24"
+                        Padding="6 3"
+                        FontSize="12"
+                        PlaceholderText="请选择"/>                </StackPanel>
             </StackPanel>
+            
         </Border>
 
         <!-- 按钮区域 -->

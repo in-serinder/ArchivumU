@@ -111,7 +111,7 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <!-- 设备列表 - 可伸缩 -->
-                <ColumnDefinition Width="200" MinWidth="180" MaxWidth="300" />
+                <ColumnDefinition Width="220" MinWidth="180" MaxWidth="300" />
                 <!-- 分界线 - GridSplitter -->
                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                 <!-- 设备列表子集 - 占用剩余空间 -->

@@ -300,4 +300,13 @@
     <data name="_enable_password" xml:space="preserve">
         <value>启用密码</value>
     </data>
+    <data name="_enable_encryption" xml:space="preserve">
+        <value>启用加密</value>
+    </data>
+    <data name="_enable_enc_confim" xml:space="preserve">
+        <value>确认加密？ 初始化后不可更改</value>
+    </data>
+    <data name="_enc_argo" xml:space="preserve">
+        <value>加密算法</value>
+    </data>
 </root>

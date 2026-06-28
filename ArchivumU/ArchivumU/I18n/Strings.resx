@@ -306,4 +306,13 @@
     <data name="_enable_password" xml:space="preserve">
         <value>Enable Password</value>
     </data>
+    <data name="_enable_encryption" xml:space="preserve">
+        <value>Enable Encryption</value>
+    </data>
+    <data name="_enable_enc_confim" xml:space="preserve">
+        <value>Confirm Encryption? After Initialization, It Cannot Be Changed Any More</value>
+    </data>
+    <data name="_enc_argo" xml:space="preserve">
+        <value>Encryption Algorithm</value>
+    </data>
 </root>
