@@ -147,6 +147,7 @@ public class I18nViewModel : ViewModelBase
             OnPropertyChanged(nameof(EnableEncryption_i8n));
             OnPropertyChanged(nameof(EnableEncryptionConfirm));
             OnPropertyChanged(nameof(EncryptionAlgorithm));
+            OnPropertyChanged(nameof(Done));
             
             // 状态和错误
             OnPropertyChanged(nameof(Size));
@@ -169,7 +170,9 @@ public class I18nViewModel : ViewModelBase
             OnPropertyChanged(nameof(SerialPortDisconnected));
             OnPropertyChanged(nameof(Authentication));
             OnPropertyChanged(nameof(AuthenticationFailed));
-            
+            OnPropertyChanged(nameof(Processing));
+            OnPropertyChanged(nameof(Waiting));
+            OnPropertyChanged(nameof(FatalError));
         }
 
         private string GetString(string key)
@@ -318,6 +321,7 @@ public class I18nViewModel : ViewModelBase
         public string EnableEncryption_i8n => GetString("_enable_encryption");
         public string EnableEncryptionConfirm => GetString("_enable_enc_confim");
         public string EncryptionAlgorithm => GetString("_enc_argo");
+        public string Done => GetString("_done");
         
         // 状态和错误
         public string Size => GetString("_size");
@@ -338,6 +342,10 @@ public class I18nViewModel : ViewModelBase
         public string AddressError => GetString("_address_error");
         public string ChipNoResponse => GetString("_chip_no_response");
         public string SerialPortDisconnected => GetString("_serial_port_disconnected");
+        public string Processing => GetString("_process");
+        public string Waiting => GetString("_wait");
+        public string FatalError => GetString("_fatal");
+        
         
     
 }

@@ -37,6 +37,8 @@ namespace ArchivumU.Views
            string test = new RC4EncHelperModel().Encrypt("Test", key);
            Debug.WriteLine($"RC4EncHelperModel ENC: {test}");
            Debug.WriteLine($"RC4EncHelperModel DEC: {new RC4EncHelperModel().Decrypt(test, key)}");
+           
+           new ProcessDialogWindow().Show();
         }
 
 

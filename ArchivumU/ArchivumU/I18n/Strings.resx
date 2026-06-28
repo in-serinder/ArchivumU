@@ -315,4 +315,16 @@
     <data name="_enc_argo" xml:space="preserve">
         <value>Encryption Algorithm</value>
     </data>
+    <data name="_process" xml:space="preserve">
+        <value>Processing</value>
+    </data>
+    <data name="_wait" xml:space="preserve">
+        <value>Waiting</value>
+    </data>
+    <data name="_fatal" xml:space="preserve">
+        <value>Fatal Error</value>
+    </data>
+    <data name="_done" xml:space="preserve">
+        <value>Done</value>
+    </data>
 </root>

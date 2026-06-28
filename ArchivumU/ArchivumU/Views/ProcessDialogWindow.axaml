@@ -1,0 +1,129 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:ArchivumU.ViewModels"
+        mc:Ignorable="d" 
+        d:DesignWidth="500" 
+        d:DesignHeight="200"
+        Width="500" 
+        Height="200"
+        CanResize="False"
+        Icon="../Assets/warn.ico"
+        x:Class="ArchivumU.Views.ProcessDialogWindow"
+        x:DataType="viewModels:ProcessMsgViewModel"
+        Title="{Binding I18n.Processing}">
+    <Window.Styles>
+        <!-- 主按钮样式（完成按钮） -->
+        <Style Selector="Button.primary-btn">
+            <Setter Property="Width" Value="80"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontFamily" Value="Segoe UI, sans-serif"/>
+        </Style>
+        <Style Selector="Button.primary-btn:pointerover">
+            <Setter Property="Background" Value="#1D4ED8"/>
+        </Style>
+        <Style Selector="Button.primary-btn:pressed">
+            <Setter Property="Background" Value="#1E40AF"/>
+        </Style>
+        
+        <!-- 次要按钮样式（取消按钮） -->
+        <Style Selector="Button.secondary-btn">
+            <Setter Property="Width" Value="80"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Background" Value="#F3F4F6"/>
+            <Setter Property="Foreground" Value="#374151"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontFamily" Value="Segoe UI, sans-serif"/>
+        </Style>
+        <Style Selector="Button.secondary-btn:pointerover">
+            <Setter Property="Background" Value="#E5E7EB"/>
+        </Style>
+        <Style Selector="Button.secondary-btn:pressed">
+            <Setter Property="Background" Value="#D1D5DB"/>
+        </Style>
+        
+        <Style Selector="ProgressBar">
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Background" Value="#E8E8E8"/>
+            <Setter Property="Foreground" Value="#2563EB"/>
+        </Style>
+    </Window.Styles>
+    
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- 内容区域 -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- 图标 -->
+            <Border Grid.Column="0" 
+                    Width="48" 
+                    Height="48" 
+                    CornerRadius="12" 
+                    IsVisible="True">
+                <Svg Path="{Binding Process_Cur_Icon}" 
+                      Width="64" 
+                      Height="64" 
+                      />
+            </Border>
+            
+            <!-- 信息框 -->
+            <StackPanel Grid.Column="2" 
+                        VerticalAlignment="Center">
+                
+                <TextBlock Text="{Binding Process_Cur_Task}" 
+                           FontSize="14" 
+                           FontWeight="Medium" 
+                           Foreground="#1F2937"/>
+                <ProgressBar Margin="0,8,0,0" 
+                             Maximum="100"
+                             Value="{Binding Process_Cur_Value}"
+                             IsIndeterminate="True"/>
+                <TextBlock Margin="0,8,0,0" 
+                           Text="{Binding Process_Cur_Status}" 
+                           FontSize="12" 
+                           Foreground="#6B7280"/>
+            </StackPanel>
+        </Grid>
+        
+        <!-- 按钮区域 -->
+        <StackPanel Grid.Row="1" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    Margin="0,16,0,0" 
+                    Spacing="12">
+            <Button Classes="secondary-btn" 
+                    Content="{Binding I18n.Cancel}"
+                    Name="BTNPDCancel"
+                    Click="BTNPDCancel_OnClick"/>
+            <Button Classes="primary-btn" 
+                    Content="{Binding I18n.Done}"/>
+        </StackPanel>
+    </Grid>
+</Window>

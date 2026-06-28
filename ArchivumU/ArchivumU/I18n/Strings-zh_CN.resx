@@ -309,4 +309,16 @@
     <data name="_enc_argo" xml:space="preserve">
         <value>加密算法</value>
     </data>
+    <data name="_process" xml:space="preserve">
+        <value>处理中</value>
+    </data>
+    <data name="_wait" xml:space="preserve">
+        <value>等待中</value>
+    </data>
+    <data name="_fatal" xml:space="preserve">
+        <value>致命错误</value>
+    </data>
+    <data name="_done" xml:space="preserve">
+        <value>完成</value>
+    </data>
 </root>
