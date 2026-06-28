@@ -254,7 +254,7 @@
                         <CheckBox Content="{Binding I18n.SaveSourceFile}" FontSize="11" />
                         <CheckBox Content="{Binding I18n.NotClone}" FontSize="11" />
                     </StackPanel>
-                    <Button Content="{Binding I18n.CloneStart}" HorizontalAlignment="Stretch" />
+                    <Button Content="{Binding I18n.CloneStart}" HorizontalAlignment="Stretch" Name="BTNDCCancel" Click="BTNDCCancel_OnClick"/>
                     <Button Content="{Binding I18n.Cancel}" HorizontalAlignment="Stretch" Classes="Secondary" />
                 </StackPanel>
             </Grid>

@@ -126,7 +126,7 @@
 
         <!-- 按钮区域 -->
         <StackPanel Grid.Row="12" Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
-            <Button Content="{Binding I18n.Cancel}" Name="BTNDICancel"/>
+            <Button Content="{Binding I18n.Cancel}" Name="BTNDICancel" Click="BTNDICancel_OnClick"/>
             <Button Content="{Binding I18n.Init}" Name="BTNDIInit" Classes="Primary"/>
         </StackPanel>
     </Grid>
