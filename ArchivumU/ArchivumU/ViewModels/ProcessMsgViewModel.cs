@@ -6,6 +6,9 @@ namespace ArchivumU.ViewModels;
 public class ProcessMsgViewModel : ViewModelBase
 {
     public I18nViewModel I18n => I18nViewModel.Instance;
+    
+    //全局单例
+    public static ProcessMsgViewModel Instance => new ProcessMsgViewModel();
 
     public enum Status
     {
@@ -28,6 +31,15 @@ public class ProcessMsgViewModel : ViewModelBase
         ProcessMsgIconSwitch();
     }
     
+    //有参传构造
+    public ProcessMsgViewModel(Status status,string Msg)
+    {
+        Process_Cur_Status = status;
+        ProcessMsgIconSwitch();
+        Process_Cur_Task = Msg;
+    }
+    
+    
     
     
     public void ProcessMsgIconSwitch()
@@ -46,5 +58,14 @@ public class ProcessMsgViewModel : ViewModelBase
                 Process_Cur_Icon = "../Assets/failed.svg";
                 break;
         }
+    }
+    
+    //外部调窗口修改信息
+    public void setProcessMsgWindow(Status status,string Msg,int ProcessValue)
+    {
+        Process_Cur_Status = status;
+        ProcessMsgIconSwitch();
+        Process_Cur_Task = Msg;
+        Process_Cur_Value = ProcessValue;
     }
 }
