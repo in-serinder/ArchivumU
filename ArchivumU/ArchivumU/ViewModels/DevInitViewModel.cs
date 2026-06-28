@@ -40,7 +40,7 @@ public class DevInitViewModelItem
     public int KeyNumberInBlock {get;set;} = 16; //可更改
     public int  BlockLengthLim {get;set;} = 20; //块名最长20个字符
     public bool EnablePassword {get;set;} = false;
-    public bool EnableEncryption {get;set;} = false;
+    // public bool EnableEncryption {get;set;} = false;
     public EncryptionType EncryptionAlgorithm {get;set;} = EncryptionType.NoneEncryption;
     
     public List<EncryptionType> EncryptionAlgoritems {get;set;} = new List<EncryptionType>((EncryptionType[])Enum.GetValues(typeof(EncryptionType)));
