@@ -1,10 +1,14 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using ArchivumU.Views; // 引入窗口
 
 namespace ArchivumU.ViewModels;
 
 public class ProcessMsgViewModel : ViewModelBase
 {
+    // 静态单例
+    public static ProcessMsgViewModel Instance { get; } = new ProcessMsgViewModel();
+
     public I18nViewModel I18n => I18nViewModel.Instance;
 
     public enum Status
@@ -30,7 +34,6 @@ public class ProcessMsgViewModel : ViewModelBase
         {
             _processCurStatus = value;
             OnPropertyChanged();
-            // 状态变更自动切换图标
             ProcessMsgIconSwitch();
         }
     }
@@ -49,9 +52,6 @@ public class ProcessMsgViewModel : ViewModelBase
         set { _processCurIcon = value; OnPropertyChanged(); }
     }
     #endregion
-
-    // 真正静态单例（全局快捷入口，不频繁new）
-    public static ProcessMsgViewModel Instance { get; } = new ProcessMsgViewModel();
 
     // 无参构造
     public ProcessMsgViewModel()
@@ -82,7 +82,7 @@ public class ProcessMsgViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// 更新进程窗口信息（外部调用）
+    /// 更新全局单例进度信息（常驻进度条用）
     /// </summary>
     public void SetProcessMsgWindow(Status status, string msg, int processValue)
     {
@@ -91,19 +91,17 @@ public class ProcessMsgViewModel : ViewModelBase
         Process_Cur_Value = processValue;
     }
 
-    #region 静态快捷调用（推荐，每次弹窗独立VM互不干扰）
-    /// <summary>
-    /// 快速打开独立进程提示窗口
-    /// </summary>
+    #region 静态快捷调用弹窗
     public static void ShowProcessWindow(Status status, string msg, int value = 0)
     {
         var vm = new ProcessMsgViewModel(status, msg);
         if (value != 0)
             vm.Process_Cur_Value = value;
 
-        // 这里替换成你对应的窗口，示例：
-        // var win = new ProcessMsgWindow(vm);
-        // win.Show();
+        var win = new ProcessDialogWindow(vm);
+        win.Show();
+        // 如需阻塞模态弹窗替换为：
+        // win.ShowDialog(App.Current.MainWindow);
     }
     #endregion
 }

@@ -40,7 +40,8 @@ namespace ArchivumU.Views
            
            // new ProcessDialogWindow().Show();
            // new ProcessDialogWindow().Show();
-           InfoDialogViewModel.Show(InfoDialogViewModel.InfoType.Success, "Success", "Test");
+           // InfoDialogViewModel.Show(InfoDialogViewModel.InfoType.Success, "Success", "Test");
+           ProcessMsgViewModel.ShowProcessWindow(ProcessMsgViewModel.Status.Processing, "测试任务", 20);
         }
 
 
