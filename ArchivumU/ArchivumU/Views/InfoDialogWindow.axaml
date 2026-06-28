@@ -1,0 +1,89 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:ArchivumU.ViewModels"
+        mc:Ignorable="d" 
+        d:DesignWidth="420" 
+        d:DesignHeight="200"
+        Width="420" 
+        Height="200"
+        CanResize="False"
+        x:Class="ArchivumU.Views.InfoDialogWindow"
+        x:DataType="viewModels:InfoDialogViewModel"
+        Title="{Binding InfoStatus}">
+    <Window.Styles>
+        <Style Selector="Button.confirm-btn">
+            <Setter Property="Width" Value="80"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontFamily" Value="Segoe UI, sans-serif"/>
+        </Style>
+        <Style Selector="Button.confirm-btn:pointerover">
+            <Setter Property="Background" Value="#1D4ED8"/>
+        </Style>
+        <Style Selector="Button.confirm-btn:pressed">
+            <Setter Property="Background" Value="#1E40AF"/>
+        </Style>
+    </Window.Styles>
+    
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- 消息区域 -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- 大图标 -->
+            <Border Grid.Column="0" 
+                    Width="56" 
+                    Height="56" 
+                    CornerRadius="14" >
+                <Svg Path="{Binding InfoIcon}" 
+                      Width="28" 
+                      Height="28" 
+                      />
+            </Border>
+            
+            <!-- 消息内容 上方为消息类型，下方为消息内容 -->
+            <StackPanel Grid.Column="2" 
+                        VerticalAlignment="Center">
+                <TextBlock Text="{Binding InfoMessage}" 
+                           FontSize="16" 
+                           FontWeight="Bold" 
+                           Foreground="#1F2937"/>
+                <TextBlock Margin="0,6,0,0" 
+                           Text="{Binding InfoText}" 
+                           FontSize="13" 
+                           Foreground="#6B7280" 
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Grid>
+        
+        <!-- 确认按钮 -->
+        <StackPanel Grid.Row="1" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    Margin="0,16,0,0">
+            <Button Classes="confirm-btn" 
+                    Content="{Binding I18n.Confirm}"  
+                    Name="BTNIDOK" 
+                    Click="BTNIDOK_OnClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

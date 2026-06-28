@@ -13,6 +13,8 @@ public partial class ProcessDialogWindow : Window
         InitializeComponent();
         DataContext = new ProcessMsgViewModel();
     }
+    
+    
 
     private void BTNPDCancel_OnClick(object? sender, RoutedEventArgs e)
     {

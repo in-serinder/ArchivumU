@@ -38,7 +38,9 @@ namespace ArchivumU.Views
            Debug.WriteLine($"RC4EncHelperModel ENC: {test}");
            Debug.WriteLine($"RC4EncHelperModel DEC: {new RC4EncHelperModel().Decrypt(test, key)}");
            
-           new ProcessDialogWindow().Show();
+           // new ProcessDialogWindow().Show();
+           // new ProcessDialogWindow().Show();
+           InfoDialogViewModel.Show(InfoDialogViewModel.InfoType.Success, "Success", "Test");
         }
 
 
