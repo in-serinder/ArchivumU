@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "f:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\upper_computer_software\\ArchivumU\\ArchivumU.csproj": {}
+    "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\upper_computer_software\\ArchivumU\\ArchivumU.csproj": {}
   },
   "projects": {
-    "f:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\upper_computer_software\\ArchivumU\\ArchivumU.csproj": {
+    "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\upper_computer_software\\ArchivumU\\ArchivumU.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "f:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\upper_computer_software\\ArchivumU\\ArchivumU.csproj",
+        "projectUniqueName": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\upper_computer_software\\ArchivumU\\ArchivumU.csproj",
         "projectName": "ArchivumU",
-        "projectPath": "f:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\upper_computer_software\\ArchivumU\\ArchivumU.csproj",
+        "projectPath": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\upper_computer_software\\ArchivumU\\ArchivumU.csproj",
         "packagesPath": "C:\\Users\\jyag\\.nuget\\packages\\",
-        "outputPath": "f:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\upper_computer_software\\ArchivumU\\obj\\",
+        "outputPath": "F:\\SYSFILE\\DeskTop\\Misc.Git\\ArchivumU\\upper_computer_software\\ArchivumU\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\jyag\\AppData\\Roaming\\NuGet\\NuGet.Config",

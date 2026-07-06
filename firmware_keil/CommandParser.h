@@ -1,6 +1,9 @@
 #ifndef __COMMAND_PARSER_H__
 #define __COMMAND_PARSER_H__
 
+#include "AI8G.h"
+#include "Serial.h"
+
 /*
 命令解析器
 AT+<指令>+<参数>
