@@ -72,9 +72,51 @@ INFO+<设备名>+<密码状态>+<接入计数>+<块数量>+<键值对数量> //
 设备名、密码状态、接入计数、块数量、键值对数量 STATUS+<当前任务> // 当前任务
 0空闲 1格式化 2读取 3写入 4创建 5删除 6更新 7全获取 RESULT+<结果> // 结果 0成功
 1失败 AUTH+<验证结果> // 验证结果 0成功 1失败 2未设置密码
-
-
-
 */
+
+// 主入口：解析串口传入的AT指令字符串并导航到对应函数
+void CMD_Parser(char *cmd);
+
+/*起始指令类*/
+void CMD_INIT(char *device_name, char *password);
+void CMD_ECHO(void);
+void CMD_INFO(void);
+void CMD_STATUS(void);
+
+/*身份验证指令类*/
+void CMD_AUTH_CREATE(char *password);
+void CMD_AUTH_VERIFY(char *password);
+void CMD_AUTH_ENABLE(void);
+void CMD_AUTH_DISABLE(void);
+void CMD_AUTH_VERIFYOUT(void);
+
+/*功能性CURD指令类 - 读取指令*/
+void CMD_READ(char *unit);
+void CMD_READ_BLOCK(char *block_id);
+void CMD_READ_KEY(char *block_id, char *key);
+
+/*功能性CURD指令类 - 写入指令*/
+void CMD_WRITE(char *block_id, char *key, char *key_value);
+
+/*功能性CURD指令类 - 创建指令*/
+void CMD_CREATE_BLOCK(char *block_name, char *block_size);
+void CMD_CREATE_KEY(char *block_flag, char *block_identifier, char *key,
+                    char *value);
+
+/*功能性CURD指令类 - 删除指令*/
+void CMD_DELETE_BLOCK(char *block_id);
+void CMD_DELETE_KEY(char *block_flag, char *block_identifier, char *key,
+                    char *value);
+
+/*功能性CURD指令类 - 更新指令*/
+void CMD_UPDATE_BLOCK(char *block_id);
+void CMD_UPDATE_KEY(char *block_id, char *key, char *key_value);
+
+/*全获取指令类*/
+void CMD_GET_ALL_BLOCK(void);
+
+/*格式化指令类*/
+void CMD_FORMAT_DEV(void);
+void CMD_FORMAT_BLOCK(char *block_flag, char *block_identifier);
 
 #endif // __COMMAND_PARSER_H__
