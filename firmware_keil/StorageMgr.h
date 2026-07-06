@@ -1,6 +1,6 @@
 #ifndef __STORAGE_MGR_H__
 #define __STORAGE_MGR_H__
-#include "24c64.h"
+#include "HW_24c64.h"
 /*
 --->单片机片内结构定义
 固定前几位
