@@ -321,4 +321,7 @@
     <data name="_done" xml:space="preserve">
         <value>完成</value>
     </data>
+    <data name="_init_A_add" xml:space="preserve">
+        <value>初始化/添加</value>
+    </data>
 </root>

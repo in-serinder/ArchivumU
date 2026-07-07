@@ -3,8 +3,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:ArchivumU.ViewModels"
-        mc:Ignorable="d" 
-        d:DesignWidth="680" 
+        mc:Ignorable="d"
+        d:DesignWidth="680"
         d:DesignHeight="500"
         Width="680"
         Height="500"
@@ -13,93 +13,94 @@
         x:DataType="viewModels:DevInitViewModel"
         Icon="../Assets/init.ico"
         Title="{Binding Title}">
-    
+
     <Window.Styles>
         <Style Selector="TextBlock.Label">
-            <Setter Property="Width" Value="250"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Width" Value="250" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="13" />
         </Style>
         <Style Selector="TextBox">
-            <Setter Property="Width" Value="160"/>
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="Padding" Value="6 6 6 6"/>
+            <Setter Property="Width" Value="160" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="6 6 6 6" />
             <!-- <Setter Property="Margin" Value="100 0 0 0"/> -->
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#D1D5DB"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#D1D5DB" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="CornerRadius" Value="4" />
         </Style>
         <Style Selector="Button">
-            <Setter Property="Width" Value="85"/>
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Margin" Value="4"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#D1D5DB"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Width" Value="85" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#D1D5DB" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="4" />
         </Style>
         <Style Selector="Button.Primary">
-            <Setter Property="Background" Value="#3B82F6"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#3B82F6"/>
+            <Setter Property="Background" Value="#3B82F6" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#3B82F6" />
         </Style>
     </Window.Styles>
 
     <Grid Margin="24" RowDefinitions="Auto,10,Auto,16,Auto,10,Auto,10,Auto,16,Auto,20,Auto">
         <!-- 标题区域 -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-            <TextBlock Text="{Binding I18n.InitDev}" FontSize="16" FontWeight="Bold"/>
+            <TextBlock Text="{Binding I18n.InitDev}" FontSize="16" FontWeight="Bold" />
             <!-- <TextBlock Text="{Binding Item.Portname}" FontSize="14" Foreground="#3B82F6"/> -->
             <!-- <ComboBox ItemsSource="{Binding Item.PortnameList}" SelectedItem="{Binding Item.Portname}"> -->
-                <ComboBox 
-                    FontSize="14" 
-                    Foreground="#3B82F6"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Padding="2"
-                    MinHeight="24"
-                    Margin="0"
-                    VerticalAlignment="Center"
-                    Name="CBINITCOMBO"
-                    DropDownClosed="CBINITCOMBO_OnDropDownClosed"
-                    ItemsSource="{Binding Item.PortnameList}" SelectedItem="{Binding Item.Portname}">
-                    <!-- 下拉框内部样式 -->
-                    <ComboBox.Styles>
-                        <Style Selector="ComboBoxItem">
-                            <Setter Property="FontSize" Value="14"/>
-                            <Setter Property="Foreground" Value="#3B82F6"/>
-                            <Setter Property="Padding" Value="4"/>
-                            <Setter Property="MinHeight" Value="24"/>
-                        </Style>
-                        <Style Selector="ComboBox /template/ Border#border">
-                            <Setter Property="BorderThickness" Value="0"/>
-                        </Style>
-                    </ComboBox.Styles>
-                </ComboBox>
+            <ComboBox
+                FontSize="14"
+                Foreground="#3B82F6"
+                Background="Transparent"
+                BorderThickness="0"
+                Padding="2"
+                MinHeight="24"
+                Margin="0"
+                VerticalAlignment="Center"
+                Name="CBINITCOMBO"
+                DropDownClosed="CBINITCOMBO_OnDropDownClosed"
+                ItemsSource="{Binding Item.PortnameList}" SelectedItem="{Binding Item.Portname}">
+                <!-- 下拉框内部样式 -->
+                <ComboBox.Styles>
+                    <Style Selector="ComboBoxItem">
+                        <Setter Property="FontSize" Value="14" />
+                        <Setter Property="Foreground" Value="#3B82F6" />
+                        <Setter Property="Padding" Value="4" />
+                        <Setter Property="MinHeight" Value="24" />
+                    </Style>
+                    <Style Selector="ComboBox /template/ Border#border">
+                        <Setter Property="BorderThickness" Value="0" />
+                    </Style>
+                </ComboBox.Styles>
+            </ComboBox>
         </StackPanel>
 
         <!-- 固件版本 -->
-        <TextBlock Grid.Row="2" Text="{Binding Item.FirmWareVersion}" FontSize="12" Foreground="#6B7280"/>
+        <TextBlock Grid.Row="2" Text="{Binding Item.FirmWareVersion}" FontSize="12" Foreground="#6B7280" />
 
         <!-- 设备名称 -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="12">
-            <TextBlock Classes="Label" Text="{Binding I18n.DevName,StringFormat='{}{0}:'}"/>
-            <TextBox Watermark="{Binding Item.DevName}" Text="{Binding Item.DevName}"/>
+            <TextBlock Classes="Label" Text="{Binding I18n.DevName,StringFormat='{}{0}:'}" />
+            <TextBox Watermark="{Binding Item.DevName}" Text="{Binding Item.DevName}" />
         </StackPanel>
 
         <!-- 每块密钥数量 -->
         <StackPanel Grid.Row="6" Orientation="Horizontal" Spacing="12">
-            <TextBlock Classes="Label" Text="{Binding I18n.AllocateTheNumberOfKeysPerBlock,StringFormat='{}{0}:'}"/>
-            <TextBox Watermark="{Binding Item.KeyNumberInBlock}" IsEnabled="False" Text="{Binding Item.KeyNumberInBlock}"/>
+            <TextBlock Classes="Label" Text="{Binding I18n.AllocateTheNumberOfKeysPerBlock,StringFormat='{}{0}:'}" />
+            <TextBox Watermark="{Binding Item.KeyNumberInBlock}" IsEnabled="False"
+                     Text="{Binding Item.KeyNumberInBlock}" />
         </StackPanel>
 
         <!-- 块长度限制 -->
         <StackPanel Grid.Row="8" Orientation="Horizontal" Spacing="12">
-            <TextBlock Classes="Label" Text="{Binding I18n.BlockNameSizeLimit,StringFormat='{}{0}:'}"/>
-            <TextBox Watermark="{Binding Item.BlockLengthLim}" IsEnabled="False" Text="{Binding Item.BlockLengthLim}"/>
+            <TextBlock Classes="Label" Text="{Binding I18n.BlockNameSizeLimit,StringFormat='{}{0}:'}" />
+            <TextBox Watermark="{Binding Item.BlockLengthLim}" IsEnabled="False" Text="{Binding Item.BlockLengthLim}" />
         </StackPanel>
 
         <!-- 密码区域 -->
@@ -107,50 +108,56 @@
             <StackPanel Spacing="12">
                 <!-- 启用密码 -->
                 <StackPanel Orientation="Horizontal" Spacing="12">
-                    <TextBlock Classes="Label" Text="{Binding I18n.EnablePassword,StringFormat='{}{0}:'}"/>
-                    <CheckBox IsChecked="{Binding Item.EnablePassword}" VerticalAlignment="Center" Name="CBENABLEPASSWORD" Click="CBENABLEPASSWORD_OnClick"/>
+                    <TextBlock Classes="Label" Text="{Binding I18n.EnablePassword,StringFormat='{}{0}:'}" />
+                    <CheckBox IsChecked="{Binding Item.EnablePassword}" VerticalAlignment="Center"
+                              Name="CBENABLEPASSWORD" Click="CBENABLEPASSWORD_OnClick" />
                 </StackPanel>
                 <!-- 密码输入框 -->
                 <StackPanel Orientation="Horizontal" Spacing="12">
-                    <TextBlock Classes="Label" Text="{Binding I18n.Password,StringFormat='{}{0}:'}"/>
-                    <TextBox IsEnabled="{Binding Item.EnablePassword}" 
+                    <TextBlock Classes="Label" Text="{Binding I18n.Password,StringFormat='{}{0}:'}" />
+                    <TextBox IsEnabled="{Binding Item.EnablePassword}"
                              Watermark="Max Length: 8 byte"
-                             Text="{Binding Item.Password}"/>
+                             Text="{Binding Item.Password}" />
                 </StackPanel>
                 <Separator
-                    BorderBrush="#D1D5DB" BorderThickness="1"></Separator>
+                    BorderBrush="#D1D5DB" BorderThickness="1">
+                </Separator>
                 <!-- 是否启用加密  -->
                 <StackPanel Orientation="Horizontal" Spacing="12">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Classes="Label" Text="{Binding I18n.EnableEncryption_i8n,StringFormat='{}{0}:'}"/>
+                        <TextBlock Classes="Label" Text="{Binding I18n.EnableEncryption_i8n,StringFormat='{}{0}:'}" />
                     </StackPanel>
                     <!-- <CheckBox IsChecked="{Binding Item.EnableEncryption}" VerticalAlignment="Center"/> -->
                     <TextBlock
                         VerticalAlignment="Center"
                         Foreground="#666"
                         FontSize="10"
-                        Text="{Binding I18n.EnableEncryptionConfirm}"></TextBlock>
+                        Text="{Binding I18n.EnableEncryptionConfirm}">
+                    </TextBlock>
 
                 </StackPanel>
                 <!-- 加密算法 -->
                 <StackPanel Orientation="Horizontal" Spacing="12">
-                    <TextBlock Classes="Label" Text="{Binding I18n.EncryptionAlgorithm,StringFormat='{}{0}:'}"/>
-                    <ComboBox 
-                        ItemsSource="{Binding Item.EncryptionAlgoritems}" 
+                    <TextBlock Classes="Label" Text="{Binding I18n.EncryptionAlgorithm,StringFormat='{}{0}:'}" />
+                    <ComboBox
+                        ItemsSource="{Binding Item.EncryptionAlgoritems}"
                         SelectedItem="{Binding Item.EncryptionAlgorithm}"
                         Width="160"
                         MinHeight="24"
                         Padding="6 3"
                         FontSize="12"
-                        PlaceholderText="请选择"/>                </StackPanel>
+                        PlaceholderText="请选择" />
+                </StackPanel>
             </StackPanel>
-            
+
         </Border>
 
         <!-- 按钮区域 -->
         <StackPanel Grid.Row="12" Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
-            <Button Content="{Binding I18n.Cancel}" Name="BTNDICancel" Click="BTNDICancel_OnClick"/>
-            <Button Content="{Binding I18n.Init}" Name="BTNDIInit" Classes="Primary" Click="BTNDIInit_OnClick"/>
+            <Button Content="{Binding I18n.Cancel}" Name="BTNDICancel" VerticalAlignment="Center"
+                    HorizontalAlignment="Center" Click="BTNDICancel_OnClick" />
+            <Button Content="{Binding I18n.InitAdd}" Name="BTNDIInit" Width="100" VerticalAlignment="Center"
+                    HorizontalAlignment="Center" Classes="Primary" Click="BTNDIInit_OnClick" />
         </StackPanel>
     </Grid>
 </Window>

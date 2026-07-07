@@ -148,6 +148,7 @@ public class I18nViewModel : ViewModelBase
             OnPropertyChanged(nameof(EnableEncryptionConfirm));
             OnPropertyChanged(nameof(EncryptionAlgorithm));
             OnPropertyChanged(nameof(Done));
+            OnPropertyChanged(nameof(InitAdd));
             
             // 状态和错误
             OnPropertyChanged(nameof(Size));
@@ -322,6 +323,7 @@ public class I18nViewModel : ViewModelBase
         public string EnableEncryptionConfirm => GetString("_enable_enc_confim");
         public string EncryptionAlgorithm => GetString("_enc_argo");
         public string Done => GetString("_done");
+        public string InitAdd => GetString("_init_A_add");
         
         // 状态和错误
         public string Size => GetString("_size");

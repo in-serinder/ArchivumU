@@ -327,4 +327,7 @@
     <data name="_done" xml:space="preserve">
         <value>Done</value>
     </data>
+    <data name="_init_A_add" xml:space="preserve">
+        <value>Initialize/Add</value>
+    </data>
 </root>
