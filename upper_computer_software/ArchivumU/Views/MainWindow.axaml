@@ -81,8 +81,8 @@
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="{Binding I18n.Device}">
-                <MenuItem Header="{Binding I18n.Refresh}" />
-                <MenuItem Header="{Binding I18n.Add}" />
+                <MenuItem Header="{Binding I18n.Refresh}"  Name="MIRefresh" Click="MIRefresh_OnClick" />
+                <MenuItem Header="{Binding I18n.Add}"  Name="MIADDDEV" Click="MIADDDEV_OnClick" />
                 <MenuItem Header="{Binding I18n.Remove}" />
                 <MenuItem Header="{Binding I18n.Rename}" />
                 <MenuItem Header="{Binding I18n.BackupToLocal}" />

@@ -52,7 +52,33 @@
         <!-- 标题区域 -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
             <TextBlock Text="{Binding I18n.InitDev}" FontSize="16" FontWeight="Bold"/>
-            <TextBlock Text="{Binding Item.Portname}" FontSize="14" Foreground="#3B82F6"/>
+            <!-- <TextBlock Text="{Binding Item.Portname}" FontSize="14" Foreground="#3B82F6"/> -->
+            <!-- <ComboBox ItemsSource="{Binding Item.PortnameList}" SelectedItem="{Binding Item.Portname}"> -->
+                <ComboBox 
+                    FontSize="14" 
+                    Foreground="#3B82F6"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="2"
+                    MinHeight="24"
+                    Margin="0"
+                    VerticalAlignment="Center"
+                    Name="CBINITCOMBO"
+                    DropDownClosed="CBINITCOMBO_OnDropDownClosed"
+                    ItemsSource="{Binding Item.PortnameList}" SelectedItem="{Binding Item.Portname}">
+                    <!-- 下拉框内部样式 -->
+                    <ComboBox.Styles>
+                        <Style Selector="ComboBoxItem">
+                            <Setter Property="FontSize" Value="14"/>
+                            <Setter Property="Foreground" Value="#3B82F6"/>
+                            <Setter Property="Padding" Value="4"/>
+                            <Setter Property="MinHeight" Value="24"/>
+                        </Style>
+                        <Style Selector="ComboBox /template/ Border#border">
+                            <Setter Property="BorderThickness" Value="0"/>
+                        </Style>
+                    </ComboBox.Styles>
+                </ComboBox>
         </StackPanel>
 
         <!-- 固件版本 -->
@@ -67,13 +93,13 @@
         <!-- 每块密钥数量 -->
         <StackPanel Grid.Row="6" Orientation="Horizontal" Spacing="12">
             <TextBlock Classes="Label" Text="{Binding I18n.AllocateTheNumberOfKeysPerBlock,StringFormat='{}{0}:'}"/>
-            <TextBox Watermark="{Binding Item.KeyNumberInBlock}" Text="{Binding Item.KeyNumberInBlock}"/>
+            <TextBox Watermark="{Binding Item.KeyNumberInBlock}" IsEnabled="False" Text="{Binding Item.KeyNumberInBlock}"/>
         </StackPanel>
 
         <!-- 块长度限制 -->
         <StackPanel Grid.Row="8" Orientation="Horizontal" Spacing="12">
             <TextBlock Classes="Label" Text="{Binding I18n.BlockNameSizeLimit,StringFormat='{}{0}:'}"/>
-            <TextBox Watermark="{Binding Item.BlockLengthLim}" Text="{Binding Item.BlockLengthLim}"/>
+            <TextBox Watermark="{Binding Item.BlockLengthLim}" IsEnabled="False" Text="{Binding Item.BlockLengthLim}"/>
         </StackPanel>
 
         <!-- 密码区域 -->
@@ -82,7 +108,7 @@
                 <!-- 启用密码 -->
                 <StackPanel Orientation="Horizontal" Spacing="12">
                     <TextBlock Classes="Label" Text="{Binding I18n.EnablePassword,StringFormat='{}{0}:'}"/>
-                    <CheckBox IsChecked="{Binding Item.EnablePassword}" VerticalAlignment="Center"/>
+                    <CheckBox IsChecked="{Binding Item.EnablePassword}" VerticalAlignment="Center" Name="CBENABLEPASSWORD" Click="CBENABLEPASSWORD_OnClick"/>
                 </StackPanel>
                 <!-- 密码输入框 -->
                 <StackPanel Orientation="Horizontal" Spacing="12">
@@ -124,7 +150,7 @@
         <!-- 按钮区域 -->
         <StackPanel Grid.Row="12" Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
             <Button Content="{Binding I18n.Cancel}" Name="BTNDICancel" Click="BTNDICancel_OnClick"/>
-            <Button Content="{Binding I18n.Init}" Name="BTNDIInit" Classes="Primary"/>
+            <Button Content="{Binding I18n.Init}" Name="BTNDIInit" Classes="Primary" Click="BTNDIInit_OnClick"/>
         </StackPanel>
     </Grid>
 </Window>

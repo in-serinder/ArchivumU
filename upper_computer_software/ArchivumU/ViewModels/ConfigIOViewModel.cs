@@ -9,12 +9,13 @@ namespace ArchivumU.Services;
 
 public class ConfigJsonService
 {
-    // 配置文件路径：%AppData%/ArchivumU/configs.json
     private readonly string _filePath;
     private readonly JsonSerializerOptions _jsonOptions;
     
-    // 全局静态单例模式
     public static ConfigJsonService Instance { get; } = new ConfigJsonService();
+
+    // 设备列表配置文件名
+    private readonly string _deviceListFilePath;
 
     public ConfigJsonService()
     {
@@ -22,6 +23,7 @@ public class ConfigJsonService
         string dir = Path.Combine(appData, "ArchivumU");
         Directory.CreateDirectory(dir);
         _filePath = Path.Combine(dir, "configs.json");
+        _deviceListFilePath = Path.Combine(dir, "device_list.json");
 
         _jsonOptions = new JsonSerializerOptions
         {
@@ -30,11 +32,9 @@ public class ConfigJsonService
         };
     }
 
-    #region 底层读写
-    /// <summary>读取全部配置集合</summary>
+    #region 底层读写（原有）
     public List<ConfigItem> LoadAll()
     {
-        if (!File.Exists(_filePath))
         if (!File.Exists(_filePath))
             return new List<ConfigItem>();
 
@@ -42,7 +42,6 @@ public class ConfigJsonService
         return JsonSerializer.Deserialize<List<ConfigItem>>(json, _jsonOptions) ?? new List<ConfigItem>();
     }
 
-    /// <summary>覆盖写入全部配置集合</summary>
     private void SaveAll(List<ConfigItem> list)
     {
         string json = JsonSerializer.Serialize(list, _jsonOptions);
@@ -50,8 +49,7 @@ public class ConfigJsonService
     }
     #endregion
 
-    #region CURD 操作
-    /// <summary>创建/新增配置（不存在则添加）</summary>
+    #region CURD 操作（原有）
     public bool Create(ConfigItem item)
     {
         var list = LoadAll();
@@ -63,14 +61,12 @@ public class ConfigJsonService
         return true;
     }
 
-    /// <summary>根据键查询单条配置，不存在返回null</summary>
     public ConfigItem? Read(string itemName)
     {
         var list = LoadAll();
         return list.FirstOrDefault(x => x.ConfigItemName == itemName);
     }
 
-    /// <summary>更新指定键的值，不存在返回false</summary>
     public bool Update(string itemName, string newValue)
     {
         var list = LoadAll();
@@ -82,7 +78,6 @@ public class ConfigJsonService
         return true;
     }
 
-    /// <summary>删除指定键配置</summary>
     public bool Delete(string itemName)
     {
         var list = LoadAll();
@@ -94,7 +89,6 @@ public class ConfigJsonService
         return true;
     }
 
-    /// <summary>根据键 存在则更新，不存在则新增（Upsert）</summary>
     public void Upsert(string itemName, string itemValue)
     {
         var list = LoadAll();
@@ -110,18 +104,127 @@ public class ConfigJsonService
         SaveAll(list);
     }
     #endregion
+
+    #region 设备列表操作（新增）
+    /// <summary>加载设备列表配置</summary>
+    private SaveDeviceListConfig LoadDeviceList()
+    {
+        if (!File.Exists(_deviceListFilePath))
+            return new SaveDeviceListConfig();
+
+        try
+        {
+            string json = File.ReadAllText(_deviceListFilePath);
+            return JsonSerializer.Deserialize<SaveDeviceListConfig>(json, _jsonOptions) ?? new SaveDeviceListConfig();
+        }
+        catch
+        {
+            return new SaveDeviceListConfig();
+        }
+    }
+
+    /// <summary>保存设备列表配置</summary>
+    private void SaveDeviceList(SaveDeviceListConfig config)
+    {
+        try
+        {
+            string json = JsonSerializer.Serialize(config, _jsonOptions);
+            File.WriteAllText(_deviceListFilePath, json);
+        }
+        catch { }
+    }
+
+    /// <summary>添加设备配置</summary>
+    public bool AddDevice(DeviceConfig device)
+    {
+        if (string.IsNullOrEmpty(device.Name) || string.IsNullOrEmpty(device.Port))
+            return false;
+
+        var config = LoadDeviceList();
+        if (config.SaveDeviceList.Any(d => d.Name == device.Name || d.Port == device.Port))
+            return false;
+
+        config.SaveDeviceList.Add(device);
+        SaveDeviceList(config);
+        return true;
+    }
+
+    /// <summary>更新设备配置</summary>
+    public bool UpdateDevice(string deviceName, DeviceConfig newDevice)
+    {
+        var config = LoadDeviceList();
+        int index = config.SaveDeviceList.FindIndex(d => d.Name == deviceName);
+        if (index == -1)
+            return false;
+
+        config.SaveDeviceList[index] = newDevice;
+        SaveDeviceList(config);
+        return true;
+    }
+
+    /// <summary>删除设备配置</summary>
+    public bool DeleteDevice(string deviceName)
+    {
+        var config = LoadDeviceList();
+        var device = config.SaveDeviceList.FirstOrDefault(d => d.Name == deviceName);
+        if (device == null)
+            return false;
+
+        config.SaveDeviceList.Remove(device);
+        SaveDeviceList(config);
+        return true;
+    }
+
+    /// <summary>根据名称获取设备配置</summary>
+    public DeviceConfig? GetDeviceByName(string deviceName)
+    {
+        var config = LoadDeviceList();
+        return config.SaveDeviceList.FirstOrDefault(d => d.Name == deviceName);
+    }
+
+    /// <summary>根据端口获取设备配置</summary>
+    public DeviceConfig? GetDeviceByPort(string port)
+    {
+        var config = LoadDeviceList();
+        return config.SaveDeviceList.FirstOrDefault(d => d.Port == port);
+    }
+
+    /// <summary>获取所有设备配置列表</summary>
+    public List<DeviceConfig> GetAllDevices()
+    {
+        var config = LoadDeviceList();
+        return config.SaveDeviceList.ToList();
+    }
+
+    /// <summary>检查设备是否存在</summary>
+    public bool DeviceExists(string deviceName)
+    {
+        var config = LoadDeviceList();
+        return config.SaveDeviceList.Any(d => d.Name == deviceName);
+    }
+
+    /// <summary>清空所有设备配置</summary>
+    public void ClearAllDevices()
+    {
+        var config = new SaveDeviceListConfig();
+        SaveDeviceList(config);
+    }
+
+    /// <summary>获取设备总数</summary>
+    public int GetDeviceCount()
+    {
+        var config = LoadDeviceList();
+        return config.SaveDeviceList.Count;
+    }
+    #endregion
 }
 
-/// <summary>单条配置项基础接口</summary>
 public interface IConfigJSONIO
 {
-    /// <summary>配置键名，唯一标识</summary>
     string ConfigItemName { get; set; }
-    /// <summary>配置存储值</summary>
     string ConfigItemValue { get; set; }
 }
 
-/// <summary>单条配置实体，纯数据</summary>
 public class ConfigItem : IConfigJSONIO
 {
     public string ConfigItemName { get; set; } = string.Empty;
@@ -134,4 +237,23 @@ public class ConfigItem : IConfigJSONIO
         ConfigItemName = name;
         ConfigItemValue = value;
     }
+}
+
+public class StorageInfo
+{
+    public long TotalSize { get; set; }
+    public long UsedSize { get; set; }
+}
+
+public class DeviceConfig
+{
+    public string Name { get; set; } = string.Empty;
+    public string Port { get; set; } = string.Empty;
+    public string EncryptionMode { get; set; } = "NON";
+    public StorageInfo Storage { get; set; } = new StorageInfo();
+}
+
+public class SaveDeviceListConfig
+{
+    public List<DeviceConfig> SaveDeviceList { get; set; } = new List<DeviceConfig>();
 }

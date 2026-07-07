@@ -8,7 +8,7 @@
              xmlns:svg1="clr-namespace:Svg;assembly=Svg.Custom"
              xmlns:viewmodels="clr-namespace:ArchivumU.ViewModels"
              x:Class="ArchivumU.Views.Components.DeviceList"
-             x:DataType="viewmodels:MainWindowViewModel">
+             x:DataType="viewmodels:DeviceListViewModel">
         <!-- 需要额外添加viewmodels -->
     <DockPanel LastChildFill="True" >
         <!-- 统计信息 - 固定在底部（必须放在前面声明） -->
@@ -40,9 +40,11 @@
                      Background="Transparent"
                      SelectionMode="Single"
                      HorizontalAlignment="Stretch"
+                     ItemsSource="{Binding DeviceList}"
                      SelectionChanged="OnDeviceSelected">
                 <ListBox.ItemTemplate>
-                    <DataTemplate DataType="components:ArchivumDevice" >
+                    <!-- <DataTemplate DataType="components:ArchivumDevice" > -->
+                        <DataTemplate  >
                         <Border Margin="2 4" 
                                 Padding="6"
                                 CornerRadius="6"

@@ -1,8 +1,10 @@
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using ArchivumU.I18n;
 using ArchivumU.Models;
 using ArchivumU.ViewModels;
+using ArchivumU.Views.Components;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
@@ -17,6 +19,9 @@ namespace ArchivumU.Views
             InitializeComponent();
             // 订阅文化变化事件
             DataContext = new MainWindowViewModel();
+            
+            // 初始化
+            DialogMgrModel.Initialize(this);
             
             string key = "1234567890123456";
             string iv = "1234567890123456";
@@ -41,25 +46,27 @@ namespace ArchivumU.Views
            // new ProcessDialogWindow().Show();
            // new ProcessDialogWindow().Show();
            // InfoDialogViewModel.Show(InfoDialogViewModel.InfoType.Success, "Success", "Test");
-           ProcessMsgViewModel.ShowProcessWindow(ProcessMsgViewModel.Status.Processing, "测试任务", 20);
+           // ProcessMsgViewModel.ShowProcessWindow(ProcessMsgViewModel.Status.Processing, "测试任务", 20);
+           
+           
+
+           
         }
 
-
-        private void showCloneWindow()
-        {
-            // Window? ownerWindow = this.FindAncestorOfType<Window>();
-            // if (ownerWindow is null)
-            //     return;
-            //
-            // // var mainVm = DataContext as MainWindowViewModel;
-            // var cloneWin = new DeviceClone();
-            // cloneWin.ShowDialog(ownerWindow);
-            new DeviceCloneWindow().Show();
-        }
         
         private void MIDevClone_OnClick(object? sender, RoutedEventArgs e)
         {
-            showCloneWindow();
+            new DeviceCloneWindow().Show();
+        }
+
+        private async void MIADDDEV_OnClick(object? sender, RoutedEventArgs e)
+        {
+            await DialogMgrModel.ShowDialogAsync<DevInitWindow>(new DevInitWindow("Com1"));
+        }
+
+        private void MIRefresh_OnClick(object? sender, RoutedEventArgs e)
+        {
+            DeviceListViewModel.Instance.RefuseDevice();
         }
     }
 }

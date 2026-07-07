@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using ArchivumU.Models;
+using ArchivumU.Services;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Selection;
@@ -15,43 +17,43 @@ namespace ArchivumU.Views.Components;
 public partial class DeviceList : UserControl
 {
     private feature_string feature_string = new feature_string();
+    //共享
 
-    public enum EncryptionType
-    {
-        NoneEncryption,
-        AES128,
-        XOR,
-        Caesar,
-        RC4
-    }
+
     
-    public ObservableCollection<ArchivumDevice> Devices { get; } = new ObservableCollection<ArchivumDevice>();
+    // public ObservableCollection<ArchivumDevice> Devices { get; } = new ObservableCollection<ArchivumDevice>();
     // 设备选中事件 - 供外部订阅
     public event EventHandler<ArchivumDevice>? DeviceSelected;
     
     public DeviceList()
     {
         InitializeComponent();
-        
-        Devices.Add(new ArchivumDevice("USB", "USB", "Connected", "USB1", 1000000000, 500000000));
-        Devices.Add(new ArchivumDevice("SD", "SD", "Connected", "SD1", 1000000000, 500000000));
-        Devices.Add(new ArchivumDevice("HDD", "HDD", "Connected", "HDD1", 1000000000000, 500000000000));
-        LBDeviceList.ItemsSource = Devices;
+        //
+        // Devices.Add(new ArchivumDevice("USB", "USB", "Connected", "USB1", 1000000000, 500000000));
+        // Devices.Add(new ArchivumDevice("SD", "SD", "Connected", "SD1", 1000000000, 500000000));
+        // Devices.Add(new ArchivumDevice("HDD", "HDD", "Connected", "HDD1", 1000000000000, 500000000000));
+        DeviceListViewModel.Instance.RefuseDevice();
+        DataContext = this;
+        LBDeviceList.ItemsSource = DeviceListViewModel.Instance.DeviceList;
     }
 
-    private void showAuthWindow(string device, string portName)
-    {
-        Window? ownerWindow = this.FindAncestorOfType<Window>();
-        if (ownerWindow is null)
-            return;
 
-        var mainVm = DataContext as MainWindowViewModel;
-        var authWin = new AuthWindow(mainVm, device, portName);
-        authWin.ShowDialog(ownerWindow);
-    }
+    
+ 
+
+    // private void showAuthWindow(string device, string portName)
+    // {
+    //     Window? ownerWindow = this.FindAncestorOfType<Window>();
+    //     if (ownerWindow is null)
+    //         return;
+    //
+    //     var mainVm = DataContext as MainWindowViewModel;
+    //     var authWin = new AuthWindow(mainVm, device, portName);
+    //     authWin.ShowDialog(ownerWindow);
+    // }
     
     // 设备选中事件处理
-    private void OnDeviceSelected(object? sender, SelectionChangedEventArgs e)
+    private async void OnDeviceSelected(object? sender, SelectionChangedEventArgs e)
     {
         if (LBDeviceList.SelectedItem is ArchivumDevice selectedDevice)
         {
@@ -61,7 +63,9 @@ public partial class DeviceList : UserControl
             // 触发外部事件通知
             DeviceSelected?.Invoke(this, selectedDevice);
             
-            showAuthWindow(selectedDevice.Name, selectedDevice.PortName);
+            // showAuthWindow(selectedDevice.Name, selectedDevice.PortName);
+            await DialogMgrModel.ShowDialogAsync <AuthWindow>(new AuthWindow(selectedDevice.Name, selectedDevice.PortName));
+            
         }
     }
     
@@ -82,36 +86,36 @@ public partial class DeviceList : UserControl
 
 
 
-public class ArchivumDevice
-{
-    public string Name { get; set; }
-    public string Type { get; set; }
-    public string Status { get; set; }
-    public string PortName { get; set; }
-    public long TotalSize { get; set; }
-    public long UsedSize { get; set; }
-    public DeviceList.EncryptionType EncryptionType { get; set; } = DeviceList.EncryptionType.NoneEncryption;
-    
-    
-    
-    public string TotalSizeString => feature_string.formatSizeToString(TotalSize);
-    public string UsedSizeString => feature_string.formatSizeToString(UsedSize);
-    public string AvailableSizePercentString => feature_string.formatSizeToString(UsedSize / TotalSize*100)+"%";
-    
-    public ArchivumDevice()
-    {
-        
-    }
-    
-    
-    public ArchivumDevice(string name, string type, string status, string portName, long totalSize, long usedSize, DeviceList.EncryptionType encryptionType = DeviceList.EncryptionType.NoneEncryption)
-    {
-        Name = name;
-        Type = type;
-        Status = status;
-        PortName = portName;
-        TotalSize = totalSize;
-        UsedSize = usedSize;
-        EncryptionType = encryptionType;
-    }
-}
+// public class ArchivumDevice
+// {
+//     public string Name { get; set; }
+//     public string Type { get; set; }
+//     public string Status { get; set; }
+//     public string PortName { get; set; }
+//     public long TotalSize { get; set; }
+//     public long UsedSize { get; set; }
+//     public DeviceList.EncryptionType EncryptionType { get; set; } = DeviceList.EncryptionType.NoneEncryption;
+//     
+//     
+//     
+//     public string TotalSizeString => feature_string.formatSizeToString(TotalSize);
+//     public string UsedSizeString => feature_string.formatSizeToString(UsedSize);
+//     public string AvailableSizePercentString => feature_string.formatSizeToString(UsedSize / TotalSize*100)+"%";
+//     
+//     public ArchivumDevice()
+//     {
+//         
+//     }
+//     
+//     
+//     public ArchivumDevice(string name, string type, string status, string portName, long totalSize, long usedSize, DeviceList.EncryptionType encryptionType = DeviceList.EncryptionType.NoneEncryption)
+//     {
+//         Name = name;
+//         Type = type;
+//         Status = status;
+//         PortName = portName;
+//         TotalSize = totalSize;
+//         UsedSize = usedSize;
+//         EncryptionType = encryptionType;
+//     }
+// }

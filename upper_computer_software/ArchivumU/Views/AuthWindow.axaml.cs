@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using ArchivumU.Models;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using ArchivumU.ViewModels;
@@ -26,13 +27,14 @@ public partial class AuthWindow : Window
 
 
     // 带参构造，外部传参入口
-    public AuthWindow(MainWindowViewModel viewModel, string device, string portName)
+    public AuthWindow(string device, string portName)
     {
         InitializeComponent();
-        DataContext = viewModel;
         Device = device;
         PortName = portName;
         TBAuthOBJ.Text = $"{Device}@{PortName}";
+        var mainVm = DialogMgrModel.GetMainViewModel<MainWindowViewModel>();
+        DataContext = mainVm;
     }
 
 
