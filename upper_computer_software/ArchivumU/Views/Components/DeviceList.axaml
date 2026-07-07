@@ -9,9 +9,9 @@
              xmlns:viewmodels="clr-namespace:ArchivumU.ViewModels"
              x:Class="ArchivumU.Views.Components.DeviceList"
              x:DataType="viewmodels:DeviceListViewModel">
-        <!-- 需要额外添加viewmodels -->
+
     <DockPanel LastChildFill="True" >
-        <!-- 统计信息 - 固定在底部（必须放在前面声明） -->
+        <!-- 底部统计栏 -->
         <Border DockPanel.Dock="Bottom" 
                 Background="#f5f5f5" 
                 Padding="8 4"
@@ -23,122 +23,258 @@
                 <TextBlock Text="{Binding I18n.Device}" 
                            FontSize="11" 
                            Foreground="#9e9e9e" />
-                <TextBlock Text="0" 
+                <TextBlock Text="{Binding DeviceList.Count}" 
                            FontSize="11" 
                            Foreground="#757575" 
                            VerticalAlignment="Center" />
             </StackPanel>
         </Border>
-        
-        <!-- 设备列表 - 填充剩余空间 -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="2" HorizontalScrollBarVisibility="Disabled"
-                      HorizontalAlignment="Stretch">
-            <ListBox Name="LBDeviceList" 
-                     VerticalAlignment="Stretch"
-                     Padding="0"
-                     BorderThickness="0"
-                     Background="Transparent"
-                     SelectionMode="Single"
-                     HorizontalAlignment="Stretch"
-                     ItemsSource="{Binding DeviceList}"
-                     SelectionChanged="OnDeviceSelected">
-                <ListBox.ItemTemplate>
-                    <!-- <DataTemplate DataType="components:ArchivumDevice" > -->
-                        <DataTemplate  >
-                        <Border Margin="2 4" 
-                                Padding="6"
-                                CornerRadius="6"
-                                Background="#f5f5f5"
-                                BorderThickness="1"
-                                BorderBrush="#e0e0e0"
-                                HorizontalAlignment="Stretch">
-                            <Grid >
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                
-                                <!-- 设备图标 -->
-                                <Svg Grid.Column="0" 
-                                     Path="../../Assets/usb.svg" 
-                                     Width="24" 
-                                     Height="24" 
-                                     Margin="0 0 6 0" />
-                                
-                                <!-- 设备信息 -->
-                                <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2">
-                                    <!-- 设备名 -->
-                                    <TextBlock Text="{Binding Name}" 
-                                               FontSize="13" 
-                                               FontWeight="500" 
-                                               Foreground="#212121" />
-                                    <!-- 设备类型 -->
-                                    <TextBlock Text="{Binding Type}" 
-                                               FontSize="11" 
-                                               Foreground="#757575" />
-                                    <!-- 状态和端口 加密类型  -->
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="{Binding Status}" 
-                                                   FontSize="10" 
-                                                   Foreground="#616161" />
-                                        <TextBlock Text="{Binding PortName}" 
-                                                   FontSize="10" 
-                                                   Foreground="#9e9e9e" />
-                                        <TextBlock Text="{Binding EncryptionType}" 
-                                                   FontSize="10" 
-                                                   Foreground="#9e9e9e" />
+
+        <!-- 主体：列表+空白占位同层叠加，Grid撑满整宽 -->
+        <Grid Margin="2">
+            <!-- 设备列表 -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                          HorizontalScrollBarVisibility="Disabled"
+                          HorizontalAlignment="Stretch">
+                <ListBox Name="LBDeviceList" 
+                         VerticalAlignment="Stretch"
+                         HorizontalAlignment="Stretch"
+                         Padding="0"
+                         BorderThickness="0"
+                         Background="Transparent"
+                         SelectionMode="Single"
+                         ItemsSource="{Binding DeviceList}"
+                         SelectionChanged="OnDeviceSelected">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <!-- 关键1：Border HorizontalAlignment="Stretch" 撑满整行宽度 -->
+                            <Border Margin="2 4" 
+                                    Padding="6"
+                                    CornerRadius="6"
+                                    Background="#f5f5f5"
+                                    BorderThickness="1"
+                                    BorderBrush="#e0e0e0"
+                                    HorizontalAlignment="Stretch">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Svg Grid.Column="0" 
+                                         Path="../../Assets/usb.svg" 
+                                         Width="24" 
+                                         Height="24" 
+                                         Margin="0 0 6 0" />
+
+                                    <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2" HorizontalAlignment="Stretch">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontSize="13" 
+                                                   FontWeight="500" 
+                                                   Foreground="#212121" />
+                                        <TextBlock Text="{Binding Type}" 
+                                                   FontSize="11" 
+                                                   Foreground="#757575" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{Binding Status}" FontSize="10" Foreground="#616161" />
+                                            <TextBlock Text="{Binding PortName}" FontSize="10" Foreground="#9e9e9e" />
+                                            <TextBlock Text="{Binding EncryptionType}" FontSize="10" Foreground="#9e9e9e" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0 2 0 0">
+                                            <TextBlock Text="{Binding TotalSizeString}" FontSize="10" Foreground="#616161" />
+                                            <TextBlock Text="/" FontSize="10" Foreground="#e0e0e0" />
+                                            <TextBlock Text="{Binding UsedSizeString}" FontSize="10" Foreground="#424242" />
+                                            <TextBlock Text="{Binding AvailableSizePercentString}" FontSize="10" Foreground="#424242" />
+                                        </StackPanel>
                                     </StackPanel>
-                                    <!-- 存储信息 -->
-                                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0 2 0 0">
-                                        <TextBlock Text="{Binding TotalSizeString}" 
-                                                   FontSize="10" 
-                                                   Foreground="#616161" />
-                                        <TextBlock Text="/" FontSize="10" Foreground="#e0e0e0" />
-                                        <TextBlock Text="{Binding UsedSizeString}" 
-                                                   FontSize="10" 
-                                                   Foreground="#424242" />
-                                        <TextBlock Text="{Binding AvailableSizePercentString }" 
-                                                   FontSize="10" 
-                                                   Foreground="#424242" />
-                                    </StackPanel>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-                
-                <ListBox.Styles>
-                    <Style Selector="ListBoxItem">
-                        <Setter Property="Padding" Value="0" />
-                        <Setter Property="Margin" Value="0" />
-                        <Setter Property="Background" Value="Transparent" />
-                        <Setter Property="BorderThickness" Value="0" />
-                        <Setter Property="HorizontalAlignment" Value="Stretch" />
-                    </Style>
-                </ListBox.Styles>
-            </ListBox>
-        </ScrollViewer>
-        <!-- 无内容时显示的占位提示 -->
-        <Border x:Name="EmptyPlaceholder" 
-                Background="Transparent"
-                IsVisible="False">
-            <StackPanel Orientation="Vertical" 
-                        HorizontalAlignment="Center" 
-                        VerticalAlignment="Center" 
-                        Spacing="12">
-                <Svg Path="../../Assets/empty.svg" Width="48" Height="48"  />
-                <TextBlock Text="{Binding I18n.NoneContent, StringFormat='{}{0}'}"
-                           FontSize="13"
-                           Foreground="#6c757d"
-                           HorizontalAlignment="Center"
-                           FontWeight="400" />
-                <TextBlock Text="{Binding I18n.NoneContent}"
-                           FontSize="11"
-                           Foreground="#adb5bd"
-                           HorizontalAlignment="Center" 
-                           MaxWidth="200"
-                           TextWrapping="Wrap" />
-            </StackPanel>
-        </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+
+                    <ListBox.Styles>
+                        <Style Selector="ListBoxItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <!-- 关键2：列表项强制横向铺满 -->
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListBox.Styles>
+                </ListBox>
+            </ScrollViewer>
+
+            <!-- 空白占位，和列表同Grid层级居中覆盖 -->
+            <Border x:Name="EmptyPlaceholder" 
+                    Background="Transparent"
+                    IsVisible="{Binding DeviceList.Count}">
+                <StackPanel Orientation="Vertical" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center" 
+                            Spacing="12">
+                    <Svg Path="../../Assets/empty.svg" Width="48" Height="48"  />
+                    <TextBlock Text="{Binding I18n.NoneContent, StringFormat='{}{0}'}"
+                               FontSize="13"
+                               Foreground="#6c757d"
+                               HorizontalAlignment="Center"
+                               FontWeight="400" />
+                    <TextBlock Text="{Binding I18n.NoneContent}"
+                               FontSize="11"
+                               Foreground="#adb5bd"
+                               HorizontalAlignment="Center" 
+                               MaxWidth="200"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </Grid>
     </DockPanel>
 </UserControl>
+
+
+
+<!-- <UserControl xmlns="https://github.com/avaloniaui" -->
+<!--              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" -->
+<!--              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" -->
+<!--              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" -->
+<!--              xmlns:components="clr-namespace:ArchivumU.Views.Components" -->
+<!--              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" -->
+<!--              xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg.Skia" -->
+<!--              xmlns:svg1="clr-namespace:Svg;assembly=Svg.Custom" -->
+<!--              xmlns:viewmodels="clr-namespace:ArchivumU.ViewModels" -->
+<!--              x:Class="ArchivumU.Views.Components.DeviceList" -->
+<!--              x:DataType="viewmodels:DeviceListViewModel"> -->
+<!--         ~1~ 需要额外添加viewmodels @1@ -->
+<!--     <DockPanel LastChildFill="True" > -->
+<!--         ~1~ 统计信息 - 固定在底部（必须放在前面声明） @1@ -->
+<!--         <Border DockPanel.Dock="Bottom"  -->
+<!--                 Background="#f5f5f5"  -->
+<!--                 Padding="8 4" -->
+<!--                 BorderThickness="1 0 0 0" -->
+<!--                 BorderBrush="#e0e0e0"> -->
+<!--             <StackPanel Orientation="Horizontal"  -->
+<!--                         Spacing="4" -->
+<!--                         VerticalAlignment="Center"> -->
+<!--                 <TextBlock Text="{Binding I18n.Device}"  -->
+<!--                            FontSize="11"  -->
+<!--                            Foreground="#9e9e9e" /> -->
+<!--                 <TextBlock Text="0"  -->
+<!--                            FontSize="11"  -->
+<!--                            Foreground="#757575"  -->
+<!--                            VerticalAlignment="Center" /> -->
+<!--             </StackPanel> -->
+<!--         </Border> -->
+<!--          -->
+<!--         ~1~ 设备列表 - 填充剩余空间 @1@ -->
+<!--         <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="2" HorizontalScrollBarVisibility="Disabled" -->
+<!--                       HorizontalAlignment="Stretch"> -->
+<!--             <ListBox Name="LBDeviceList"  -->
+<!--                      VerticalAlignment="Stretch" -->
+<!--                      Padding="0" -->
+<!--                      BorderThickness="0" -->
+<!--                      Background="Transparent" -->
+<!--                      SelectionMode="Single" -->
+<!--                      HorizontalAlignment="Stretch" -->
+<!--                      ItemsSource="{Binding DeviceList}" -->
+<!--                      SelectionChanged="OnDeviceSelected"> -->
+<!--                 <ListBox.ItemTemplate> -->
+<!--                     ~1~ <DataTemplate DataType="components:ArchivumDevice" > @1@ -->
+<!--                         <DataTemplate  > -->
+<!--                         <Border Margin="2 4"  -->
+<!--                                 Padding="6" -->
+<!--                                 CornerRadius="6" -->
+<!--                                 Background="#f5f5f5" -->
+<!--                                 BorderThickness="1" -->
+<!--                                 BorderBrush="#e0e0e0" -->
+<!--                                 HorizontalAlignment="Stretch"> -->
+<!--                             <Grid > -->
+<!--                                 <Grid.ColumnDefinitions> -->
+<!--                                     <ColumnDefinition Width="Auto" /> -->
+<!--                                     <ColumnDefinition Width="*" /> -->
+<!--                                 </Grid.ColumnDefinitions> -->
+<!--                                  -->
+<!--                                 ~1~ 设备图标 @1@ -->
+<!--                                 <Svg Grid.Column="0"  -->
+<!--                                      Path="../../Assets/usb.svg"  -->
+<!--                                      Width="24"  -->
+<!--                                      Height="24"  -->
+<!--                                      Margin="0 0 6 0" /> -->
+<!--                                  -->
+<!--                                 ~1~ 设备信息 @1@ -->
+<!--                                 <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2"> -->
+<!--                                     ~1~ 设备名 @1@ -->
+<!--                                     <TextBlock Text="{Binding Name}"  -->
+<!--                                                FontSize="13"  -->
+<!--                                                FontWeight="500"  -->
+<!--                                                Foreground="#212121" /> -->
+<!--                                     ~1~ 设备类型 @1@ -->
+<!--                                     <TextBlock Text="{Binding Type}"  -->
+<!--                                                FontSize="11"  -->
+<!--                                                Foreground="#757575" /> -->
+<!--                                     ~1~ 状态和端口 加密类型  @1@ -->
+<!--                                     <StackPanel Orientation="Horizontal" Spacing="8"> -->
+<!--                                         <TextBlock Text="{Binding Status}"  -->
+<!--                                                    FontSize="10"  -->
+<!--                                                    Foreground="#616161" /> -->
+<!--                                         <TextBlock Text="{Binding PortName}"  -->
+<!--                                                    FontSize="10"  -->
+<!--                                                    Foreground="#9e9e9e" /> -->
+<!--                                         <TextBlock Text="{Binding EncryptionType}"  -->
+<!--                                                    FontSize="10"  -->
+<!--                                                    Foreground="#9e9e9e" /> -->
+<!--                                     </StackPanel> -->
+<!--                                     ~1~ 存储信息 @1@ -->
+<!--                                     <StackPanel Orientation="Horizontal" Spacing="6" Margin="0 2 0 0"> -->
+<!--                                         <TextBlock Text="{Binding TotalSizeString}"  -->
+<!--                                                    FontSize="10"  -->
+<!--                                                    Foreground="#616161" /> -->
+<!--                                         <TextBlock Text="/" FontSize="10" Foreground="#e0e0e0" /> -->
+<!--                                         <TextBlock Text="{Binding UsedSizeString}"  -->
+<!--                                                    FontSize="10"  -->
+<!--                                                    Foreground="#424242" /> -->
+<!--                                         <TextBlock Text="{Binding AvailableSizePercentString }"  -->
+<!--                                                    FontSize="10"  -->
+<!--                                                    Foreground="#424242" /> -->
+<!--                                     </StackPanel> -->
+<!--                                 </StackPanel> -->
+<!--                             </Grid> -->
+<!--                         </Border> -->
+<!--                     </DataTemplate> -->
+<!--                 </ListBox.ItemTemplate> -->
+<!--                  -->
+<!--                 <ListBox.Styles> -->
+<!--                     <Style Selector="ListBoxItem"> -->
+<!--                         <Setter Property="Padding" Value="0" /> -->
+<!--                         <Setter Property="Margin" Value="0" /> -->
+<!--                         <Setter Property="Background" Value="Transparent" /> -->
+<!--                         <Setter Property="BorderThickness" Value="0" /> -->
+<!--                         <Setter Property="HorizontalAlignment" Value="Stretch" /> -->
+<!--                     </Style> -->
+<!--                 </ListBox.Styles> -->
+<!--             </ListBox> -->
+<!--         </ScrollViewer> -->
+<!--         ~1~ 无内容时显示的占位提示 @1@ -->
+<!--         <Border x:Name="EmptyPlaceholder"  -->
+<!--                 Background="Transparent" -->
+<!--                 IsVisible="False"> -->
+<!--             <StackPanel Orientation="Vertical"  -->
+<!--                         HorizontalAlignment="Center"  -->
+<!--                         VerticalAlignment="Center"  -->
+<!--                         Spacing="12"> -->
+<!--                 <Svg Path="../../Assets/empty.svg" Width="48" Height="48"  /> -->
+<!--                 <TextBlock Text="{Binding I18n.NoneContent, StringFormat='{}{0}'}" -->
+<!--                            FontSize="13" -->
+<!--                            Foreground="#6c757d" -->
+<!--                            HorizontalAlignment="Center" -->
+<!--                            FontWeight="400" /> -->
+<!--                 <TextBlock Text="{Binding I18n.NoneContent}" -->
+<!--                            FontSize="11" -->
+<!--                            Foreground="#adb5bd" -->
+<!--                            HorizontalAlignment="Center"  -->
+<!--                            MaxWidth="200" -->
+<!--                            TextWrapping="Wrap" /> -->
+<!--             </StackPanel> -->
+<!--         </Border> -->
+<!--     </DockPanel> -->
+<!-- </UserControl> -->

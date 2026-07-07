@@ -19,7 +19,7 @@ public class AT_CMDRXPeaserHelperModel
                 {
                     DeviceName = parts[1],
                     FirmwareVersion = parts[2],
-                    PasswordStatus = parts[3],
+                    PasswordStatus = parts[3] == "ENABLED",
                     AccessCount = int.TryParse(parts[4], out int access) ? access : 0,
                     BlockCount = int.TryParse(parts[5], out int blocks) ? blocks : 0,
                     KeyValueCount = int.TryParse(parts[6], out int kv) ? kv : 0,
@@ -40,7 +40,7 @@ public class AT_CMDRXPeaserHelperModel
             {
                 DeviceName = null,
                 FirmwareVersion = parts[1],
-                PasswordStatus = null,
+                PasswordStatus = false,
                 AccessCount = 0,
                 BlockCount = 0,
                 KeyValueCount = 0
@@ -58,7 +58,7 @@ public class DevBaseInfo
 {
     public string DeviceName { get; set; }
     public string FirmwareVersion { get; set; }
-    public string PasswordStatus { get; set; }
+    public bool PasswordStatus { get; set; }
     public int AccessCount { get; set; }
     public int BlockCount { get; set; }
     public int KeyValueCount { get; set; }

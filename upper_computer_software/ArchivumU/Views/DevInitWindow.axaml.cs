@@ -69,13 +69,24 @@ public partial class DevInitWindow : Window
             // 可以判断设备是否已初始化
             if (devinfo.DeviceName != null)
             {
-                // 已初始化设备
+                // 已初始化设备 把所有设置禁用
+                TBINITNAME.IsEnabled = false;
+                CBENABLEPASSWORD.IsEnabled = false;
+                CBINITENCRYPTALGO.IsEnabled = false;
+                // 配置获取已初始化设备的配置
+                Vm.Item.DevName = devinfo.DeviceName;
+                Vm.Item.EnablePassword = devinfo.PasswordStatus;
+                Vm.Item.Password = "Unknown";
+                Vm.Item.EncryptionAlgorithm = DeviceListViewModel.Instance.FormatEncryptionType(devinfo.EncryptionType);
                 Debug.WriteLine($"设备名: {devinfo.DeviceName}");
-                Vm.Item.FirmWareVersion = $"{devinfo.DeviceName}@{devinfo.FirmwareVersion}";
+                Vm.Item.FirmWareVersion = $"{devinfo.DeviceName}@{devinfo.FirmwareVersion} (AlreadyInitialized)";
                 isNonInit = false;
             }
             else
             {
+                TBINITNAME.IsEnabled = true;
+                CBENABLEPASSWORD.IsEnabled = true;
+                CBINITENCRYPTALGO.IsEnabled = true;
                 // 未初始化设备
                 Debug.WriteLine("设备未初始化");
                 isNonInit = true;

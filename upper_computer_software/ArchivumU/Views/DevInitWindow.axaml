@@ -87,7 +87,7 @@
         <!-- 设备名称 -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="12">
             <TextBlock Classes="Label" Text="{Binding I18n.DevName,StringFormat='{}{0}:'}" />
-            <TextBox Watermark="{Binding Item.DevName}" Text="{Binding Item.DevName}" />
+            <TextBox Watermark="{Binding Item.DevName}" Text="{Binding Item.DevName}" Name="TBINITNAME" />
         </StackPanel>
 
         <!-- 每块密钥数量 -->
@@ -144,6 +144,7 @@
                         SelectedItem="{Binding Item.EncryptionAlgorithm}"
                         Width="160"
                         MinHeight="24"
+                        Name="CBINITENCRYPTALGO"
                         Padding="6 3"
                         FontSize="12"
                         PlaceholderText="请选择" />
