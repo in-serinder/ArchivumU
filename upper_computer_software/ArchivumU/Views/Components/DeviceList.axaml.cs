@@ -33,6 +33,14 @@ public partial class DeviceList : UserControl
         // Devices.Add(new ArchivumDevice("SD", "SD", "Connected", "SD1", 1000000000, 500000000));
         // Devices.Add(new ArchivumDevice("HDD", "HDD", "Connected", "HDD1", 1000000000000, 500000000000));
         DeviceListViewModel.Instance.RefuseDevice();
+        if (DeviceListViewModel.Instance.DeviceList.Count > 0)
+        {
+            DevListEmptyPlaceholder.IsVisible = false;
+        }
+        else
+        {
+            DevListEmptyPlaceholder.IsVisible = true;
+        }
         DataContext = this;
         LBDeviceList.ItemsSource = DeviceListViewModel.Instance.DeviceList;
     }

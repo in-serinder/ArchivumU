@@ -47,7 +47,7 @@
                          SelectionChanged="OnDeviceSelected">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <!-- 关键1：Border HorizontalAlignment="Stretch" 撑满整行宽度 -->
+                            <!-- Border HorizontalAlignment="Stretch" 撑满整行宽度 -->
                             <Border Margin="2 4" 
                                     Padding="6"
                                     CornerRadius="6"
@@ -98,7 +98,7 @@
                             <Setter Property="Margin" Value="0" />
                             <Setter Property="Background" Value="Transparent" />
                             <Setter Property="BorderThickness" Value="0" />
-                            <!-- 关键2：列表项强制横向铺满 -->
+                            <!-- 列表项强制横向铺满 -->
                             <Setter Property="HorizontalAlignment" Value="Stretch" />
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                         </Style>
@@ -107,7 +107,7 @@
             </ScrollViewer>
 
             <!-- 空白占位，和列表同Grid层级居中覆盖 -->
-            <Border x:Name="EmptyPlaceholder" 
+            <Border x:Name="DevListEmptyPlaceholder" 
                     Background="Transparent"
                     IsVisible="{Binding DeviceList.Count}">
                 <StackPanel Orientation="Vertical" 
