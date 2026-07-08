@@ -53,9 +53,9 @@ public partial class DevInitWindow : Window
     }
 
     private async void CBINITCOMBO_OnDropDownClosed(object? sender, EventArgs e)
-    {
-        Vm.Item.Portname = CBINITCOMBO.SelectedItem as string;
-        Vm.Title = $"{Vm.I18n.InitDev}:{Vm.Item.Portname}";
+    {   
+        //预执行
+        await Vm.SerialObjectHelperModel.QuickSendCommand(Vm.Item.Portname, AT_CMDTXHelperModel.AT_INFO());        Vm.Title = $"{Vm.I18n.InitDev}:{Vm.Item.Portname}";
         var (ret, dev_check) =
             await Vm.SerialObjectHelperModel.QuickSendCommand(Vm.Item.Portname, AT_CMDTXHelperModel.AT_INFO());
         DevBaseInfo devinfo = AT_CMDRXPeaserHelperModel.ParseInfoResponse(dev_check);
