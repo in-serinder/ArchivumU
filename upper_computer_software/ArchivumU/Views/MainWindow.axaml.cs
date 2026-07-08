@@ -19,10 +19,10 @@ namespace ArchivumU.Views
             InitializeComponent();
             // 订阅文化变化事件
             DataContext = new MainWindowViewModel();
-            
             // 初始化
             DialogMgrModel.Initialize(this);
-            
+            // private SerialObjectHelperModel serialObjectHelperModel = new SerialObjectHelperModel();
+
             string key = "1234567890123456";
             string iv = "1234567890123456";
             
@@ -61,6 +61,11 @@ namespace ArchivumU.Views
 
         private async void MIADDDEV_OnClick(object? sender, RoutedEventArgs e)
         {
+            if (new SerialObjectHelperModel().GetAvailablePorts().Length<=0)
+            {
+                InfoDialogViewModel.Show(InfoDialogViewModel.InfoType.Error, "Error", "No available serial ports found.");
+                return;
+            }
             await DialogMgrModel.ShowDialogAsync<DevInitWindow>(new DevInitWindow("Com1"));
         }
 

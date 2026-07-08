@@ -504,7 +504,7 @@ namespace ArchivumU.Models
             _serialPorts.Clear();
         }
         
-        public async Task<(bool Success, string Result)> QuickSendCommand(string portName, string command, int timeoutMs = 3000)
+        public async Task<(bool Success, string Result)> QuickSendCommand(string portName, string command, int timeoutMs = 5000)
         {
             // 检查串口是否已被占用
             if (_serialPorts.ContainsKey(portName))
