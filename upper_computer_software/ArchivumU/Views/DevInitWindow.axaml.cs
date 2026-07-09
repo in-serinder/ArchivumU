@@ -54,7 +54,7 @@ public partial class DevInitWindow : Window
 
     private async void CBINITCOMBO_OnDropDownClosed(object? sender, EventArgs e)
     {   
-        //预执行
+        //预执行 解决缓冲区滞后问题
         await Vm.SerialObjectHelperModel.QuickSendCommand(Vm.Item.Portname, AT_CMDTXHelperModel.AT_INFO());        Vm.Title = $"{Vm.I18n.InitDev}:{Vm.Item.Portname}";
         var (ret, dev_check) =
             await Vm.SerialObjectHelperModel.QuickSendCommand(Vm.Item.Portname, AT_CMDTXHelperModel.AT_INFO());
