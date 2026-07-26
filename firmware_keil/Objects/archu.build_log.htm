@@ -3,9 +3,9 @@
 <pre>
 <h1>µVision Build Log</h1>
 <h2>Tool Versions:</h2>
-IDE-Version: ¦ÌVision V5.25.3.0
-Copyright (C) 2018 ARM Ltd and ARM Germany GmbH. All rights reserved.
-License Information: data jyag, dara, LIC=UJ5FJ-U798J-C7MR1-CI8Y6-89HMI-25G5S
+IDE-Version: ¦ÌVision V5.39.0.0
+Copyright (C) 2023 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: sss dsad, asdasd, LIC=YAC6R-KJG8Y-3A6DP-MF0RE-RE7BY-GJHV4
  
 Tool Versions:
 Toolchain:       PK51 Prof. Developers Kit  Version: 9.59.0.0
@@ -18,12 +18,24 @@ Hex Converter:   OH51.exe V2.7.0.0
 CPU DLL:         S8051.DLL V3.122.0.0
 Dialog DLL:      DP51.DLL V2.66.0.0 
 <h2>Project:</h2>
-F:\SYSFILE\DeskTop\Misc.Git\ArchivumU\firmware_keil\archu.uvproj
-Project File Date:  06/23/2026
+D:\SysFile\Desktop\Misc.Git\ArchivumU\firmware_keil\archu.uvproj
+Project File Date:  07/26/2026
 
 <h2>Output:</h2>
 Build target 'Target 1'
 compiling main.c...
+main.c(1): warning C318: can't open file 'main.h'
+AI8G.h(10): warning C318: can't open file 'cstdint'
+CommandParser.h(5): warning C318: can't open file 'Serial.h'
+StorageMgr.h(3): warning C318: can't open file 'HW_24c64.h'
+compiling Serial.c...
+AI8G.h(10): warning C318: can't open file 'cstdint'
+Serial\Serial.c(60): warning C235: parameter 2: different types
+Serial\Serial.c(133): error C141: syntax error near 'uint16_t', expected 'sizeof'
+Serial\Serial.c(133): error C202: 'i': undefined identifier
+Serial\Serial.c(133): error C202: 'i': undefined identifier
+Serial\Serial.c(133): error C202: 'i': undefined identifier
+Serial\Serial.c(133): error C141: syntax error near ')', expected ';'
 compiling 24c64.c...
 AI8G.h(10): warning C318: can't open file 'cstdint'
 compiling IAP.c...
@@ -41,10 +53,11 @@ EEPROM\IAP.c(333): error C208: '_EEPROM_WriteByte': too many actual parameters
 compiling DevMgr.c...
 AI8G.h(10): warning C318: can't open file 'cstdint'
 compiling StorageMgr.c...
-StorageMgr.h(3): warning C318: can't open file '24c64.h'
-StorageMgr.c(4): warning C206: 'I2C_Init': missing function-prototype
+StorageMgr.h(3): warning C318: can't open file 'HW_24c64.h'
+StorageMgr.c(5): warning C206: 'HW_I2C_Init': missing function-prototype
+StorageMgr.c(21): warning C206: 'HW_EEPROM_ClearAll': missing function-prototype
 Target not created.
-Build Time Elapsed:  00:00:00
+Build Time Elapsed:  00:00:01
 </pre>
 </body>
 </html>

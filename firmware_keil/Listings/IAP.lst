@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   IAP                                                               06/23/2026 21:13:58 PAGE 1   
+C51 COMPILER V9.59.0.0   IAP                                                               07/26/2026 10:19:13 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE IAP
@@ -62,7 +62,7 @@ line level    source
   48   1        return data;
 *** ERROR C141 IN LINE 48 OF EEPROM\IAP.c: syntax error near 'data', expected ';'
   49   1      }
-C51 COMPILER V9.59.0.0   IAP                                                               06/23/2026 21:13:58 PAGE 2   
+C51 COMPILER V9.59.0.0   IAP                                                               07/26/2026 10:19:13 PAGE 2   
 
   50          
   51          /**
@@ -126,7 +126,7 @@ line level    source
  109   1        if (start_addr > EEPROM_END_ADDR)
  110   1          return 0;
  111   1        if (end_addr > EEPROM_END_ADDR)
-C51 COMPILER V9.59.0.0   IAP                                                               06/23/2026 21:13:58 PAGE 3   
+C51 COMPILER V9.59.0.0   IAP                                                               07/26/2026 10:19:13 PAGE 3   
 
  112   1          end_addr = EEPROM_END_ADDR;
  113   1      
@@ -190,7 +190,7 @@ line level    source
  169   2        }
  170   1      
  171   1        for (i = 0; i < write_len; i++) {
-C51 COMPILER V9.59.0.0   IAP                                                               06/23/2026 21:13:58 PAGE 4   
+C51 COMPILER V9.59.0.0   IAP                                                               07/26/2026 10:19:13 PAGE 4   
 
  172   2          EEPROM_WriteByte(addr + i, buf[i]);
 *** ERROR C208 IN LINE 172 OF EEPROM\IAP.c: '_EEPROM_WriteByte': too many actual parameters
@@ -254,7 +254,7 @@ line level    source
 *** ERROR C208 IN LINE 229 OF EEPROM\IAP.c: '_EEPROM_WriteByte': too many actual parameters
  230   2        }
  231   1      
-C51 COMPILER V9.59.0.0   IAP                                                               06/23/2026 21:13:58 PAGE 5   
+C51 COMPILER V9.59.0.0   IAP                                                               07/26/2026 10:19:13 PAGE 5   
 
  232   1        return fill_len;
  233   1      }
@@ -318,7 +318,7 @@ line level    source
  291   2            return 0;
  292   2        }
  293   1      
-C51 COMPILER V9.59.0.0   IAP                                                               06/23/2026 21:13:58 PAGE 6   
+C51 COMPILER V9.59.0.0   IAP                                                               07/26/2026 10:19:13 PAGE 6   
 
  294   1        return 1;
  295   1      }
