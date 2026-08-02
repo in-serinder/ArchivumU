@@ -1,37 +1,51 @@
-C51 COMPILER V9.59.0.0   MAIN                                                              07/26/2026 10:19:13 PAGE 1   
+C51 COMPILER V9.59.0.0   MAIN                                                              08/03/2026 02:39:20 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
 OBJECT MODULE PLACED IN .\Objects\main.obj
-COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
-                    -.lst) TABS(2) OBJECT(.\Objects\main.obj)
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE main.c COMPACT OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPROM;.\Serial;.\Secur
+                    -ity) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
 
 line level    source
 
-   1          #include "main.h"
-*** WARNING C318 IN LINE 1 OF main.c: can't open file 'main.h'
-   2          #include "CommandParser.h"
-*** WARNING C318 IN LINE 10 OF AI8G.h: can't open file 'cstdint'
-*** WARNING C318 IN LINE 5 OF CommandParser.h: can't open file 'Serial.h'
-   3          #include "DevMgr.h"
-   4          #include "StorageMgr.h"
-*** WARNING C318 IN LINE 3 OF StorageMgr.h: can't open file 'HW_24c64.h'
-   5          
-   6          void main(void) {
-   7   1        while (1) {
-   8   2        }
-   9   1      }
+   1          #include "CommandParser.h"
+   2          #include "DevMgr.h"
+   3          #include "StorageMgr.h"
+   4          #include "BLAKE2s.h"
+   5          #include "Serial.h"
+   6          
+   7          #define FIRMWARE_NAME "ArchivumU"
+   8          #define FIRMWARE_VERSION "1.0.0"
+   9          #define FIRMWARE_DATE "2026-08-01"
+  10          #define FIRMWARE_BLOCK_ZONE_SIZE 16*1024 // 16KB block
+  11          #define FIRMWARE_STORAGE_ZONE_SIZE 16*1024 // 16KB block
+  12          
+  13          uint8_t tmp[16];
+  14          
+  15          void main(void) {
+  16   1        uint16_t update_cnt;
+  17   1        Uart1_Init();
+  18   1        CMD_PARSER_SET_STORAGE(FIRMWARE_STORAGE_ZONE_SIZE);
+  19   1        BLAKE2s_Checksum("123456", 6, tmp); /* 临时: 测量代码尺寸 */
+  20   1        Uart1_SendHexBuffer(tmp, 16);
+  21   1        update_cnt = DM_UPDATECOUNT_Get();
+  22   1        Uart1_SendHexBuffer((uint8_t *)&update_cnt, 2);
+  23   1        Uart1_SendString("\r\n");
+  24   1      
+  25   1        while (1) {
+  26   2        }
+  27   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =      2    ----
-   CONSTANT SIZE    =   ----    ----
+   CODE SIZE        =     81    ----
+   CONSTANT SIZE    =     10    ----
    XDATA SIZE       =   ----    ----
-   PDATA SIZE       =   ----    ----
+   PDATA SIZE       =     16       2
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
 
 
-C51 COMPILATION COMPLETE.  4 WARNING(S),  0 ERROR(S)
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

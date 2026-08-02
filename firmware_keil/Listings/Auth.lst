@@ -1,0 +1,38 @@
+C51 COMPILER V9.59.0.0   AUTH                                                              08/03/2026 02:39:21 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE AUTH
+OBJECT MODULE PLACED IN .\Objects\Auth.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Security\Auth.c COMPACT OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPROM;.\Seria
+                    -l;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\Auth.lst) TABS(2) OBJECT(.\Objects\Auth.obj)
+
+line level    source
+
+   1          #include "Auth.h"
+   2          
+   3          
+   4          const  char xdata slat[16] = "ArchivumU1234567";
+   5          char idata auth_key[32] = {0};
+   6          char * Auth_GenerateKey(char *password) {
+   7   1        //盐+密码
+   8   1        uint8_t i;
+   9   1        BLAKE2s_Checksum(password, 16, auth_key);
+  10   1        for ( i = 15; i < 32; i++) {
+  11   2          auth_key[i] = auth_key[i] | slat[i];
+  12   2        }
+  13   1        return auth_key;
+  14   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     56    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     16    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =     32    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

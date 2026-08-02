@@ -1,15 +1,14 @@
-C51 COMPILER V9.59.0.0   SERIAL                                                            07/26/2026 10:19:13 PAGE 1   
+C51 COMPILER V9.59.0.0   SERIAL                                                            08/03/2026 02:39:24 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE SERIAL
 OBJECT MODULE PLACED IN .\Objects\Serial.obj
-COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Serial\Serial.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\List
-                    -ings\Serial.lst) TABS(2) OBJECT(.\Objects\Serial.obj)
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Serial\Serial.c COMPACT OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPROM;.\Seria
+                    -l;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\Serial.lst) TABS(2) OBJECT(.\Objects\Serial.obj)
 
 line level    source
 
    1          #include "Serial.h"
-*** WARNING C318 IN LINE 10 OF AI8G.h: can't open file 'cstdint'
    2          
    3          void Uart1_Init(void) // 115200bps@22.1184MHz
    4          {
@@ -62,16 +61,15 @@ line level    source
   51   2          Uart1_SendByte('A' + low - 10);
   52   2        }
   53   1      }
-C51 COMPILER V9.59.0.0   SERIAL                                                            07/26/2026 10:19:13 PAGE 2   
-
   54          
+C51 COMPILER V9.59.0.0   SERIAL                                                            08/03/2026 02:39:24 PAGE 2   
+
   55          /**
   56           * @brief 发送数据缓冲区的十六进制表示
   57           * @param buf 数据缓冲区指针
   58           * @param len 数据长度
   59           */
   60          void Uart1_SendHexBuffer(uint8_t *buf, uint16_t len) {
-*** WARNING C235 IN LINE 60 OF Serial\Serial.c: parameter 2: different types
   61   1        uint16_t i;
   62   1        for (i = 0; i < len; i++) {
   63   2          Uart1_SendHex(buf[i]);
@@ -107,11 +105,13 @@ line level    source
   93           * @return 接收到的字节
   94           */
   95          uint8_t Uart1_ReceiveByte(void) {
+*** ERROR C231 IN LINE 95 OF Serial\Serial.c: 'Uart1_ReceiveByte': redefinition
   96   1        while (!RI)
   97   1          ;
   98   1        RI = 0;
   99   1        return SBUF;
  100   1      }
+*** ERROR C231 IN LINE 100 OF Serial\Serial.c: 'Uart1_ReceiveByte': redefinition
  101          
  102          /**
  103           * @brief 接收字符串（带超时检测）
@@ -123,10 +123,10 @@ line level    source
  109          uint8_t Uart1_ReceiveString(uint8_t *buf, uint8_t max_len, uint16_t timeout) {
  110   1        uint8_t len = 0;
  111   1        uint8_t ch;
- 112   1        uint16_t t = 0;
+ 112   1        uint16_t t,i = 0;
  113   1      
  114   1        while (len < max_len - 1) {
-C51 COMPILER V9.59.0.0   SERIAL                                                            07/26/2026 10:19:13 PAGE 3   
+C51 COMPILER V9.59.0.0   SERIAL                                                            08/03/2026 02:39:24 PAGE 3   
 
  115   2          if (RI) {
  116   3            RI = 0;
@@ -146,12 +146,7 @@ line level    source
  130   5                break; // 超时退出
  131   5              }
  132   4              // 简单延时约1ms
- 133   4              for (uint16_t i = 0; i < 1000; i++)
-*** ERROR C141 IN LINE 133 OF Serial\Serial.c: syntax error near 'uint16_t', expected 'sizeof'
-*** ERROR C202 IN LINE 133 OF Serial\Serial.c: 'i': undefined identifier
-*** ERROR C202 IN LINE 133 OF Serial\Serial.c: 'i': undefined identifier
-*** ERROR C202 IN LINE 133 OF Serial\Serial.c: 'i': undefined identifier
-*** ERROR C141 IN LINE 133 OF Serial\Serial.c: syntax error near ')', expected ';'
+ 133   4              for ( i = 0; i < 1000; i++)
  134   4                ;
  135   4            }
  136   3          }
@@ -161,4 +156,4 @@ line level    source
  140   1        return len;
  141   1      }
 
-C51 COMPILATION COMPLETE.  2 WARNING(S),  5 ERROR(S)
+C51 COMPILATION COMPLETE.  0 WARNING(S),  2 ERROR(S)

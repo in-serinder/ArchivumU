@@ -1,219 +1,132 @@
 #include "HW_24c64.h"
 
-// 延时函数
-void HW_I2C_Delay(void) {
-  uint8_t i = 10;
-  while (i--)
-    ;
+/* 软件延时: 22.1184MHz 1T内核, 约1ms/循环; volatile防止被优化器删除 */
+void DelayMs(uint16_t ms)
+{
+    uint16_t i;
+    volatile uint16_t j;
+    for (i = 0; i < ms; i++) {
+        for (j = 0; j < 5000; j++);
+    }
 }
 
-// 初始化硬件I2C
-void HW_I2C_Init(void) {
-  // 1. 开启扩展特殊寄存器访问 EAXFR=1(P_SW2.7)
-  P_SW2 |= 0x80;
 
-  // 2. I2C引脚选择：bit5 bit4 = 11 → SCL=P3.2，SDA=P3.3
-  P_SW2 |= 0x30;
+uint8_t EEPROM_ADDR = 0xA0;   /* 24C64 写地址: #0=0xA0, #1=0xA2 */
+uint8_t I2C_Err     = 0;      /* 0=OK, 1=DevAddrNACK 2=AddrHiNACK 3=AddrLoNACK 4=DataNACK 5=ReadAddrNACK */
 
-  // 3. IO配置为 开漏模式：M1=1，M0=0
-  P3M1 |= (1 << 2) | (1 << 3);
-  P3M0 &= ~((1 << 2) | (1 << 3));
+/* STC8G 硬件I2C寄存器要点:
+   - I2CCFG (FE80H):  BIT7=ENI2C  BIT6=MSSL  [5:0]=MSSPEED
+   - I2CMSST(FE82H):  BIT6=MSIF   BIT1=MSACKI BIT0=MSACKO
+   - I2CMSCR(FE83H):  CMD=1 START, 2 SEND, 3 RECVACK, 4 RECV, 5 ACK, 6 STOP
+   - P_SW2 (0BAH):    BIT7=EAXFR  BIT5:4=I2C_S 引脚选择
+   - 主频 22.1184MHz, MSSPEED=25 → I2C总线≈205KHz ≤24C64 400KHz极限
+*/
 
-  // 4. 配置I2C外设：使能+主机模式+分频
-  // BIT7=1(I2C_EN), BIT6=1(主机), MSSPEED分频值
-  // 22.1184M MSSPEED=13 → 400kHz
-  I2CCFG = 0xC0 | 13;
+#define I2C_MSSPEED  25
 
-  // 5. 总线复位，释放SDA/SCL
-  I2CMSST = 0x08;
-
-  // 操作完可关闭扩展SFR，不影响后续使用
-  P_SW2 &= ~0x80;
+static void I2C_Wait(void)
+{
+    while (!(I2CMSST & 0x40));   // 轮询 MSIF=BIT6
+    I2CMSST &= ~0x40;              // 软件清0
 }
 
-// 发送起始信号
-void HW_I2C_Start(void) {
-  P_SW2 |= 0x80;
-  // 发送START条件
-  I2CMSCR = 0x01; // STA=1
-  // 等待START发送完成
-  while (!(I2CMSST & 0x20))
-    ;               // 等待SB=1
-  I2CMSST &= ~0x20; // 清除SB标志
-  P_SW2 &= ~0x80;
+/* I2C主机初始化:
+   - P3.2=SCL P3.3=SDA (准双向口)
+   - P5.4/P5.5=WP#0/WP#1 (推挽输出, 拉低=允许写)
+   - P_SW2.EAXFR=1 开放扩展SFR访问
+*/
+void I2C_Init(void)
+{
+    P3M1 &= ~0x0C;   P3M0 &= ~0x0C;   // P3.2/P3.3: 准双向
+    P5M1 &= ~0x30;   P5M0 |=  0x30;   // P5.4/P5.5 (WP): 推挽输出
+    IC0_WP = 0;                        // WP低 = 解除24C64写保护
+    IC1_WP = 0;
+    P_SW2 |= 0x80;                     // EAXFR=1 访问扩展SFR
+    I2CCFG  = 0xE0 | I2C_MSSPEED;     // ENI2C=1 MSSL=1(主机)
+    I2CMSST = 0x00;                     // 清状态
 }
 
-// 发送停止信号
-void HW_I2C_Stop(void) {
-  P_SW2 |= 0x80;
-  // 发送STOP条件
-  I2CMSCR = 0x04; // STO=1
-  // 等待STOP发送完成
-  while (I2CMSST & 0x10)
-    ; // 等待总线空闲
-  P_SW2 &= ~0x80;
+void I2C_Start(void)  { I2CMSCR = 0x01; I2C_Wait(); }   // CMD1: START
+void I2C_Stop(void)   { I2CMSCR = 0x06; I2C_Wait(); }   // CMD6: STOP
+void I2C_SendByte(uint8_t byte) { I2CTXD = byte; I2CMSCR = 0x02; I2C_Wait(); }   // CMD2: SEND
+uint8_t I2C_ReceiveByte(void)   { I2CMSCR = 0x04; I2C_Wait(); return I2CRXD; }        // CMD4: RECV
+
+bit I2C_WaitAck(void)
+{
+    I2CMSCR = 0x03; I2C_Wait();                        // CMD3: 接收ACK
+    return (I2CMSST & 0x02) ? 1 : 0;                   // MSACKI=BIT1
 }
 
-// 发送一个字节
-void HW_I2C_SendByte(uint8_t byte) {
-  P_SW2 |= 0x80;
-  // 写入数据到发送寄存器
-  I2CTXD = byte;
-  // 启动发送
-  I2CMSCR = 0x02; // WR=1
-  // 等待发送完成
-  while (!(I2CMSST & 0x08))
-    ;               // 等待TBE=1
-  I2CMSST &= ~0x08; // 清除TBE标志
-  P_SW2 &= ~0x80;
+void I2C_SendAck(bit ack)
+{
+    I2CMSST = ack ? 0x01 : 0x00;                       // MSACKO=BIT0
+    I2CMSCR = 0x05; I2C_Wait();                        // CMD5: 发送ACK
 }
 
-// 接收一个字节
-uint8_t HW_I2C_ReceiveByte(void) {
-  uint8_t dat;
-  P_SW2 |= 0x80;
-  // 启动接收
-  I2CMSCR = 0x02; // WR=1（读操作）
-  // 等待接收完成
-  while (!(I2CMSST & 0x40))
-    ; // 等待RBNE=1
-  dat = I2CRXD;
-  I2CMSST &= ~0x40; // 清除RBNE标志
-  P_SW2 &= ~0x80;
-  return dat;
+void EEPROM_WriteByte(uint16_t addr, uint8_t dat)
+{
+    I2C_Err = 0;
+    I2C_Start();
+    I2C_SendByte(EEPROM_ADDR);      if (I2C_WaitAck()) { I2C_Err = 1; I2C_Stop(); return; }
+    I2C_SendByte(addr >> 8);        if (I2C_WaitAck()) { I2C_Err = 2; I2C_Stop(); return; }
+    I2C_SendByte(addr & 0xFF);      if (I2C_WaitAck()) { I2C_Err = 3; I2C_Stop(); return; }
+    I2C_SendByte(dat);             if (I2C_WaitAck()) { I2C_Err = 4; I2C_Stop(); return; }
+    I2C_Stop();
+    DelayMs(5);  // 24C64 tWR = 5ms
 }
 
-// 等待应答
-bit HW_I2C_WaitAck(void) {
-  P_SW2 |= 0x80;
-  // 等待ACK/NACK
-  while (!(I2CMSST & 0x04))
-    ; // 等待ADRS=1
-  // 检查是否收到ACK
-  if (I2CMSST & 0x80) {
-    // NOACK=1，未收到ACK
-    I2CMSST &= ~0x04; // 清除ADRS标志
-    P_SW2 &= ~0x80;
-    return 1;
-  }
-  I2CMSST &= ~0x04; // 清除ADRS标志
-  P_SW2 &= ~0x80;
-  return 0;
+uint8_t EEPROM_ReadByte(uint16_t addr)
+{
+    uint8_t dat;
+    I2C_Err = 0;
+    I2C_Start();
+    I2C_SendByte(EEPROM_ADDR);      if (I2C_WaitAck()) { I2C_Err = 1; I2C_Stop(); return 0; }
+    I2C_SendByte(addr >> 8);        if (I2C_WaitAck()) { I2C_Err = 2; I2C_Stop(); return 0; }
+    I2C_SendByte(addr & 0xFF);      if (I2C_WaitAck()) { I2C_Err = 3; I2C_Stop(); return 0; }
+    I2C_Start();
+    I2C_SendByte(EEPROM_ADDR | 0x01); if (I2C_WaitAck()) { I2C_Err = 5; I2C_Stop(); return 0; }
+    dat = I2C_ReceiveByte();
+    I2C_SendAck(1);
+    I2C_Stop();
+    return dat;
 }
 
-// 发送应答
-void HW_I2C_SendAck(bit ack) {
-  P_SW2 |= 0x80;
-  if (ack) {
-    // 发送NACK
-    I2CMSCR = 0x12; // NACK=1, WR=1
-  } else {
-    // 发送ACK
-    I2CMSCR = 0x02; // WR=1
-  }
-  // 等待发送完成
-  while (!(I2CMSST & 0x08))
-    ;               // 等待TBE=1
-  I2CMSST &= ~0x08; // 清除TBE标志
-  P_SW2 &= ~0x80;
+
+void EEPROM_SetAddress(uint16_t addr) { EEPROM_ADDR = (uint8_t)(addr << 1); }
+
+/* 从addr起始向EEPROM连续地址写入字符串(含结尾'\0') */
+void EEPROM_WriteString(uint16_t addr, uint8_t *str)
+{
+    while (*str)
+    {
+        EEPROM_WriteByte(addr++, *str++);
+    }
+    EEPROM_WriteByte(addr, 0x00);   // 写结束符，便于ReadString判断终止
 }
 
-// 向EEPROM写入一个字节
-void HW_EEPROM_WriteByte(uint16_t addr, uint8_t dat) {
-  HW_I2C_Start();
-  HW_I2C_SendByte(EEPROM_ADDR);
-  if (HW_I2C_WaitAck()) {
-    HW_I2C_Stop();
-    return;
-  }
-  HW_I2C_SendByte(addr >> 8);
-  if (HW_I2C_WaitAck()) {
-    HW_I2C_Stop();
-    return;
-  }
-  HW_I2C_SendByte(addr & 0xFF);
-  if (HW_I2C_WaitAck()) {
-    HW_I2C_Stop();
-    return;
-  }
-  HW_I2C_SendByte(dat);
-  if (HW_I2C_WaitAck()) {
-    HW_I2C_Stop();
-    return;
-  }
-  HW_I2C_Stop();
-  // 等待写入完成
-  uint8_t wait_i = 255;
-  while (wait_i--)
-    ;
+/* 从addr起始读取字符串到buf，最多写入maxLen-1个字符，返回实际字符数(不含'\0') */
+uint8_t EEPROM_ReadString(uint16_t addr, uint8_t *buf, uint8_t maxLen)
+{
+    uint8_t len = 0;
+    uint8_t dat;
+
+    if (maxLen == 0) return 0;
+
+    while (len < (maxLen - 1))
+    {
+        dat = EEPROM_ReadByte(addr++);
+        buf[len++] = dat;
+        if (dat == 0x00) break;   // 遇到结束符停止
+    }
+        buf[len] = 0x00;              // 确保buf始终以'\0'结尾
+    return len;
 }
 
-// 从EEPROM读取一个字节
-uint8_t HW_EEPROM_ReadByte(uint16_t addr) {
-  uint8_t dat;
-  HW_I2C_Start();
-  HW_I2C_SendByte(EEPROM_ADDR);
-  if (HW_I2C_WaitAck()) {
-    HW_I2C_Stop();
-    return 0;
-  }
-  HW_I2C_SendByte(addr >> 8);
-  if (HW_I2C_WaitAck()) {
-    HW_I2C_Stop();
-    return 0;
-  }
-  HW_I2C_SendByte(addr & 0xFF);
-  if (HW_I2C_WaitAck()) {
-    HW_I2C_Stop();
-    return 0;
-  }
-  HW_I2C_Start();
-  HW_I2C_SendByte(EEPROM_ADDR | 0x01);
-  if (HW_I2C_WaitAck()) {
-    HW_I2C_Stop();
-    return 0;
-  }
-  dat = HW_I2C_ReceiveByte();
-  HW_I2C_SendAck(1);
-  HW_I2C_Stop();
-  return dat;
+/* 整片24C64清零(格式化EEPROM): 将当前选中芯片 0x0000~0x1FFF 全部写0x00 */
+void HW_EEPROM_ClearAll(void)
+{
+    uint16_t addr;
+    for (addr = 0; addr < 0x2000; addr++) {
+        EEPROM_WriteByte(addr, 0x00);
+    }
 }
-
-// 向EEPROM写入字符串
-void HW_EEPROM_WriteString(uint16_t addr, uint8_t *str) {
-  while (*str) {
-    HW_EEPROM_WriteByte(addr++, *str++);
-  }
-  HW_EEPROM_WriteByte(addr, 0); // 写入结束符
-}
-
-// 从EEPROM读取字符串
-void HW_EEPROM_ReadString(uint16_t addr, uint8_t *str, uint16_t len) {
-  uint16_t read_str_i;
-  for (read_str_i = 0; read_str_i < len; read_str_i++) {
-    *str = HW_EEPROM_ReadByte(addr++);
-    if (*str == 0)
-      break;
-    str++;
-  }
-  *str = 0; // 确保字符串结束
-}
-
-// 读取EEPROM指定长度内容
-void HW_EEPROM_ReadBuffer(uint16_t addr, uint8_t *buffer, uint16_t len) {
-  uint16_t read_i;
-  for (read_i = 0; read_i < len; read_i++) {
-    buffer[read_i] = HW_EEPROM_ReadByte(addr + read_i);
-  }
-}
-
-// 清空EEPROM全部内容
-void HW_EEPROM_ClearAll(void) {
-  uint16_t clear_i;
-  for (clear_i = 0; clear_i < 8192; clear_i++) { // 24C64容量为8KB
-    HW_EEPROM_WriteByte(clear_i, 0);
-  }
-}
-
-// 设置设备地址
-void HW_EEPROM_SetAddress(uint16_t addr) { EEPROM_ADDR = addr; }

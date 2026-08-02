@@ -3,15 +3,19 @@
 
 #include "AI8G.h"
 #include "Serial.h"
+#include "HW_24c64.h"
+#include "Auth.h"
+#include "DevMgr.h"
 
 /*
 命令解析器
 AT+<指令>+<参数>
 
 // 起始指令
-AT+INIT+<设备名>+<密码(UPASS表示不启用密码)>
+AT+INIT+<设备名>+<密码(UPASS表示不启用密码)>+<加密方式(0表示不加密，1表示AES加密,2表示XOR加密,3表示凯撒加密，4表示RC4加密)>
 AT+ECHO检测设备是否在线 返回0成功 1失败 2未设置密码
-AT+INFO获取设备信息 返回设备名、密码状态、接入计数、块数量、键值对数量
+AT+INFO获取设备信息
+返回设备名、固件版本、密码状态、接入计数、块数量、键值对数量、加密方式(0-NON，1-AES，2-XOR,3-CESAR，4-RC4)、存储总大小(默认16384字节)
 AT+STATUS获取设备状态 当前任务
 
 // 身份验证指令
@@ -48,6 +52,8 @@ AT+UPDATE+KEY+<BLOCKID>+<KEY>+<KEY_VALUE>
 
 // 全获取指令
  AT+GET+ALL+BLOCK //以数组形式返回所有块名和块ID
+ 返回格式应该为DATA+[块名;块id](块内键值对)
+这里的括号是作为对进行区分的实际上多个块和键值对情况下为DATA+[块名;块id](块内键值对)|[块名;块id](块内键值对)|[块名;块id](块内键值对)
 数组【块名数组】、【块ID数组】、【块对应键值对地址二维数组】、【块对应键值对二维数组】
 
 
@@ -73,12 +79,12 @@ INFO+<设备名>+<密码状态>+<接入计数>+<块数量>+<键值对数量> //
 0空闲 1格式化 2读取 3写入 4创建 5删除 6更新 7全获取 RESULT+<结果> // 结果 0成功
 1失败 AUTH+<验证结果> // 验证结果 0成功 1失败 2未设置密码
 */
-
+void CMD_PARSER_SET_STORAGE(uint16_t addr);
 // 主入口：解析串口传入的AT指令字符串并导航到对应函数
 void CMD_Parser(char *cmd);
 
 /*起始指令类*/
-void CMD_INIT(char *device_name, char *password);
+void CMD_INIT(char *device_name, char *password, uint8_t encrypt_type);  // encrypt_type: 0不加密/1AES/2XOR/3凯撒/4RC4
 void CMD_ECHO(void);
 void CMD_INFO(void);
 void CMD_STATUS(void);

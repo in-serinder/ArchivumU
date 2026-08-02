@@ -109,7 +109,7 @@ uint8_t Uart1_ReceiveByte(void) {
 uint8_t Uart1_ReceiveString(uint8_t *buf, uint8_t max_len, uint16_t timeout) {
   uint8_t len = 0;
   uint8_t ch;
-  uint16_t t = 0;
+  uint16_t t,i = 0;
 
   while (len < max_len - 1) {
     if (RI) {
@@ -130,7 +130,7 @@ uint8_t Uart1_ReceiveString(uint8_t *buf, uint8_t max_len, uint16_t timeout) {
           break; // 超时退出
         }
         // 简单延时约1ms
-        for (uint16_t i = 0; i < 1000; i++)
+        for ( i = 0; i < 1000; i++)
           ;
       }
     }

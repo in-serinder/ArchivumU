@@ -51,10 +51,12 @@ class CommandParser:
         
         cmd_type = parts[0]
         
-        # 未初始化时只允许INIT命令
+        # 未初始化时允许INIT和INFO命令
         if not self.config_area.is_initialized():
             if cmd_type == 'INIT':
                 return self._handle_init(parts)
+            elif cmd_type == 'INFO':
+                return 'INIT=0+V1.0.0'  # 设备未初始化+固件版本
             else:
                 return 'ERR+3'  # 未验证（未初始化）
         
@@ -99,6 +101,7 @@ class CommandParser:
         
         device_name = parts[1]
         password = parts[2]
+        encryption_mode = int(parts[3]) if len(parts) > 3 else 0  # 默认不加密
         
         # 格式化EEPROM
         self.key_value_manager.eeprom_manager.format()
@@ -115,6 +118,9 @@ class CommandParser:
         else:
             self.config_area.set_pwd_auth_enabled(False)
         
+        # 设置加密方式
+        self.config_area.set_encryption_mode(encryption_mode)
+        
         # 设置初始化标志
         self.config_area.set_initialized()
         
@@ -127,15 +133,29 @@ class CommandParser:
     def _handle_info(self, parts):
         """处理INFO命令"""
         name = self.config_area.get_device_name()
+        firmware_version = 'V1.0.0'  # 固件版本
         pwd_status = 'ENABLED' if self.config_area.is_pwd_auth_enabled() else 'DISABLED'
         access_count = self.config_area.get_access_count()
+        
+        # 获取加密方式
+        encryption_mode = self.config_area.get_encryption_mode()
+        encryption_str = {
+            0: 'NON',
+            1: 'AES',
+            2: 'XOR',
+            3: 'CESAR',
+            4: 'RC4'
+        }.get(encryption_mode, 'NON')
         
         # 计算块数量和键值对数量
         blocks = self.block_manager.get_all_blocks()
         block_count = len(blocks)
         key_count = sum(block['key_addrs'].count(addr) for block in blocks for addr in block['key_addrs'] if addr != 0xFFFF)
         
-        return f'INFO+{name}+{pwd_status}+{access_count}+{block_count}+{key_count}'
+        # 存储总大小（两个8KB EEPROM = 16384字节）
+        storage_size = 16384
+        
+        return f'INFO+{name}+{firmware_version}+{pwd_status}+{access_count}+{block_count}+{key_count}+{encryption_str}+{storage_size}'
     
     def _handle_status(self, parts):
         """处理STATUS命令"""

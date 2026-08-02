@@ -1,0 +1,162 @@
+C51 COMPILER V9.59.0.0   BLAKE2S                                                           08/03/2026 02:39:21 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE BLAKE2S
+OBJECT MODULE PLACED IN .\Objects\BLAKE2s.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Security\BLAKE2s.c COMPACT OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPROM;.\Se
+                    -rial;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\BLAKE2s.lst) TABS(2) OBJECT(.\Objects\BLAKE2s.obj)
+
+line level    source
+
+   1          #include "BLAKE2s.h"
+   2          
+   3          #if BLAKE2S_FOLD_OP == 0
+              #define FOLD(a, b) ((a) | (b))
+              #elif BLAKE2S_FOLD_OP == 2
+              #define FOLD(a, b) ((a) & (b))
+              #else
+   8          #define FOLD(a, b) ((a) ^ (b))
+   9          #endif
+  10          
+  11          #define ROT16(x) (((x) >> 16) | ((x) << 16))
+  12          #define ROT12(x) (((x) >> 12) | ((x) << 20))
+  13          #define ROT8(x)  (((x) >> 8)  | ((x) << 24))
+  14          #define ROT7(x)  (((x) >> 7)  | ((x) << 25))
+  15          
+  16          static uint32_t xdata m[16]; /* 消息字 */
+  17          static uint32_t xdata v[16]; /* 工作状态 */
+  18          
+  19          static void B2S_G(uint8_t a, uint8_t b, uint8_t c, uint8_t d,
+  20                            uint32_t x, uint32_t y)
+  21          {
+  22   1        uint32_t t;
+  23   1        v[a] += v[b] + x;
+  24   1          t = v[d] ^ v[a]; v[d] = ROT16(t);
+  25   1        v[c] += v[d];
+  26   1        t = v[b] ^ v[c]; v[b] = ROT12(t);
+  27   1        v[a] += v[b] + y;
+  28   1        t = v[d] ^ v[a]; v[d] = ROT8(t);
+  29   1        v[c] += v[d];
+  30   1        t = v[b] ^ v[c]; v[b] = ROT7(t);
+  31   1      }
+  32          
+  33          #define GX(a, b, c, d, i, j) B2S_G(a, b, c, d, m[i], m[j])
+  34          
+  35          #define PUT32(o, t) \
+  36            out[o] = (uint8_t)(t); out[o + 1] = (uint8_t)((t) >> 8); \
+  37            out[o + 2] = (uint8_t)((t) >> 16); out[o + 3] = (uint8_t)((t) >> 24)
+  38          
+  39          /* 10轮展开(消息索引直接取自BLAKE2s sigma表, RD避免与C51寄存器名R0-R7冲突) */
+  40          #define RD0 \
+  41            GX(0,4,8,12,0,1);  GX(1,5,9,13,2,3);   GX(2,6,10,14,4,5);  GX(3,7,11,15,6,7); \
+  42            GX(0,5,10,15,8,9); GX(1,6,11,12,10,11); GX(2,7,8,13,12,13); GX(3,4,9,14,14,15)
+  43          #define RD1 \
+  44            GX(0,4,8,12,14,10); GX(1,5,9,13,4,8);  GX(2,6,10,14,9,15); GX(3,7,11,15,13,6); \
+  45            GX(0,5,10,15,1,12); GX(1,6,11,12,0,2); GX(2,7,8,13,11,7);  GX(3,4,9,14,5,3)
+  46          #define RD2 \
+  47            GX(0,4,8,12,11,8); GX(1,5,9,13,12,0);  GX(2,6,10,14,5,2);  GX(3,7,11,15,15,13); \
+  48            GX(0,5,10,15,10,14); GX(1,6,11,12,3,6); GX(2,7,8,13,7,1); GX(3,4,9,14,9,4)
+  49          #define RD3 \
+  50            GX(0,4,8,12,7,9); GX(1,5,9,13,3,1);  GX(2,6,10,14,13,12); GX(3,7,11,15,11,14); \
+  51            GX(0,5,10,15,2,6); GX(1,6,11,12,5,10); GX(2,7,8,13,4,0); GX(3,4,9,14,15,8)
+  52          #define RD4 \
+  53            GX(0,4,8,12,9,0); GX(1,5,9,13,5,7);  GX(2,6,10,14,2,4);  GX(3,7,11,15,10,15); \
+  54            GX(0,5,10,15,14,1); GX(1,6,11,12,11,12); GX(2,7,8,13,6,8); GX(3,4,9,14,3,13)
+C51 COMPILER V9.59.0.0   BLAKE2S                                                           08/03/2026 02:39:21 PAGE 2   
+
+  55          #define RD5 \
+  56            GX(0,4,8,12,2,12); GX(1,5,9,13,6,10); GX(2,6,10,14,0,11); GX(3,7,11,15,8,3); \
+  57            GX(0,5,10,15,4,13); GX(1,6,11,12,7,5); GX(2,7,8,13,15,14); GX(3,4,9,14,1,9)
+  58          #define RD6 \
+  59            GX(0,4,8,12,12,5); GX(1,5,9,13,1,15); GX(2,6,10,14,14,13); GX(3,7,11,15,4,10); \
+  60            GX(0,5,10,15,0,7); GX(1,6,11,12,6,3); GX(2,7,8,13,9,2); GX(3,4,9,14,8,11)
+  61          #define RD7 \
+  62            GX(0,4,8,12,13,11); GX(1,5,9,13,7,14); GX(2,6,10,14,12,1); GX(3,7,11,15,3,9); \
+  63            GX(0,5,10,15,5,0); GX(1,6,11,12,15,4); GX(2,7,8,13,8,6); GX(3,4,9,14,2,10)
+  64          #define RD8 \
+  65            GX(0,4,8,12,6,15); GX(1,5,9,13,14,9); GX(2,6,10,14,11,3); GX(3,7,11,15,0,8); \
+  66            GX(0,5,10,15,12,2); GX(1,6,11,12,13,7); GX(2,7,8,13,1,4); GX(3,4,9,14,10,5)
+  67          #define RD9 \
+  68            GX(0,4,8,12,10,2); GX(1,5,9,13,8,4);  GX(2,6,10,14,7,6);  GX(3,7,11,15,1,5); \
+  69            GX(0,5,10,15,15,11); GX(1,6,11,12,9,14); GX(2,7,8,13,3,12); GX(3,4,9,14,13,0)
+  70          
+  71          void BLAKE2s_Checksum(const char *in, uint8_t len, uint8_t *out)
+  72          {
+  73   1        uint8_t i;
+  74   1      
+  75   1        if (len > BLAKE2S_MAX_LEN)
+  76   1          len = BLAKE2S_MAX_LEN;
+  77   1      
+  78   1        /* h=IV, h0^=0x01010000^(kk<<8)^nn, kk=0 nn=32 */
+  79   1        v[0] = 0x6A09E667UL ^ 0x01010020UL;
+  80   1        v[1] = 0xBB67AE85UL;
+  81   1        v[2] = 0x3C6EF372UL;
+  82   1        v[3] = 0xA54FF53AUL;
+  83   1        v[4] = 0x510E527FUL;
+  84   1        v[5] = 0x9B05688CUL;
+  85   1        v[6] = 0x1F83D9ABUL;
+  86   1        v[7] = 0x5BE0CD19UL;
+  87   1        v[8]  = 0x6A09E667UL;
+  88   1        v[9]  = 0xBB67AE85UL;
+  89   1        v[10] = 0x3C6EF372UL;
+  90   1        v[11] = 0xA54FF53AUL;
+  91   1        v[12] = 0x510E527FUL ^ len;          /* 计数器t0=len */
+  92   1        v[13] = 0x9B05688CUL;
+  93   1        v[14] = 0x1F83D9ABUL ^ 0xFFFFFFFFUL; /* 末块标志f0 */
+  94   1        v[15] = 0x5BE0CD19UL;
+  95   1      
+  96   1        /* 消息字(仅前4个字非零, 其余补0) */
+  97   1        for (i = 0; i < 16; i++)
+  98   1          m[i] = 0;
+  99   1        for (i = 0; i < len; i++)
+ 100   1          m[i >> 2] |= ((uint32_t)(uint8_t)in[i]) << ((i & 3) << 3);
+ 101   1      
+ 102   1        RD0;
+ 103   1        RD1;
+ 104   1        RD2;
+ 105   1        RD3;
+ 106   1        RD4;
+ 107   1        RD5;
+ 108   1        RD6;
+ 109   1        RD7;
+ 110   1        RD8;
+ 111   1        RD9;
+ 112   1      
+ 113   1          /* 摘要字 = h0[i] ^ v[i] ^ v[i+8] (h0为压缩前状态), 先就地合成 v[i]^=v[i+8] */
+ 114   1        for (i = 0; i < 8; i++)
+ 115   1          v[i] ^= v[i + 8];
+ 116   1      
+C51 COMPILER V9.59.0.0   BLAKE2S                                                           08/03/2026 02:39:21 PAGE 3   
+
+ 117   1        /* 32字节摘要(h0为常数)折半合成16字节 */
+ 118   1        {
+ 119   2          uint32_t t = FOLD(0x6B08E647UL ^ v[0], 0x510E527FUL ^ v[4]);
+ 120   2          PUT32(0, t);
+ 121   2        }
+ 122   1        {
+ 123   2          uint32_t t = FOLD(0xBB67AE85UL ^ v[1], 0x9B05688CUL ^ v[5]);
+ 124   2          PUT32(4, t);
+ 125   2        }
+ 126   1        {
+ 127   2          uint32_t t = FOLD(0x3C6EF372UL ^ v[2], 0x1F83D9ABUL ^ v[6]);
+ 128   2          PUT32(8, t);
+ 129   2        }
+ 130   1        {
+ 131   2          uint32_t t = FOLD(0xA54FF53AUL ^ v[3], 0x5BE0CD19UL ^ v[7]);
+ 132   2          PUT32(12, t);
+ 133   2        }
+ 134   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   6055    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    128    ----
+   PDATA SIZE       =   ----      28
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

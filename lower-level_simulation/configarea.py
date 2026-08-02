@@ -106,6 +106,16 @@ class ConfigArea:
         """获取接入计数"""
         return int.from_bytes(self.data[ConfigArea.ADDR_ACCESS_COUNT:ConfigArea.ADDR_ACCESS_COUNT+2], 'big')
     
+    def set_encryption_mode(self, mode):
+        """设置加密方式
+        mode: 0-不加密, 1-AES128, 2-XOR, 3-凯撒加密, 4-RC4
+        """
+        self.data[ConfigArea.ADDR_ENCRYPTION] = mode & 0xFF
+    
+    def get_encryption_mode(self):
+        """获取加密方式"""
+        return self.data[ConfigArea.ADDR_ENCRYPTION]
+    
     def format(self):
         """格式化配置区"""
         self.data = bytearray([0x00] * self.SIZE)

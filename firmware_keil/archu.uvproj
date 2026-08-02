@@ -13,14 +13,14 @@
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
-          <Device>AT89C52</Device>
-          <Vendor>Microchip</Vendor>
-          <Cpu>IRAM(0-0xFF) IROM(0-0x1FFF) CLOCK(24000000)</Cpu>
+          <Device>AT89C55WD</Device>
+          <Vendor>Atmel</Vendor>
+          <Cpu>IRAM(0-0xFF) IROM(0-0x4FFF) CLOCK(24000000)</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile>"LIB\STARTUP.A51" ("Standard 8051 Startup Code")</StartupFile>
           <FlashDriverDll></FlashDriverDll>
-          <DeviceId>2980</DeviceId>
-          <RegisterFile>REGX52.H</RegisterFile>
+          <DeviceId>3414</DeviceId>
+          <RegisterFile>REGX55.H</RegisterFile>
           <MemoryEnv></MemoryEnv>
           <Cmp></Cmp>
           <Asm></Asm>
@@ -49,7 +49,7 @@
           <OutputName>archu</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
-          <CreateHexFile>0</CreateHexFile>
+          <CreateHexFile>1</CreateHexFile>
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
           <ListingPath>.\Listings\</ListingPath>
@@ -110,11 +110,11 @@
           <SimDllName>S8051.DLL</SimDllName>
           <SimDllArguments></SimDllArguments>
           <SimDlgDll>DP51.DLL</SimDlgDll>
-          <SimDlgDllArguments>-p52</SimDlgDllArguments>
+          <SimDlgDllArguments>-pAT52</SimDlgDllArguments>
           <TargetDllName>S8051.DLL</TargetDllName>
           <TargetDllArguments></TargetDllArguments>
           <TargetDlgDll>TP51.DLL</TargetDlgDll>
-          <TargetDlgDllArguments>-p52</TargetDlgDllArguments>
+          <TargetDlgDllArguments>-pAT52</TargetDlgDllArguments>
         </DllOption>
         <DebugOption>
           <OPTHX>
@@ -186,7 +186,7 @@
         </Utilities>
         <Target51>
           <Target51Misc>
-            <MemoryModel>0</MemoryModel>
+            <MemoryModel>1</MemoryModel>
             <RTOS>0</RTOS>
             <RomSize>2</RomSize>
             <DataHold>0</DataHold>
@@ -233,7 +233,7 @@
               <RCB>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x0</Size>
+                <Size>0xffff</Size>
               </RCB>
               <RXB>
                 <Type>0</Type>
@@ -273,7 +273,7 @@
               <IRO>
                 <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x2000</Size>
+                <Size>0x5000</Size>
               </IRO>
               <IRA>
                 <Type>0</Type>
@@ -324,7 +324,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath></IncludePath>
+              <IncludePath>.\EEPROM;.\Serial;.\Security</IncludePath>
             </VariousControls>
           </C51>
           <Ax51>
@@ -402,24 +402,14 @@
           <GroupName>EEPROM</GroupName>
           <Files>
             <File>
-              <FileName>24c64.c</FileName>
+              <FileName>HW_24c64.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\EEPROM\24c64.c</FilePath>
+              <FilePath>.\EEPROM\HW_24c64.c</FilePath>
             </File>
             <File>
-              <FileName>24c64.h</FileName>
+              <FileName>HW_24c64.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\EEPROM\24c64.h</FilePath>
-            </File>
-            <File>
-              <FileName>IAP.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\EEPROM\IAP.c</FilePath>
-            </File>
-            <File>
-              <FileName>IAP.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\EEPROM\IAP.h</FilePath>
+              <FilePath>.\EEPROM\HW_24c64.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -445,6 +435,46 @@
               <FileName>StorageMgr.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\StorageMgr.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Security</GroupName>
+          <Files>
+            <File>
+              <FileName>Auth.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Security\Auth.c</FilePath>
+            </File>
+            <File>
+              <FileName>Auth.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Security\Auth.h</FilePath>
+            </File>
+            <File>
+              <FileName>BLAKE2s.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Security\BLAKE2s.c</FilePath>
+            </File>
+            <File>
+              <FileName>BLAKE2s.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Security\BLAKE2s.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>CommandParser</GroupName>
+          <Files>
+            <File>
+              <FileName>CommandParser.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\CommandParser.c</FilePath>
+            </File>
+            <File>
+              <FileName>CommandParser.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\CommandParser.h</FilePath>
             </File>
           </Files>
         </Group>

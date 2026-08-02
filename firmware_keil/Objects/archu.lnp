@@ -1,5 +1,9 @@
 ".\Objects\main.obj",
 ".\Objects\Serial.obj",
-".\Objects\24c64.obj" 
+".\Objects\HW_24c64.obj",
+".\Objects\DevMgr.obj",
+".\Objects\StorageMgr.obj",
+".\Objects\Auth.obj",
+".\Objects\BLAKE2s.obj" 
 TO ".\Objects\archu" 
 PRINT(".\Listings\archu.m51") RAMSIZE(256) 

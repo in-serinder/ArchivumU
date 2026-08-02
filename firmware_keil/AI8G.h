@@ -7,7 +7,7 @@
 
 #include "intrins.h"
 #include "stdio.h"
-#include <cstdint>
+
 
 typedef unsigned char uint8_t;
 typedef unsigned int uint16_t;
