@@ -1,0 +1,32 @@
+C51 COMPILER V9.59.0.0   _SZMAIN                                                           09/25/2026 23:53:42 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE _SZMAIN
+OBJECT MODULE PLACED IN .\Objects\_szmain.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.exe _szmain.c COMPACT OPTIMIZE(8,SPEED) INCDIR(.\EEPROM;.\Serial;.\Security)
+                    - OBJECTEXTEND OBJECT(.\Objects\_szmain.obj)
+
+line level    source
+
+   1          #include "FeatTag.h"
+   2          
+   3          uint8_t xdata szout[16];
+   4          
+   5          void main(void) {
+   6   1        FeatTag_Checksum("123456", 6, szout);
+   7   1        while (1) { }
+   8   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     26    ----
+   CONSTANT SIZE    =      7    ----
+   XDATA SIZE       =     16    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,9 +1,10 @@
 ".\Objects\main.obj",
 ".\Objects\Serial.obj",
 ".\Objects\HW_24c64.obj",
-".\Objects\DevMgr.obj",
+".\Objects\ConfigMgr.obj",
 ".\Objects\StorageMgr.obj",
 ".\Objects\Auth.obj",
-".\Objects\BLAKE2s.obj" 
-TO ".\Objects\archu" 
+".\Objects\FeatTag.obj",
+".\Objects\CommandParser.obj" 
+TO ".\Objects\archu" RTX51 
 PRINT(".\Listings\archu.m51") RAMSIZE(256) 

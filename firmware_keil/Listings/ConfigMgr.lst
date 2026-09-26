@@ -1,0 +1,139 @@
+C51 COMPILER V9.59.0.0   CONFIGMGR                                                         09/26/2026 13:00:09 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE CONFIGMGR
+OBJECT MODULE PLACED IN .\Objects\ConfigMgr.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ConfigMgr.c COMPACT RTX51 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPROM;.\Ser
+                    -ial;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\ConfigMgr.lst) TABS(2) OBJECT(.\Objects\ConfigMgr.obj)
+
+line level    source
+
+   1          #include "ConfigMgr.h"
+   2          #include "StorageMgr.h"
+   3          #include "FeatTag.h"
+   4          #include <string.h>
+   5          
+   6          // 读 16 位小端
+   7          static uint16_t ConfigMgr_ReadU16(uint16_t addr) {
+   8   1        return (uint16_t)EEPROM_ReadByte(addr) |
+   9   1               ((uint16_t)EEPROM_ReadByte(addr + 1) << 8);
+  10   1      }
+  11          
+  12          // 写 16 位小端
+  13          static void ConfigMgr_WriteU16(uint16_t addr, uint16_t val) {
+  14   1        EEPROM_WriteByte(addr, (uint8_t)(val & 0xFF));
+  15   1        EEPROM_WriteByte(addr + 1, (uint8_t)(val >> 8));
+  16   1      }
+  17          
+  18          // 填充默认配置
+  19          void ConfigMgr_Defaults(cfg_t *cfg) {
+  20   1        memset(cfg, 0, sizeof(cfg_t));
+  21   1        cfg->flags = FLAG_INITIALIZED;
+  22   1        cfg->encrypt = ENC_ALGO_NONE;
+  23   1        cfg->key_vol = KEY_VOL_DEFAULT;
+  24   1        cfg->dev_size = DEV_SIZE_DEFAULT;
+  25   1      }
+  26          
+  27          // 读取整个配置区到缓存
+  28          void ConfigMgr_Load(cfg_t *cfg) {
+  29   1        uint8_t i;
+  30   1      
+  31   1        EEPROM_SetAddress(IC_0_24C64);
+  32   1        cfg->flags   = EEPROM_ReadByte(CFG_ADDR_FLAGS);
+  33   1        cfg->encrypt = EEPROM_ReadByte(CFG_ADDR_ENC_ALGO);
+  34   1        cfg->key_vol = EEPROM_ReadByte(CFG_ADDR_KEY_VOL);
+  35   1        cfg->dev_size = EEPROM_ReadByte(CFG_ADDR_DEV_SIZE);
+  36   1        for (i = 0; i < 16; i++) cfg->pwd_hash[i] = EEPROM_ReadByte(CFG_ADDR_PWD_HASH + i);
+  37   1        for (i = 0; i < CFG_NAME_LEN; i++) cfg->name[i] = (char)EEPROM_ReadByte(CFG_ADDR_NAME + i);
+  38   1        cfg->name[CFG_NAME_LEN - 1] = '\0';
+  39   1        cfg->access_count = ConfigMgr_ReadU16(CFG_ADDR_ACCESS_CNT);
+  40   1      }
+  41          
+  42          // 计算配置区校验和(逐字段异或)
+  43          uint8_t ConfigMgr_Checksum(const cfg_t *cfg) {
+  44   1        uint8_t i, sum = 0;
+  45   1      
+  46   1        sum ^= cfg->flags ^ cfg->encrypt ^ cfg->key_vol ^ cfg->dev_size;
+  47   1        for (i = 0; i < 16; i++) sum ^= cfg->pwd_hash[i];
+  48   1        for (i = 0; i < CFG_NAME_LEN; i++) sum ^= (uint8_t)cfg->name[i];
+  49   1        sum ^= (uint8_t)(cfg->access_count & 0xFF) ^ (uint8_t)(cfg->access_count >> 8);
+  50   1        return sum;
+  51   1      }
+  52          
+  53          // 回写整个配置区并重算校验和
+  54          void ConfigMgr_Save(const cfg_t *cfg) {
+C51 COMPILER V9.59.0.0   CONFIGMGR                                                         09/26/2026 13:00:09 PAGE 2   
+
+  55   1        uint8_t i;
+  56   1      
+  57   1        EEPROM_SetAddress(IC_0_24C64);
+  58   1        EEPROM_WriteByte(CFG_ADDR_FLAGS, cfg->flags);
+  59   1        EEPROM_WriteByte(CFG_ADDR_ENC_ALGO, cfg->encrypt);
+  60   1        EEPROM_WriteByte(CFG_ADDR_KEY_VOL, cfg->key_vol);
+  61   1        EEPROM_WriteByte(CFG_ADDR_DEV_SIZE, cfg->dev_size);
+  62   1        for (i = 0; i < 16; i++) EEPROM_WriteByte(CFG_ADDR_PWD_HASH + i, cfg->pwd_hash[i]);
+  63   1        for (i = 0; i < CFG_NAME_LEN; i++) EEPROM_WriteByte(CFG_ADDR_NAME + i, (uint8_t)cfg->name[i]);
+  64   1        ConfigMgr_WriteU16(CFG_ADDR_ACCESS_CNT, cfg->access_count);
+  65   1        EEPROM_WriteByte(CFG_ADDR_CHECKSUM, ConfigMgr_Checksum(cfg));
+  66   1      }
+  67          
+  68          // 写设备名(截断补0)
+  69          void ConfigMgr_SetName(cfg_t *cfg, const char *name) {
+  70   1        uint8_t i, len = (uint8_t)strlen(name);
+  71   1      
+  72   1        if (len > CFG_NAME_LEN - 1) len = CFG_NAME_LEN - 1;
+  73   1        for (i = 0; i < CFG_NAME_LEN; i++) cfg->name[i] = (i < len) ? name[i] : 0x00;
+  74   1      }
+  75          
+  76          // 写密码摘要(UPASS=空)
+  77          void ConfigMgr_SetPassword(cfg_t *cfg, const char *pwd) {
+  78   1        memset(cfg->pwd_hash, 0, 16);
+  79   1        if (pwd == NULL || strlen(pwd) == 0 || strcmp(pwd, PASS_NONE_STR) == 0) {
+  80   2          cfg->flags &= (uint8_t)~FLAG_PWD_AUTH;
+  81   2          return;
+  82   2        }
+  83   1        FeatTag_Checksum(pwd, (uint8_t)strlen(pwd), cfg->pwd_hash);
+  84   1        cfg->flags |= FLAG_PWD_AUTH;
+  85   1      }
+  86          
+  87          // 读状态标志位
+  88          uint8_t ConfigMgr_GetFlags(void) {
+  89   1        EEPROM_SetAddress(IC_0_24C64);
+  90   1        return EEPROM_ReadByte(CFG_ADDR_FLAGS);
+  91   1      }
+  92          
+  93          // 写状态标志位
+  94          void ConfigMgr_SetFlags(uint8_t flags) {
+  95   1        EEPROM_SetAddress(IC_0_24C64);
+  96   1        EEPROM_WriteByte(CFG_ADDR_FLAGS, flags);
+  97   1      }
+  98          
+  99          // 读接入计数
+ 100          uint16_t ConfigMgr_GetAccessCount(void) {
+ 101   1        EEPROM_SetAddress(IC_0_24C64);
+ 102   1        return ConfigMgr_ReadU16(CFG_ADDR_ACCESS_CNT);
+ 103   1      }
+ 104          
+ 105          // 接入计数+1, 65535封顶
+ 106          void ConfigMgr_AddAccessCount(void) {
+ 107   1        uint16_t count = ConfigMgr_GetAccessCount();
+ 108   1      
+ 109   1        if (count < 0xFFFF) count++;
+ 110   1        ConfigMgr_WriteU16(CFG_ADDR_ACCESS_CNT, count);
+ 111   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1294    ----
+   CONSTANT SIZE    =      6    ----
+C51 COMPILER V9.59.0.0   CONFIGMGR                                                         09/26/2026 13:00:09 PAGE 3   
+
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----      37
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

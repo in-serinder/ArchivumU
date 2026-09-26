@@ -26,6 +26,7 @@ void I2C_SendAck(bit ack);
 void EEPROM_WriteByte(uint16_t addr, uint8_t dat);
 uint8_t EEPROM_ReadByte(uint16_t addr);
 void EEPROM_SetAddress(uint16_t addr);  // 入参:7位设备地址(0x50/#0, 0x51/#1)，内部左移1位成8位写地址
+void EEPROM_Fill(uint16_t addr, uint16_t size, uint8_t byte);  // 从addr起连续写size字节
 
 void EEPROM_WriteString(uint16_t addr, uint8_t *str);  // 从addr起始连续写入字符串(含结尾'\0')
 uint8_t EEPROM_ReadString(uint16_t addr, uint8_t *buf, uint8_t maxLen);  // 从addr起始读字符串，返回字符数(不含'\0')

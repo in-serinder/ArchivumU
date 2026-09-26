@@ -23,7 +23,7 @@ void Uart1_SendByte(uint8_t byte) {
  * @brief 发送字符串
  * @param str 指向字符串的指针
  */
-void Uart1_SendString(uint8_t *str) {
+void Uart1_SendString(const char *str) {
   while (*str != '\0') {
     Uart1_SendByte(*str++);
   }

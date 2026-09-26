@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ArchivumU")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3919bdb1f65cf327a05500ac838afc4535a2f7f8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb208f26bd0cfe89f88f29675a05802787d81d72")]
 [assembly: System.Reflection.AssemblyProductAttribute("ArchivumU")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ArchivumU")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

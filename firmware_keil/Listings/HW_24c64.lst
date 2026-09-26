@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   HW_24C64                                                          08/03/2026 02:39:20 PAGE 1   
+C51 COMPILER V9.59.0.0   HW_24C64                                                          09/26/2026 13:00:09 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE HW_24C64
 OBJECT MODULE PLACED IN .\Objects\HW_24c64.obj
-COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE EEPROM\HW_24c64.c COMPACT OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPROM;.\Ser
-                    -ial;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\HW_24c64.lst) TABS(2) OBJECT(.\Objects\HW_24c64.obj)
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE EEPROM\HW_24c64.c COMPACT RTX51 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPROM
+                    -;.\Serial;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\HW_24c64.lst) TABS(2) OBJECT(.\Objects\HW_24c64.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   51          void I2C_SendByte(uint8_t byte) { I2CTXD = byte; I2CMSCR = 0x02; I2C_Wait(); }   // CMD2: SEND
   52          uint8_t I2C_ReceiveByte(void)   { I2CMSCR = 0x04; I2C_Wait(); return I2CRXD; }        // CMD4: RECV
   53          
-C51 COMPILER V9.59.0.0   HW_24C64                                                          08/03/2026 02:39:20 PAGE 2   
+C51 COMPILER V9.59.0.0   HW_24C64                                                          09/26/2026 13:00:09 PAGE 2   
 
   54          bit I2C_WaitAck(void)
   55          {
@@ -107,52 +107,61 @@ line level    source
   94          
   95          void EEPROM_SetAddress(uint16_t addr) { EEPROM_ADDR = (uint8_t)(addr << 1); }
   96          
-  97          /* 从addr起始向EEPROM连续地址写入字符串(含结尾'\0') */
-  98          void EEPROM_WriteString(uint16_t addr, uint8_t *str)
+  97          /* 从addr起连续写size字节, 正序 */
+  98          void EEPROM_Fill(uint16_t addr, uint16_t size, uint8_t byte)
   99          {
- 100   1          while (*str)
- 101   1          {
- 102   2              EEPROM_WriteByte(addr++, *str++);
+ 100   1          uint16_t i;
+ 101   1          for (i = 0; i < size; i++) {
+ 102   2              EEPROM_WriteByte((uint16_t)(addr + i), byte);
  103   2          }
- 104   1          EEPROM_WriteByte(addr, 0x00);   // 写结束符，便于ReadString判断终止
- 105   1      }
- 106          
- 107          /* 从addr起始读取字符串到buf，最多写入maxLen-1个字符，返回实际字符数(不含'\0') 
-             -*/
- 108          uint8_t EEPROM_ReadString(uint16_t addr, uint8_t *buf, uint8_t maxLen)
- 109          {
- 110   1          uint8_t len = 0;
- 111   1          uint8_t dat;
- 112   1      
- 113   1          if (maxLen == 0) return 0;
- 114   1      
-C51 COMPILER V9.59.0.0   HW_24C64                                                          08/03/2026 02:39:20 PAGE 3   
+ 104   1      }
+ 105          
+ 106          /* 从addr起始向EEPROM连续地址写入字符串(含结尾'\0') */
+ 107          void EEPROM_WriteString(uint16_t addr, uint8_t *str)
+ 108          {
+ 109   1          while (*str)
+ 110   1          {
+ 111   2              EEPROM_WriteByte(addr++, *str++);
+ 112   2          }
+ 113   1          EEPROM_WriteByte(addr, 0x00);   // 写结束符，便于ReadString判断终止
+ 114   1      }
+ 115          
+C51 COMPILER V9.59.0.0   HW_24C64                                                          09/26/2026 13:00:09 PAGE 3   
 
- 115   1          while (len < (maxLen - 1))
- 116   1          {
- 117   2              dat = EEPROM_ReadByte(addr++);
- 118   2              buf[len++] = dat;
- 119   2              if (dat == 0x00) break;   // 遇到结束符停止
- 120   2          }
- 121   1              buf[len] = 0x00;              // 确保buf始终以'\0'结尾
- 122   1          return len;
- 123   1      }
- 124          
- 125          /* 整片24C64清零(格式化EEPROM): 将当前选中芯片 0x0000~0x1FFF 全部写0x00 */
- 126          void HW_EEPROM_ClearAll(void)
- 127          {
- 128   1          uint16_t addr;
- 129   1          for (addr = 0; addr < 0x2000; addr++) {
- 130   2              EEPROM_WriteByte(addr, 0x00);
- 131   2          }
+ 116          /* 从addr起始读取字符串到buf，最多写入maxLen-1个字符，返回实际字符数(不含'\0') 
+             -*/
+ 117          uint8_t EEPROM_ReadString(uint16_t addr, uint8_t *buf, uint8_t maxLen)
+ 118          {
+ 119   1          uint8_t len = 0;
+ 120   1          uint8_t dat;
+ 121   1      
+ 122   1          if (maxLen == 0) return 0;
+ 123   1      
+ 124   1          while (len < (maxLen - 1))
+ 125   1          {
+ 126   2              dat = EEPROM_ReadByte(addr++);
+ 127   2              buf[len++] = dat;
+ 128   2              if (dat == 0x00) break;   // 遇到结束符停止
+ 129   2          }
+ 130   1              buf[len] = 0x00;              // 确保buf始终以'\0'结尾
+ 131   1          return len;
  132   1      }
+ 133          
+ 134          /* 整片24C64清零(格式化EEPROM): 将当前选中芯片 0x0000~0x1FFF 全部写0x00 */
+ 135          void HW_EEPROM_ClearAll(void)
+ 136          {
+ 137   1          uint16_t addr;
+ 138   1          for (addr = 0; addr < 0x2000; addr++) {
+ 139   2              EEPROM_WriteByte(addr, 0x00);
+ 140   2          }
+ 141   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    579    ----
+   CODE SIZE        =    646    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
-   PDATA SIZE       =      2      16
+   PDATA SIZE       =      2      22
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----       1

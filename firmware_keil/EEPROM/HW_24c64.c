@@ -94,6 +94,15 @@ uint8_t EEPROM_ReadByte(uint16_t addr)
 
 void EEPROM_SetAddress(uint16_t addr) { EEPROM_ADDR = (uint8_t)(addr << 1); }
 
+/* 从addr起连续写size字节, 正序 */
+void EEPROM_Fill(uint16_t addr, uint16_t size, uint8_t byte)
+{
+    uint16_t i;
+    for (i = 0; i < size; i++) {
+        EEPROM_WriteByte((uint16_t)(addr + i), byte);
+    }
+}
+
 /* 从addr起始向EEPROM连续地址写入字符串(含结尾'\0') */
 void EEPROM_WriteString(uint16_t addr, uint8_t *str)
 {

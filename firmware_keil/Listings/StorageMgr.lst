@@ -1,46 +1,169 @@
-C51 COMPILER V9.59.0.0   STORAGEMGR                                                        08/03/2026 02:39:21 PAGE 1   
+C51 COMPILER V9.59.0.0   STORAGEMGR                                                        09/26/2026 13:00:09 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE STORAGEMGR
 OBJECT MODULE PLACED IN .\Objects\StorageMgr.obj
-COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE StorageMgr.c COMPACT OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPROM;.\Serial;.
-                    -\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\StorageMgr.lst) TABS(2) OBJECT(.\Objects\StorageMgr.obj)
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE StorageMgr.c COMPACT RTX51 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPROM;.\Se
+                    -rial;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\StorageMgr.lst) TABS(2) OBJECT(.\Objects\StorageMgr.obj)
 
 line level    source
 
    1          #include "StorageMgr.h"
-   2          
-   3          // 初始化存储器管理器
-   4          void StorageMgr_Init(void) {
-   5   1        HW_I2C_Init();
-   6   1        //   IAP_Enable(16);
-   7   1      }
-   8          
-   9          // 初始化片内配置区
-  10          void StorageMgr_Init_ConfigZone(void) {
-  11   1        // 初始化配置区
-  12   1      }
-  13          // 格式化片内块区
-  14          void StorageMgr_Format_BlockZone(void) {
-  15   1        // 格式化块区
-  16   1      }
-  17          
-  18          // 格式化24c64 EEPROM内存储区
-  19          void StorageMgr_Format_EEPROMZone(void) {
-  20   1        // 格式化EEPROM
-  21   1        HW_EEPROM_ClearAll();
-  22   1      }
+   2          #include <string.h>
+   3          
+   4          /* 算法属性表: 索引即 ENC_ALGO_*, 驱动长度计算与加解密 */
+   5          static const enc_algo_info_t code enc_algo_tab[] = {
+   6            /* algo                 mode                iv  tag  blk  keep */
+   7            { ENC_ALGO_NONE,        ENC_MODE_STREAM,     0,  0,  1,  1 },
+   8            { ENC_ALGO_AES128_CBC,  ENC_MODE_BLOCK_PAD, 16,  0, 16,  0 },
+   9            { ENC_ALGO_AES128_GCM,  ENC_MODE_AEAD,      12, 16,  1,  0 },
+  10            { ENC_ALGO_XOR,         ENC_MODE_STREAM,     0,  0,  1,  1 },
+  11            { ENC_ALGO_CAESAR,      ENC_MODE_STREAM,     0,  0,  1,  1 },
+  12            { ENC_ALGO_RC4,         ENC_MODE_STREAM,     0,  0,  1,  1 },
+  13          };
+  14          
+  15          #define ENC_ALGO_CNT (sizeof(enc_algo_tab) / sizeof(enc_algo_tab[0]))
+  16          
+  17          // 第二块容量代码 -> 总字节数
+  18          static uint16_t StorageMgr_SizeCodeToBytes(uint8_t size_code) {
+  19   1        switch (size_code) {
+  20   2          case DATA_SIZE_24C32:  return 4  * 1024;
+  21   2          case DATA_SIZE_24C64:  return 8  * 1024;
+  22   2          case DATA_SIZE_24C128: return 16 * 1024;
+  23   2          case DATA_SIZE_24C256: return 32 * 1024;
+  24   2          case DATA_SIZE_24C512: return 64 * 1024;
+  25   2          default:               return 0;
+  26   2        }
+  27   1      }
+  28          
+  29          // 取算法属性, 越界回退到明文
+  30          static const enc_algo_info_t *StorageMgr_AlgoInfo(uint8_t algo) {
+  31   1        if (algo >= ENC_ALGO_CNT) algo = ENC_ALGO_NONE;
+  32   1        return &enc_algo_tab[algo];
+  33   1      }
+  34          
+  35          // 写 16 位小端
+  36          static void StorageMgr_WriteU16(uint16_t addr, uint16_t val) {
+  37   1        EEPROM_WriteByte(addr, (uint8_t)(val & 0xFF));
+  38   1        EEPROM_WriteByte(addr + 1, (uint8_t)(val >> 8));
+  39   1      }
+  40          
+  41          // 读 16 位小端
+  42          static uint16_t StorageMgr_ReadU16(uint16_t addr) {
+  43   1        return (uint16_t)EEPROM_ReadByte(addr) |
+  44   1               ((uint16_t)EEPROM_ReadByte(addr + 1) << 8);
+  45   1      }
+  46          
+  47          // 初始化存储器管理器
+  48          void StorageMgr_Init(void) {
+  49   1        I2C_Init();
+  50   1      }
+  51          
+  52          // 初始化设备: 清零第一块并写入配置区, 返回 ERR_*
+  53          int StorageMgr_InitDevice(const char *name, const char *pass, uint8_t data_size_code) {
+  54   1        uint16_t total;
+C51 COMPILER V9.59.0.0   STORAGEMGR                                                        09/26/2026 13:00:09 PAGE 2   
+
+  55   1        uint8_t flags = FLAG_INITIALIZED;
+  56   1      
+  57   1        total = StorageMgr_SizeCodeToBytes(data_size_code);
+  58   1        if (total == 0) return ERR_SIZE_CODE_INVALID;
+  59   1      
+  60   1        if (pass != NULL && strlen(pass) > 0 && strcmp(pass, PASS_NONE_STR) != 0)
+  61   1          flags |= FLAG_PWD_AUTH;
+  62   1      
+  63   1          EEPROM_SetAddress(IC_0_24C64);
+  64   1        EEPROM_Fill(0, DEV_EEPROM_SIZE, 0x00);
+  65   1      
+  66   1        EEPROM_WriteByte(CFG_ADDR_FLAGS, flags);
+  67   1        EEPROM_WriteByte(CFG_ADDR_ENC_ALGO, ENC_ALGO_NONE);
+  68   1        EEPROM_WriteByte(CFG_ADDR_KEY_VOL, KEY_VOL_DEFAULT);
+  69   1        EEPROM_WriteByte(CFG_ADDR_DEV_SIZE, DEV_SIZE_DEFAULT);
+  70   1      
+  71   1        EEPROM_WriteByte(CFG_ADDR_DATA_SLAVE, IC_1_24CXX);
+  72   1        EEPROM_WriteByte(CFG_ADDR_DATA_SIZE_CODE, data_size_code);
+  73   1        StorageMgr_WriteU16(CFG_ADDR_DATA_TOTAL, total);
+  74   1        StorageMgr_WriteU16(CFG_ADDR_DATA_USED, 0);
+  75   1        StorageMgr_WriteU16(CFG_ADDR_DATA_FREE, total);
+  76   1        StorageMgr_WriteU16(CFG_ADDR_DATA_HWM, DATA_HEAD_SIZE);
+  77   1        StorageMgr_WriteU16(CFG_ADDR_DATA_NEXT, DATA_HEAD_SIZE);
+  78   1        EEPROM_WriteByte(CFG_ADDR_DATA_USAGE, 0);
+  79   1      
+  80   1        EEPROM_WriteByte(CFG_ADDR_BITMAP_FMT, BITMAP_FMT_VER);
+  81   1        StorageMgr_WriteU16(CFG_ADDR_BITMAP_OFF, FIRST_BLOCK_BITMAP);
+  82   1        StorageMgr_WriteU16(CFG_ADDR_BITMAP_LEN, (uint16_t)(total / DATA_ALLOC_UNIT / 8));
+  83   1        StorageMgr_WriteU16(CFG_ADDR_BLOCKTAB_OFF, FIRST_BLOCK_BLOCKTAB);
+  84   1        StorageMgr_WriteU16(CFG_ADDR_KVIDX_OFF, FIRST_BLOCK_KVIDX);
+  85   1        StorageMgr_WriteU16(CFG_ADDR_KVIDX_CNT, 0);
+  86   1        EEPROM_WriteByte(CFG_ADDR_KVIDX_ENTRY, (uint8_t)sizeof(kv_entry_t));
+  87   1      
+  88   1        StorageMgr_InitDataHead(total, data_size_code);
+  89   1        return ERR_OK;
+  90   1      }
+*** WARNING C280 IN LINE 53 OF StorageMgr.c: 'name': unreferenced local variable
+  91          
+  92          // 初始化第二块数据片头
+  93          void StorageMgr_InitDataHead(uint16_t total, uint8_t size_code) {
+  94   1        uint8_t sum;
+  95   1      
+  96   1        EEPROM_SetAddress(IC_1_24CXX);
+  97   1        EEPROM_WriteByte(0x00, DATA_HEAD_MAGIC);
+  98   1        EEPROM_WriteByte(0x01, DATA_HEAD_VER);
+  99   1        EEPROM_WriteByte(0x02, size_code);
+ 100   1        StorageMgr_WriteU16(0x03, total);
+ 101   1        StorageMgr_WriteU16(0x05, DATA_ALLOC_UNIT * 2);
+ 102   1        StorageMgr_WriteU16(0x07, 0);
+ 103   1        StorageMgr_WriteU16(0x09, DATA_HEAD_SIZE);
+ 104   1        StorageMgr_WriteU16(0x0B, DATA_HEAD_SIZE);
+ 105   1        EEPROM_WriteByte(0x0D, 0);
+ 106   1        EEPROM_WriteByte(0x0E, 0);
+ 107   1        sum = (uint8_t)(DATA_HEAD_MAGIC ^ DATA_HEAD_VER ^ size_code);
+ 108   1        sum ^= (uint8_t)(total & 0xFF) ^ (uint8_t)(total >> 8);
+ 109   1        EEPROM_WriteByte(0x0F, sum);
+ 110   1      }
+ 111          
+ 112          // 按算法计算密文长度(含 TAG)
+ 113          uint16_t enc_calc_cipher_len(uint8_t algo, uint16_t plain_len) {
+ 114   1        const enc_algo_info_t *info = StorageMgr_AlgoInfo(algo);
+ 115   1        uint16_t len = plain_len;
+C51 COMPILER V9.59.0.0   STORAGEMGR                                                        09/26/2026 13:00:09 PAGE 3   
+
+ 116   1      
+ 117   1        if (info->mode == ENC_MODE_BLOCK_PAD)
+ 118   1          len = (uint16_t)((len / info->block_size + 1) * info->block_size);
+ 119   1        return (uint16_t)(len + info->tag_len);
+ 120   1      }
+ 121          
+ 122          // 按算法反推明文长度
+ 123          uint16_t enc_calc_plain_len(uint8_t algo, uint16_t enc_len) {
+ 124   1        const enc_algo_info_t *info = StorageMgr_AlgoInfo(algo);
+ 125   1      
+ 126   1        if (info->tag_len > enc_len) return 0;
+ 127   1        return (uint16_t)(enc_len - info->tag_len);
+ 128   1      }
+ 129          
+ 130          // 格式化片内块区(块目录/索引/位图)
+ 131          void StorageMgr_Format_BlockZone(void) {
+ 132   1          EEPROM_SetAddress(IC_0_24C64);
+ 133   1        EEPROM_Fill(FIRST_BLOCK_BLOCKTAB, FIRST_BLOCK_BITMAP + DATA_ALLOC_UNIT - FIRST_BLOCK_BLOCKTAB, 0x00);
+ 134   1      }
+ 135          
+ 136          // 整片清零第一块
+ 137          void StorageMgr_Format_EEPROMZone(void) {
+ 138   1        EEPROM_SetAddress(IC_0_24C64);
+ 139   1        HW_EEPROM_ClearAll();
+ 140   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =      8    ----
-   CONSTANT SIZE    =   ----    ----
+   CODE SIZE        =    823    ----
+   CONSTANT SIZE    =     42    ----
    XDATA SIZE       =   ----    ----
-   PDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----      24
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
 
 
-C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

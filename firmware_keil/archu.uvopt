@@ -271,8 +271,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\DevMgr.c</PathWithFileName>
-      <FilenameWithoutPath>DevMgr.c</FilenameWithoutPath>
+      <PathWithFileName>.\ConfigMgr.c</PathWithFileName>
+      <FilenameWithoutPath>ConfigMgr.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -283,8 +283,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\DevMgr.h</PathWithFileName>
-      <FilenameWithoutPath>DevMgr.h</FilenameWithoutPath>
+      <PathWithFileName>.\ConfigMgr.h</PathWithFileName>
+      <FilenameWithoutPath>ConfigMgr.h</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -351,8 +351,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\Security\BLAKE2s.c</PathWithFileName>
-      <FilenameWithoutPath>BLAKE2s.c</FilenameWithoutPath>
+      <PathWithFileName>.\Security\FeatTag.c</PathWithFileName>
+      <FilenameWithoutPath>FeatTag.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -363,8 +363,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\Security\BLAKE2s.h</PathWithFileName>
-      <FilenameWithoutPath>BLAKE2s.h</FilenameWithoutPath>
+      <PathWithFileName>.\Security\FeatTag.h</PathWithFileName>
+      <FilenameWithoutPath>FeatTag.h</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -372,7 +372,7 @@
 
   <Group>
     <GroupName>CommandParser</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

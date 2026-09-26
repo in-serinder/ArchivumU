@@ -1,0 +1,104 @@
+C51 COMPILER V9.59.0.0   FEATTAG                                                           09/26/2026 13:00:09 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE FEATTAG
+OBJECT MODULE PLACED IN .\Objects\FeatTag.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Security\FeatTag.c COMPACT RTX51 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPRO
+                    -M;.\Serial;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\FeatTag.lst) TABS(2) OBJECT(.\Objects\FeatTag.obj)
+
+line level    source
+
+   1          #include "FeatTag.h"
+   2          
+   3          /* FeatTag —— 中等安全强度的紧凑特征算法
+   4           * ------------------------------------------------------------------
+   5           * 设计目标: 在8051(8位, 代码区受限)上以极小代码量提供"优于简单异或"
+   6           *           的口令/配置校验能力。非密码学安全哈希, 但对短口令的抗碰撞、
+   7           *           抗篡改能力明显强于普通校验和。
+   8           *
+   9           * 结构:
+  10           *   1) 状态 s[16] 由固定IV初始化;
+  11           *   2) 吸收(absorb): 逐字节把输入混入状态, 位置相关, 含加/循环左移/异或;
+  12           *   3) 扩散(diffuse): 固定ROUNDS轮的非线性混淆, 每轮更新全部16字节;
+  13           *   4) 挤出(squeeze): 逐字节把状态扩散输出, 共16字节。
+  14           *
+  15           * 代码量约 < 1.2KB。
+  16           * ------------------------------------------------------------------ */
+  17          
+  18          #define FEATTAG_ROUNDS 8   /* 扩散轮数, 越大越安全, 代码量不变仅时间增加 */
+  19          
+  20          /* 16字节工作状态 */
+  21          static uint8_t idata ft_s[16];
+  22          
+  23          /* 固定初值(IV) */
+  24          static const uint8_t code ft_iv[16] = {
+  25            0x6A, 0x09, 0xE6, 0x67, 0xBB, 0x67, 0xAE, 0x85,
+  26            0x3C, 0x6E, 0xF3, 0x72, 0xA5, 0x4F, 0xF5, 0x3A
+  27          };
+  28          
+  29          /* 8位循环左移 */
+  30          #define ROL8(x, n) ((uint8_t)(((uint8_t)(x) << (n)) | ((uint8_t)(x) >> (8 - (n)))))
+  31          
+  32          void FeatTag_Checksum(const char *in, uint8_t len, uint8_t *out)
+  33          {
+  34   1        uint8_t i, r, t, a, b;
+  35   1      
+  36   1        if (len > FEATTAG_MAX_LEN)
+  37   1          len = FEATTAG_MAX_LEN;
+  38   1      
+  39   1        /* 1) 初始化状态 */
+  40   1        for (i = 0; i < 16; i++)
+  41   1          ft_s[i] = (uint8_t)(ft_iv[i] ^ (uint8_t)(0x9E + i));
+  42   1      
+  43   1        /* 2) 吸收输入: 每字节混入状态, 并做局部混淆 */
+  44   1        for (i = 0; i < len; i++) {
+  45   2          t = (uint8_t)in[i] ^ (uint8_t)(i * 0x1D);
+  46   2          ft_s[i & 15]        = (uint8_t)(ft_s[i & 15] + t);
+  47   2          ft_s[(i + 7) & 15] ^= ROL8(t, 3);
+  48   2          ft_s[(i + 3) & 15]  = (uint8_t)(ft_s[(i + 3) & 15] + ROL8(ft_s[i & 15], 1));
+  49   2        }
+  50   1      
+  51   1        /* 混入长度, 防止长度扩展/填充歧义 */
+  52   1        ft_s[15] ^= (uint8_t)(len + FEATTAG_OUT_LEN);
+  53   1      
+  54   1        /* 3) 扩散: 固定轮数的非线性混淆, 每轮前向+后向各扫一遍 */
+C51 COMPILER V9.59.0.0   FEATTAG                                                           09/26/2026 13:00:09 PAGE 2   
+
+  55   1        for (r = 0; r < FEATTAG_ROUNDS; r++) {
+  56   2          /* 前向 */
+  57   2          for (i = 0; i < 16; i++) {
+  58   3            a = ft_s[i];
+  59   3            b = ft_s[(i + 1) & 15];
+  60   3            ft_s[i]            = (uint8_t)(a + b + 0x37 + r);
+  61   3            ft_s[(i + 1) & 15] = (uint8_t)(ft_s[(i + 1) & 15] ^ ROL8(a, 5));
+  62   3          }
+  63   2          /* 后向 */
+  64   2          for (i = 16; i-- > 0; ) {
+  65   3            a = ft_s[i];
+  66   3            b = ft_s[(i + 15) & 15];        /* 前一个字节(i-1) */
+  67   3            ft_s[i]            = (uint8_t)(a + b + 0x5C);
+  68   3            ft_s[(i + 15) & 15] = (uint8_t)(ft_s[(i + 15) & 15] ^ ROL8(a, 2));
+  69   3          }
+  70   2        }
+  71   1      
+  72   1        /* 4) 挤出输出: 状态对折异或再循环左移, 保证雪崩 */
+  73   1        for (i = 0; i < FEATTAG_OUT_LEN; i++) {
+  74   2          a = ft_s[i];
+  75   2          b = ft_s[(i + 8) & 15];
+  76   2          out[i] = (uint8_t)(a ^ b ^ ROL8(a, 4));
+  77   2        }
+  78   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    418    ----
+   CONSTANT SIZE    =     16    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----      10
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =     16    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
