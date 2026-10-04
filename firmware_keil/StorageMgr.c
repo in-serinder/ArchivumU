@@ -1,18 +1,14 @@
 #include "StorageMgr.h"
-#include <string.h>
 
-/* 算法属性表: 索引即 ENC_ALGO_*, 驱动长度计算与加解密 */
-static const enc_algo_info_t code enc_algo_tab[] = {
-  /* algo                 mode                iv  tag  blk  keep */
-  { ENC_ALGO_NONE,        ENC_MODE_STREAM,     0,  0,  1,  1 },
-  { ENC_ALGO_AES128_CBC,  ENC_MODE_BLOCK_PAD, 16,  0, 16,  0 },
-  { ENC_ALGO_AES128_GCM,  ENC_MODE_AEAD,      12, 16,  1,  0 },
-  { ENC_ALGO_XOR,         ENC_MODE_STREAM,     0,  0,  1,  1 },
-  { ENC_ALGO_CAESAR,      ENC_MODE_STREAM,     0,  0,  1,  1 },
-  { ENC_ALGO_RC4,         ENC_MODE_STREAM,     0,  0,  1,  1 },
-};
-
-#define ENC_ALGO_CNT (sizeof(enc_algo_tab) / sizeof(enc_algo_tab[0]))
+/* ============================================================
+ * StorageMgr —— 双 EEPROM 布局层
+ * ------------------------------------------------------------
+ * 只负责第一片(0x50 元数据)/第二片(0x51 数据)底层布局：
+ *   - 配置区各字段的初始化
+ *   - 数据片头(自描述)初始化
+ *   - 块区 / 整片格式化
+ * 不含加密、不含串口应答、不含鉴权。
+ * ============================================================ */
 
 // 第二块容量代码 -> 总字节数
 static uint16_t StorageMgr_SizeCodeToBytes(uint8_t size_code) {
@@ -22,14 +18,8 @@ static uint16_t StorageMgr_SizeCodeToBytes(uint8_t size_code) {
     case DATA_SIZE_24C128: return 16 * 1024;
     case DATA_SIZE_24C256: return 32 * 1024;
     case DATA_SIZE_24C512: return 64 * 1024;
-    default:               return 0;
+        default:               return 0;
   }
-}
-
-// 取算法属性, 越界回退到明文
-static const enc_algo_info_t *StorageMgr_AlgoInfo(uint8_t algo) {
-  if (algo >= ENC_ALGO_CNT) algo = ENC_ALGO_NONE;
-  return &enc_algo_tab[algo];
 }
 
 // 写 16 位小端
@@ -50,27 +40,28 @@ void StorageMgr_Init(void) {
 }
 
 // 初始化设备: 清零第一块并写入配置区, 返回 ERR_*
+// 密码摘要与设备名由 ConfigMgr 负责，这里只落盘布局裸字段（形参仅接口兼容）。
 int StorageMgr_InitDevice(const char *name, const char *pass, uint8_t data_size_code) {
   uint16_t total;
-  uint8_t flags = FLAG_INITIALIZED;
 
+  /* 形参 name / pass 仅保持接口兼容，本层不处理，用(void)标记意图（C275 已在文件头屏蔽） */
+  (void)name;
+  (void)pass;
   total = StorageMgr_SizeCodeToBytes(data_size_code);
   if (total == 0) return ERR_SIZE_CODE_INVALID;
 
-  if (pass != NULL && strlen(pass) > 0 && strcmp(pass, PASS_NONE_STR) != 0)
-    flags |= FLAG_PWD_AUTH;
-
-    EEPROM_SetAddress(IC_0_24C64);
+  EEPROM_SetAddress(IC_0_24C64);
   EEPROM_Fill(0, DEV_EEPROM_SIZE, 0x00);
 
-  EEPROM_WriteByte(CFG_ADDR_FLAGS, flags);
+  EEPROM_WriteByte(CFG_ADDR_FLAGS, FLAG_INITIALIZED);
   EEPROM_WriteByte(CFG_ADDR_ENC_ALGO, ENC_ALGO_NONE);
   EEPROM_WriteByte(CFG_ADDR_KEY_VOL, KEY_VOL_DEFAULT);
-  EEPROM_WriteByte(CFG_ADDR_DEV_SIZE, DEV_SIZE_DEFAULT);
+  EEPROM_WriteByte(CFG_ADDR_DEV_SIZE, (uint8_t)(EEPROM0_CAPACITY_BYTES / 1024));
 
   EEPROM_WriteByte(CFG_ADDR_DATA_SLAVE, IC_1_24CXX);
   EEPROM_WriteByte(CFG_ADDR_DATA_SIZE_CODE, data_size_code);
   StorageMgr_WriteU16(CFG_ADDR_DATA_TOTAL, total);
+  StorageMgr_WriteU16(CFG_ADDR_DATA_PAGE, DATA_ALLOC_UNIT * 2);
   StorageMgr_WriteU16(CFG_ADDR_DATA_USED, 0);
   StorageMgr_WriteU16(CFG_ADDR_DATA_FREE, total);
   StorageMgr_WriteU16(CFG_ADDR_DATA_HWM, DATA_HEAD_SIZE);
@@ -109,28 +100,12 @@ void StorageMgr_InitDataHead(uint16_t total, uint8_t size_code) {
   EEPROM_WriteByte(0x0F, sum);
 }
 
-// 按算法计算密文长度(含 TAG)
-uint16_t enc_calc_cipher_len(uint8_t algo, uint16_t plain_len) {
-  const enc_algo_info_t *info = StorageMgr_AlgoInfo(algo);
-  uint16_t len = plain_len;
-
-  if (info->mode == ENC_MODE_BLOCK_PAD)
-    len = (uint16_t)((len / info->block_size + 1) * info->block_size);
-  return (uint16_t)(len + info->tag_len);
-}
-
-// 按算法反推明文长度
-uint16_t enc_calc_plain_len(uint8_t algo, uint16_t enc_len) {
-  const enc_algo_info_t *info = StorageMgr_AlgoInfo(algo);
-
-  if (info->tag_len > enc_len) return 0;
-  return (uint16_t)(enc_len - info->tag_len);
-}
-
 // 格式化片内块区(块目录/索引/位图)
 void StorageMgr_Format_BlockZone(void) {
-    EEPROM_SetAddress(IC_0_24C64);
-  EEPROM_Fill(FIRST_BLOCK_BLOCKTAB, FIRST_BLOCK_BITMAP + DATA_ALLOC_UNIT - FIRST_BLOCK_BLOCKTAB, 0x00);
+  EEPROM_SetAddress(IC_0_24C64);
+  EEPROM_Fill(FIRST_BLOCK_BLOCKTAB,
+              (uint16_t)(FIRST_BLOCK_BITMAP + DATA_ALLOC_UNIT - FIRST_BLOCK_BLOCKTAB),
+              0x00);
 }
 
 // 整片清零第一块

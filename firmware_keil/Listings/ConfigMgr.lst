@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   CONFIGMGR                                                         09/26/2026 13:00:09 PAGE 1   
+C51 COMPILER V9.59.0.0   CONFIGMGR                                                         09/30/2026 23:25:46 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE CONFIGMGR
 OBJECT MODULE PLACED IN .\Objects\ConfigMgr.obj
-COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ConfigMgr.c COMPACT RTX51 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPROM;.\Ser
-                    -ial;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\ConfigMgr.lst) TABS(2) OBJECT(.\Objects\ConfigMgr.obj)
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ConfigMgr.c COMPACT OPTIMIZE(8,SIZE) BROWSE INCDIR(.\EEPROM;.\Serial;.\S
+                    -ecurity) DEBUG OBJECTEXTEND PRINT(.\Listings\ConfigMgr.lst) TABS(2) OBJECT(.\Objects\ConfigMgr.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   52          
   53          // 回写整个配置区并重算校验和
   54          void ConfigMgr_Save(const cfg_t *cfg) {
-C51 COMPILER V9.59.0.0   CONFIGMGR                                                         09/26/2026 13:00:09 PAGE 2   
+C51 COMPILER V9.59.0.0   CONFIGMGR                                                         09/30/2026 23:25:46 PAGE 2   
 
   55   1        uint8_t i;
   56   1      
@@ -124,9 +124,9 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1294    ----
+   CODE SIZE        =   1114    ----
    CONSTANT SIZE    =      6    ----
-C51 COMPILER V9.59.0.0   CONFIGMGR                                                         09/26/2026 13:00:09 PAGE 3   
+C51 COMPILER V9.59.0.0   CONFIGMGR                                                         09/30/2026 23:25:46 PAGE 3   
 
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----      37

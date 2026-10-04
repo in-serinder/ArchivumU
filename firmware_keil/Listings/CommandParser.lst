@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 1   
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE COMMANDPARSER
 OBJECT MODULE PLACED IN .\Objects\CommandParser.obj
-COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE CommandParser.c COMPACT RTX51 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPROM;.
-                    -\Serial;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\CommandParser.lst) TABS(2) OBJECT(.\Objects\CommandParser.obj)
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE CommandParser.c COMPACT OPTIMIZE(8,SIZE) BROWSE INCDIR(.\EEPROM;.\Serial
+                    -;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\CommandParser.lst) TABS(2) OBJECT(.\Objects\CommandParser.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   52          
   53          static int CMD_Compare(const char *a, const char *b) {
   54   1        if (a == 0 || b == 0) return 0;
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 2   
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 2   
 
   55   1        return strcmp(a, b) == 0;
   56   1      }
@@ -126,7 +126,7 @@ line level    source
  114   2        }
  115   1        return count;
  116   1      }
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 3   
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 3   
 
  117          
  118          static uint8_t CMD_CheckAuth(void) {
@@ -149,1256 +149,1062 @@ line level    source
  135   1        return 1;
  136   1      }
  137          
- 138          uint8_t CMD_IsAuthorized(void) { return s_authed; }
- 139          
- 140          void CMD_SessionTick(void) {
- 141   1        if (s_authed && s_auth_tick > 0) { if (--s_auth_tick == 0) s_authed = 0; }
- 142   1      }
- 143          
- 144          void CMD_PARSER_SET_STORAGE(uint16_t addr) { s_storage_size = addr; }
- 145          
- 146          /* ---- Block table management ---- */
- 147          
- 148          static uint8_t CMD_ReadBlockSlot(uint16_t idx, block_entry_t *out) {
- 149   1        uint16_t off = (uint16_t)(FIRST_BLOCK_BLOCKTAB + idx * BLK_REC_SIZE);
- 150   1        uint8_t  j;
- 151   1        if (idx >= BLOCK_TAB_MAX) return 0;
- 152   1        out->block_id = CMD_ReadU16(off);
- 153   1        if (out->block_id == 0xFFFF) return 0;
- 154   1        for (j = 0; j < BLOCK_NAME_LEN; j++)
- 155   1          out->name[j] = EEPROM_ReadByte((uint16_t)(off + 2 + j));
- 156   1        out->flags        = EEPROM_ReadByte((uint16_t)(off + 2 + BLOCK_NAME_LEN));
- 157   1        out->kv_count     = CMD_ReadU16((uint16_t)(off + 3 + BLOCK_NAME_LEN));
- 158   1        out->kv_index_off = CMD_ReadU16((uint16_t)(off + 5 + BLOCK_NAME_LEN));
- 159   1        out->kv_index_len = CMD_ReadU16((uint16_t)(off + 7 + BLOCK_NAME_LEN));
- 160   1        out->data_start   = 0;
- 161   1        out->data_used    = 0;
- 162   1        return 1;
+ 138          /* 密码比对：返回 1 匹配、0 不匹配、2 未设置密码。
+ 139           * 复用调用方已有的 cfg 缓存，不额外占用持久变量。 */
+ 140          static uint8_t CMD_PwdMatches(cfg_t *cfg, char *pass) {
+ 141   1        uint8_t hash[16];
+ 142   1        uint8_t i, match = 1, allzero = 1;
+ 143   1        for (i = 0; i < 16; i++) { if (cfg->pwd_hash[i] != 0) { allzero = 0; break; } }
+ 144   1        if (allzero) return 2;
+ 145   1        FeatTag_Checksum(pass, (uint8_t)strlen(pass), hash);
+ 146   1        for (i = 0; i < 16; i++) { if (cfg->pwd_hash[i] != hash[i]) { match = 0; break; } }
+ 147   1        return match;
+ 148   1      }
+ 149          
+ 150          /* 命令统一前置：置任务态 + 鉴权 (+ 只读锁)。
+ 151           * need_write=1 时同时检查写保护。返回 0 表示已被拒绝（已回 ERR）。 */
+ 152          static uint8_t CMD_Begin(uint8_t task, uint8_t need_write) {
+ 153   1        s_task = task;
+ 154   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return 0; }
+ 155   1        if (need_write && !CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return 0; }
+ 156   1        return 1;
+ 157   1      }
+ 158          
+ 159          uint8_t CMD_IsAuthorized(void) { return s_authed; }
+ 160          
+ 161          void CMD_SessionTick(void) {
+ 162   1        if (s_authed && s_auth_tick > 0) { if (--s_auth_tick == 0) s_authed = 0; }
  163   1      }
  164          
- 165          static void CMD_WriteBlockSlot(uint16_t idx, const block_entry_t *blk) {
- 166   1        uint16_t off = (uint16_t)(FIRST_BLOCK_BLOCKTAB + idx * BLK_REC_SIZE);
- 167   1        uint8_t  j;
- 168   1        CMD_WriteU16(off, blk->block_id);
- 169   1        for (j = 0; j < BLOCK_NAME_LEN; j++)
- 170   1          EEPROM_WriteByte((uint16_t)(off + 2 + j), blk->name[j]);
- 171   1        EEPROM_WriteByte((uint16_t)(off + 2 + BLOCK_NAME_LEN), blk->flags);
- 172   1        CMD_WriteU16((uint16_t)(off + 3 + BLOCK_NAME_LEN), blk->kv_count);
- 173   1        CMD_WriteU16((uint16_t)(off + 5 + BLOCK_NAME_LEN), blk->kv_index_off);
- 174   1        CMD_WriteU16((uint16_t)(off + 7 + BLOCK_NAME_LEN), blk->kv_index_len);
- 175   1      }
- 176          
- 177          static void CMD_ClearBlockSlot(uint16_t idx) {
- 178   1        uint16_t off = (uint16_t)(FIRST_BLOCK_BLOCKTAB + idx * BLK_REC_SIZE);
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 4   
+ 165          void CMD_PARSER_SET_STORAGE(uint16_t addr) { s_storage_size = addr; }
+ 166          
+ 167          /* ---- Block table management ---- */
+ 168          
+ 169          static uint8_t CMD_ReadBlockSlot(uint16_t idx, block_entry_t *out) {
+ 170   1        uint16_t off = (uint16_t)(FIRST_BLOCK_BLOCKTAB + idx * BLK_REC_SIZE);
+ 171   1        uint8_t  j;
+ 172   1        if (idx >= BLOCK_TAB_MAX) return 0;
+ 173   1        out->block_id = CMD_ReadU16(off);
+ 174   1        if (out->block_id == 0xFFFF) return 0;
+ 175   1        for (j = 0; j < BLOCK_NAME_LEN; j++)
+ 176   1          out->name[j] = EEPROM_ReadByte((uint16_t)(off + 2 + j));
+ 177   1        out->flags        = EEPROM_ReadByte((uint16_t)(off + 2 + BLOCK_NAME_LEN));
+ 178   1        out->kv_count     = CMD_ReadU16((uint16_t)(off + 3 + BLOCK_NAME_LEN));
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 4   
 
- 179   1        uint8_t  j;
- 180   1        CMD_WriteU16(off, 0xFFFF);
- 181   1        for (j = 0; j < BLOCK_NAME_LEN; j++) EEPROM_WriteByte((uint16_t)(off + 2 + j), 0x00);
- 182   1        EEPROM_WriteByte((uint16_t)(off + 2 + BLOCK_NAME_LEN), 0x00);
- 183   1      }
- 184          
- 185          static uint16_t CMD_FindFreeBlockSlot(void) {
- 186   1        uint16_t i;
- 187   1        for (i = 0; i < BLOCK_TAB_MAX; i++) {
- 188   2          if (CMD_ReadU16((uint16_t)(FIRST_BLOCK_BLOCKTAB + i * BLK_REC_SIZE)) == 0xFFFF) return i;
- 189   2        }
- 190   1        return 0xFFFF;
- 191   1      }
- 192          
- 193          static uint16_t CMD_NextBlockId(void) {
- 194   1        uint16_t i, max_id = 0;
- 195   1        for (i = 0; i < BLOCK_TAB_MAX; i++) {
- 196   2          block_entry_t b;
- 197   2          if (!CMD_ReadBlockSlot(i, &b)) continue;
- 198   2          if (b.block_id > max_id) max_id = b.block_id;
- 199   2        }
- 200   1        return (uint16_t)(max_id + 1);
- 201   1      }
- 202          
- 203          static uint16_t CMD_LoadBlockById(uint16_t want_id, block_entry_t *out) {
- 204   1        uint16_t i;
- 205   1        for (i = 0; i < BLOCK_TAB_MAX; i++) {
- 206   2          if (!CMD_ReadBlockSlot(i, out)) continue;
- 207   2          if (out->block_id == want_id) return i;
- 208   2        }
- 209   1        return 0xFFFF;
- 210   1      }
- 211          
- 212          static uint16_t CMD_LoadBlockByName(char *name, block_entry_t *out) {
- 213   1        uint16_t i;
- 214   1        uint8_t  j;
- 215   1        for (i = 0; i < BLOCK_TAB_MAX; i++) {
- 216   2          if (!CMD_ReadBlockSlot(i, out)) continue;
- 217   2          for (j = 0; j < BLOCK_NAME_LEN; j++) {
- 218   3            if (name[j] == '\0') break;
- 219   3            if (out->name[j] != (uint8_t)name[j]) break;
- 220   3          }
- 221   2          if (name[j] == '\0') return i;
- 222   2        }
- 223   1        return 0xFFFF;
- 224   1      }
- 225          
- 226          static uint8_t CMD_BlockNameExists(char *name) {
- 227   1        block_entry_t b;
- 228   1        return (CMD_LoadBlockByName(name, &b) != 0xFFFF) ? 1 : 0;
- 229   1      }
- 230          
- 231          static void CMD_SetBlockName(block_entry_t *blk, char *name) {
- 232   1        uint8_t j;
- 233   1        for (j = 0; j < BLOCK_NAME_LEN; j++) blk->name[j] = 0;
- 234   1        if (name == 0) return;
- 235   1        for (j = 0; j < BLOCK_NAME_LEN && name[j] != '\0'; j++) blk->name[j] = (uint8_t)name[j];
- 236   1      }
- 237          
- 238          static void CMD_GetBlockName(const block_entry_t *blk, char *out) {
- 239   1        uint8_t j;
- 240   1        for (j = 0; j < BLOCK_NAME_LEN; j++) out[j] = (char)blk->name[j];
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 5   
+ 179   1        out->kv_index_off = CMD_ReadU16((uint16_t)(off + 5 + BLOCK_NAME_LEN));
+ 180   1        out->kv_index_len = CMD_ReadU16((uint16_t)(off + 7 + BLOCK_NAME_LEN));
+ 181   1        out->data_start   = 0;
+ 182   1        out->data_used    = 0;
+ 183   1        return 1;
+ 184   1      }
+ 185          
+ 186          static void CMD_WriteBlockSlot(uint16_t idx, const block_entry_t *blk) {
+ 187   1        uint16_t off = (uint16_t)(FIRST_BLOCK_BLOCKTAB + idx * BLK_REC_SIZE);
+ 188   1        uint8_t  j;
+ 189   1        CMD_WriteU16(off, blk->block_id);
+ 190   1        for (j = 0; j < BLOCK_NAME_LEN; j++)
+ 191   1          EEPROM_WriteByte((uint16_t)(off + 2 + j), blk->name[j]);
+ 192   1        EEPROM_WriteByte((uint16_t)(off + 2 + BLOCK_NAME_LEN), blk->flags);
+ 193   1        CMD_WriteU16((uint16_t)(off + 3 + BLOCK_NAME_LEN), blk->kv_count);
+ 194   1        CMD_WriteU16((uint16_t)(off + 5 + BLOCK_NAME_LEN), blk->kv_index_off);
+ 195   1        CMD_WriteU16((uint16_t)(off + 7 + BLOCK_NAME_LEN), blk->kv_index_len);
+ 196   1      }
+ 197          
+ 198          static void CMD_ClearBlockSlot(uint16_t idx) {
+ 199   1        uint16_t off = (uint16_t)(FIRST_BLOCK_BLOCKTAB + idx * BLK_REC_SIZE);
+ 200   1        uint8_t  j;
+ 201   1        CMD_WriteU16(off, 0xFFFF);
+ 202   1        for (j = 0; j < BLOCK_NAME_LEN; j++) EEPROM_WriteByte((uint16_t)(off + 2 + j), 0x00);
+ 203   1        EEPROM_WriteByte((uint16_t)(off + 2 + BLOCK_NAME_LEN), 0x00);
+ 204   1      }
+ 205          
+ 206          static uint16_t CMD_FindFreeBlockSlot(void) {
+ 207   1        uint16_t i;
+ 208   1        for (i = 0; i < BLOCK_TAB_MAX; i++) {
+ 209   2          if (CMD_ReadU16((uint16_t)(FIRST_BLOCK_BLOCKTAB + i * BLK_REC_SIZE)) == 0xFFFF) return i;
+ 210   2        }
+ 211   1        return 0xFFFF;
+ 212   1      }
+ 213          
+ 214          static uint16_t CMD_NextBlockId(void) {
+ 215   1        uint16_t i, max_id = 0;
+ 216   1        for (i = 0; i < BLOCK_TAB_MAX; i++) {
+ 217   2          block_entry_t b;
+ 218   2          if (!CMD_ReadBlockSlot(i, &b)) continue;
+ 219   2          if (b.block_id > max_id) max_id = b.block_id;
+ 220   2        }
+ 221   1        return (uint16_t)(max_id + 1);
+ 222   1      }
+ 223          
+ 224          static uint16_t CMD_LoadBlockById(uint16_t want_id, block_entry_t *out) {
+ 225   1        uint16_t i;
+ 226   1        for (i = 0; i < BLOCK_TAB_MAX; i++) {
+ 227   2          if (!CMD_ReadBlockSlot(i, out)) continue;
+ 228   2          if (out->block_id == want_id) return i;
+ 229   2        }
+ 230   1        return 0xFFFF;
+ 231   1      }
+ 232          
+ 233          static uint16_t CMD_LoadBlockByName(char *name, block_entry_t *out) {
+ 234   1        uint16_t i;
+ 235   1        uint8_t  j;
+ 236   1        for (i = 0; i < BLOCK_TAB_MAX; i++) {
+ 237   2          if (!CMD_ReadBlockSlot(i, out)) continue;
+ 238   2          for (j = 0; j < BLOCK_NAME_LEN; j++) {
+ 239   3            if (name[j] == '\0') break;
+ 240   3            if (out->name[j] != (uint8_t)name[j]) break;
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 5   
 
- 241   1        out[BLOCK_NAME_LEN] = '\0';
- 242   1      }
- 243          
- 244          /* ---- KV index management ---- */
- 245          
- 246          static uint16_t CMD_KvEntryOff(uint16_t idx) {
- 247   1        return (uint16_t)(FIRST_BLOCK_KVIDX + idx * KVIDX_REC_SIZE);
- 248   1      }
- 249          
- 250          static void CMD_ReadKvEntry(uint16_t idx, kv_entry_t *e) {
- 251   1        uint16_t off = CMD_KvEntryOff(idx);
- 252   1        e->block_id  = CMD_ReadU16((uint16_t)(off + 0));
- 253   1        e->key_len   = CMD_ReadU16((uint16_t)(off + 2));
- 254   1        e->key_off   = CMD_ReadU16((uint16_t)(off + 4));
- 255   1        e->slave     = EEPROM_ReadByte((uint16_t)(off + 6));
- 256   1        e->data_addr = CMD_ReadU16((uint16_t)(off + 7));
- 257   1        e->data_len  = CMD_ReadU16((uint16_t)(off + 9));
- 258   1        e->enc_algo  = EEPROM_ReadByte((uint16_t)(off + 11));
- 259   1        e->flags     = EEPROM_ReadByte((uint16_t)(off + 12));
- 260   1      }
- 261          
- 262          static void CMD_WriteKvEntry(uint16_t idx, const kv_entry_t *e) {
- 263   1        uint16_t off = CMD_KvEntryOff(idx);
- 264   1        CMD_WriteU16((uint16_t)(off + 0), e->block_id);
- 265   1        CMD_WriteU16((uint16_t)(off + 2), e->key_len);
- 266   1        CMD_WriteU16((uint16_t)(off + 4), e->key_off);
- 267   1        EEPROM_WriteByte((uint16_t)(off + 6), e->slave);
- 268   1        CMD_WriteU16((uint16_t)(off + 7), e->data_addr);
- 269   1        CMD_WriteU16((uint16_t)(off + 9), e->data_len);
- 270   1        EEPROM_WriteByte((uint16_t)(off + 11), e->enc_algo);
- 271   1        EEPROM_WriteByte((uint16_t)(off + 12), e->flags);
- 272   1      }
- 273          
- 274          static uint16_t CMD_FindKeyIdx(uint16_t block_id, const char *key) {
- 275   1        uint16_t klen = (uint16_t)strlen(key);
- 276   1        uint16_t i;
- 277   1        for (i = 0; i < KVIDX_MAX; i++) {
- 278   2          kv_entry_t e;
- 279   2          uint16_t k;
- 280   2          CMD_ReadKvEntry(i, &e);
- 281   2          if (e.block_id != block_id) continue;
- 282   2          if (!(e.flags & KV_FLAG_VALID)) continue;
- 283   2          if (e.key_len != klen) continue;
- 284   2          for (k = 0; k < klen; k++) {
- 285   3            if (EEPROM_ReadByte((uint16_t)(e.key_off + k)) != (uint8_t)key[k]) break;
- 286   3          }
- 287   2          if (k == klen) return i;
- 288   2        }
- 289   1        return 0xFFFF;
- 290   1      }
- 291          
- 292          static uint16_t CMD_AllocKvSlot(void) {
- 293   1        uint16_t i;
- 294   1        for (i = 0; i < KVIDX_MAX; i++) {
- 295   2          if (CMD_ReadU16(CMD_KvEntryOff(i)) == 0xFFFF) return i;
- 296   2        }
- 297   1        return 0xFFFF;
- 298   1      }
- 299          
- 300          static uint16_t CMD_KeyPoolAlloc(uint16_t len) {
- 301   1        uint16_t i, end = (uint16_t)(FIRST_BLOCK_KVIDX + KVIDX_MAX * KVIDX_REC_SIZE);
- 302   1        for (i = 0; i < KVIDX_MAX; i++) {
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 6   
+ 241   3          }
+ 242   2          if (name[j] == '\0') return i;
+ 243   2        }
+ 244   1        return 0xFFFF;
+ 245   1      }
+ 246          
+ 247          static uint8_t CMD_BlockNameExists(char *name) {
+ 248   1        block_entry_t b;
+ 249   1        return (CMD_LoadBlockByName(name, &b) != 0xFFFF) ? 1 : 0;
+ 250   1      }
+ 251          
+ 252          static void CMD_SetBlockName(block_entry_t *blk, char *name) {
+ 253   1        uint8_t j;
+ 254   1        for (j = 0; j < BLOCK_NAME_LEN; j++) blk->name[j] = 0;
+ 255   1        if (name == 0) return;
+ 256   1        for (j = 0; j < BLOCK_NAME_LEN && name[j] != '\0'; j++) blk->name[j] = (uint8_t)name[j];
+ 257   1      }
+ 258          
+ 259          static void CMD_GetBlockName(const block_entry_t *blk, char *out) {
+ 260   1        uint8_t j;
+ 261   1        for (j = 0; j < BLOCK_NAME_LEN; j++) out[j] = (char)blk->name[j];
+ 262   1        out[BLOCK_NAME_LEN] = '\0';
+ 263   1      }
+ 264          
+ 265          /* ---- KV index management ---- */
+ 266          
+ 267          static uint16_t CMD_KvEntryOff(uint16_t idx) {
+ 268   1        return (uint16_t)(FIRST_BLOCK_KVIDX + idx * KVIDX_REC_SIZE);
+ 269   1      }
+ 270          
+ 271          static void CMD_ReadKvEntry(uint16_t idx, kv_entry_t *e) {
+ 272   1        uint16_t off = CMD_KvEntryOff(idx);
+ 273   1        e->block_id  = CMD_ReadU16((uint16_t)(off + 0));
+ 274   1        e->key_len   = CMD_ReadU16((uint16_t)(off + 2));
+ 275   1        e->key_off   = CMD_ReadU16((uint16_t)(off + 4));
+ 276   1        e->slave     = EEPROM_ReadByte((uint16_t)(off + 6));
+ 277   1        e->data_addr = CMD_ReadU16((uint16_t)(off + 7));
+ 278   1        e->data_len  = CMD_ReadU16((uint16_t)(off + 9));
+ 279   1        e->enc_algo  = EEPROM_ReadByte((uint16_t)(off + 11));
+ 280   1        e->flags     = EEPROM_ReadByte((uint16_t)(off + 12));
+ 281   1      }
+ 282          
+ 283          static void CMD_WriteKvEntry(uint16_t idx, const kv_entry_t *e) {
+ 284   1        uint16_t off = CMD_KvEntryOff(idx);
+ 285   1        CMD_WriteU16((uint16_t)(off + 0), e->block_id);
+ 286   1        CMD_WriteU16((uint16_t)(off + 2), e->key_len);
+ 287   1        CMD_WriteU16((uint16_t)(off + 4), e->key_off);
+ 288   1        EEPROM_WriteByte((uint16_t)(off + 6), e->slave);
+ 289   1        CMD_WriteU16((uint16_t)(off + 7), e->data_addr);
+ 290   1        CMD_WriteU16((uint16_t)(off + 9), e->data_len);
+ 291   1        EEPROM_WriteByte((uint16_t)(off + 11), e->enc_algo);
+ 292   1        EEPROM_WriteByte((uint16_t)(off + 12), e->flags);
+ 293   1      }
+ 294          
+ 295          static uint16_t CMD_FindKeyIdx(uint16_t block_id, const char *key) {
+ 296   1        uint16_t klen = (uint16_t)strlen(key);
+ 297   1        uint16_t i;
+ 298   1        for (i = 0; i < KVIDX_MAX; i++) {
+ 299   2          kv_entry_t e;
+ 300   2          uint16_t k;
+ 301   2          CMD_ReadKvEntry(i, &e);
+ 302   2          if (e.block_id != block_id) continue;
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 6   
 
- 303   2          kv_entry_t e;
- 304   2          CMD_ReadKvEntry(i, &e);
- 305   2          if (e.block_id == 0xFFFF) continue;
- 306   2          if ((uint16_t)(e.key_off + e.key_len) > end) end = (uint16_t)(e.key_off + e.key_len);
- 307   2        }
- 308   1        if ((uint32_t)end + len > FIRST_BLOCK_BITMAP) return 0xFFFF;
- 309   1        return end;
- 310   1      }
- 311          
- 312          /* ---- Data plane KV_RECORD serialization ---- */
- 313          
- 314          static uint16_t CMD_KvRecLen(uint16_t key_len, uint16_t val_len) {
- 315   1        return (uint16_t)(KV_REC_HDR_LEN + key_len + val_len + 2 + 1 + 1);
- 316   1      }
- 317          
- 318          static uint16_t CMD_AppendKvRecord(uint16_t block_id, const char *key,
- 319                                             const uint8_t *value, uint16_t val_len,
- 320                                             uint8_t enc_algo, uint8_t flags) {
- 321   1        uint16_t key_len = (uint16_t)strlen(key);
- 322   1        uint16_t total   = CMD_KvRecLen(key_len, val_len);
- 323   1        uint16_t addr    = CMD_ReadU16(CFG_ADDR_DATA_NEXT);
- 324   1        uint16_t total_cap = CMD_ReadU16(CFG_ADDR_DATA_TOTAL);
- 325   1        uint16_t i;
- 326   1      
- 327   1        if (total_cap < DATA_BODY_START) return 0xFFFF;
- 328   1        if (addr < DATA_BODY_START) return 0xFFFF;
- 329   1        if ((uint32_t)addr + total > total_cap) return 0xFFFF;
- 330   1      
- 331   1        EEPROM_SetAddress(IC_1_24CXX);
- 332   1        EEPROM_WriteByte((uint16_t)(addr + 0x00), KV_REC_MAGIC);
- 333   1        EEPROM_WriteByte((uint16_t)(addr + 0x01), KV_REC_STATE_VALID);
- 334   1        CMD_WriteU16((uint16_t)(addr + KV_OFF_BLOCK_ID), block_id);
- 335   1        CMD_WriteU16((uint16_t)(addr + KV_OFF_KEY_LEN), key_len);
- 336   1        CMD_WriteU16((uint16_t)(addr + KV_OFF_VAL_LEN), val_len);
- 337   1        EEPROM_WriteByte((uint16_t)(addr + KV_OFF_ENC_ALGO), enc_algo);
- 338   1        EEPROM_WriteByte((uint16_t)(addr + KV_OFF_FLAGS), flags);
- 339   1        EEPROM_WriteByte((uint16_t)(addr + KV_OFF_IV_LEN), 0);
- 340   1        for (i = 0; i < 16; i++) EEPROM_WriteByte((uint16_t)(addr + KV_OFF_IV + i), 0x00);
- 341   1        EEPROM_WriteByte((uint16_t)(addr + KV_OFF_TAG_LEN), 0);
- 342   1        for (i = 0; i < 16; i++) EEPROM_WriteByte((uint16_t)(addr + KV_OFF_TAG + i), 0x00);
- 343   1        for (i = 0; i < key_len; i++)
- 344   1          EEPROM_WriteByte((uint16_t)(addr + KV_OFF_KEY + i), (uint8_t)key[i]);
- 345   1        for (i = 0; i < val_len; i++)
- 346   1          EEPROM_WriteByte((uint16_t)(addr + KV_OFF_KEY + key_len + i), value[i]);
- 347   1        {
- 348   2          uint16_t crc_addr = (uint16_t)(addr + KV_OFF_KEY + key_len + val_len);
- 349   2          uint16_t crc = 0;
- 350   2          for (i = 0; i < val_len; i++) crc = (uint16_t)(crc + (uint16_t)value[i] * (i + 1));
- 351   2          CMD_WriteU16(crc_addr, crc);
- 352   2          EEPROM_WriteByte((uint16_t)(crc_addr + 2), KV_REC_VER);
- 353   2          EEPROM_WriteByte((uint16_t)(crc_addr + 3), KV_REC_ETX);
- 354   2        }
- 355   1        addr = (uint16_t)(addr + total);
- 356   1        CMD_WriteU16(CFG_ADDR_DATA_NEXT, addr);
- 357   1        {
- 358   2          uint16_t used = CMD_ReadU16(CFG_ADDR_DATA_USED);
- 359   2          uint16_t hwm  = CMD_ReadU16(CFG_ADDR_DATA_HWM);
- 360   2          used = (uint16_t)(used + total);
- 361   2          if (addr > hwm) hwm = addr;
- 362   2          CMD_WriteU16(CFG_ADDR_DATA_USED, used);
- 363   2          CMD_WriteU16(CFG_ADDR_DATA_HWM, hwm);
- 364   2          if (total_cap > 0) {
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 7   
+ 303   2          if (!(e.flags & KV_FLAG_VALID)) continue;
+ 304   2          if (e.key_len != klen) continue;
+ 305   2          for (k = 0; k < klen; k++) {
+ 306   3            if (EEPROM_ReadByte((uint16_t)(e.key_off + k)) != (uint8_t)key[k]) break;
+ 307   3          }
+ 308   2          if (k == klen) return i;
+ 309   2        }
+ 310   1        return 0xFFFF;
+ 311   1      }
+ 312          
+ 313          static uint16_t CMD_AllocKvSlot(void) {
+ 314   1        uint16_t i;
+ 315   1        for (i = 0; i < KVIDX_MAX; i++) {
+ 316   2          if (CMD_ReadU16(CMD_KvEntryOff(i)) == 0xFFFF) return i;
+ 317   2        }
+ 318   1        return 0xFFFF;
+ 319   1      }
+ 320          
+ 321          static uint16_t CMD_KeyPoolAlloc(uint16_t len) {
+ 322   1        uint16_t i, end = (uint16_t)(FIRST_BLOCK_KVIDX + KVIDX_MAX * KVIDX_REC_SIZE);
+ 323   1        for (i = 0; i < KVIDX_MAX; i++) {
+ 324   2          kv_entry_t e;
+ 325   2          CMD_ReadKvEntry(i, &e);
+ 326   2          if (e.block_id == 0xFFFF) continue;
+ 327   2          if ((uint16_t)(e.key_off + e.key_len) > end) end = (uint16_t)(e.key_off + e.key_len);
+ 328   2        }
+ 329   1        if ((uint32_t)end + len > FIRST_BLOCK_BITMAP) return 0xFFFF;
+ 330   1        return end;
+ 331   1      }
+ 332          
+ 333          /* ---- Data plane KV_RECORD serialization ---- */
+ 334          
+ 335          static uint16_t CMD_KvRecLen(uint16_t key_len, uint16_t val_len) {
+ 336   1        return (uint16_t)(KV_REC_HDR_LEN + key_len + val_len + 2 + 1 + 1);
+ 337   1      }
+ 338          
+ 339          static uint16_t CMD_AppendKvRecord(uint16_t block_id, const char *key,
+ 340                                             const uint8_t *value, uint16_t val_len,
+ 341                                             uint8_t enc_algo, uint8_t flags) {
+ 342   1        uint16_t key_len = (uint16_t)strlen(key);
+ 343   1        uint16_t total   = CMD_KvRecLen(key_len, val_len);
+ 344   1        uint16_t addr    = CMD_ReadU16(CFG_ADDR_DATA_NEXT);
+ 345   1        uint16_t total_cap = CMD_ReadU16(CFG_ADDR_DATA_TOTAL);
+ 346   1        uint16_t i;
+ 347   1      
+ 348   1        if (total_cap < DATA_BODY_START) return 0xFFFF;
+ 349   1        if (addr < DATA_BODY_START) return 0xFFFF;
+ 350   1        if ((uint32_t)addr + total > total_cap) return 0xFFFF;
+ 351   1      
+ 352   1        EEPROM_SetAddress(IC_1_24CXX);
+ 353   1        EEPROM_WriteByte((uint16_t)(addr + 0x00), KV_REC_MAGIC);
+ 354   1        EEPROM_WriteByte((uint16_t)(addr + 0x01), KV_REC_STATE_VALID);
+ 355   1        CMD_WriteU16((uint16_t)(addr + KV_OFF_BLOCK_ID), block_id);
+ 356   1        CMD_WriteU16((uint16_t)(addr + KV_OFF_KEY_LEN), key_len);
+ 357   1        CMD_WriteU16((uint16_t)(addr + KV_OFF_VAL_LEN), val_len);
+ 358   1        EEPROM_WriteByte((uint16_t)(addr + KV_OFF_ENC_ALGO), enc_algo);
+ 359   1        EEPROM_WriteByte((uint16_t)(addr + KV_OFF_FLAGS), flags);
+ 360   1        EEPROM_WriteByte((uint16_t)(addr + KV_OFF_IV_LEN), 0);
+ 361   1        for (i = 0; i < 16; i++) EEPROM_WriteByte((uint16_t)(addr + KV_OFF_IV + i), 0x00);
+ 362   1        EEPROM_WriteByte((uint16_t)(addr + KV_OFF_TAG_LEN), 0);
+ 363   1        for (i = 0; i < 16; i++) EEPROM_WriteByte((uint16_t)(addr + KV_OFF_TAG + i), 0x00);
+ 364   1        for (i = 0; i < key_len; i++)
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 7   
 
- 365   3            CMD_WriteU16(CFG_ADDR_DATA_FREE, (uint16_t)(total_cap - used));
- 366   3            EEPROM_WriteByte(CFG_ADDR_DATA_USAGE, (uint8_t)(((uint32_t)used * 100u) / total_cap));
- 367   3          }
- 368   2        }
- 369   1        return (uint16_t)(addr - total);
- 370   1      }
- 371          
- 372          static uint16_t CMD_ReadKvRecordValue(uint16_t data_addr, uint8_t *buf, uint16_t max) {
- 373   1        uint16_t key_len, val_len, i;
- 374   1        if (data_addr < DATA_BODY_START) return 0xFFFF;
- 375   1        EEPROM_SetAddress(IC_1_24CXX);
- 376   1        if (EEPROM_ReadByte(data_addr) != KV_REC_MAGIC) return 0xFFFF;
- 377   1        key_len = CMD_ReadU16((uint16_t)(data_addr + KV_OFF_KEY_LEN));
- 378   1        val_len = CMD_ReadU16((uint16_t)(data_addr + KV_OFF_VAL_LEN));
- 379   1        if (val_len > max) return 0xFFFF;
- 380   1        for (i = 0; i < val_len; i++)
- 381   1          buf[i] = EEPROM_ReadByte((uint16_t)(data_addr + KV_OFF_KEY + key_len + i));
- 382   1        return val_len;
- 383   1      }
- 384          
- 385          static void CMD_DeleteKvRecord(uint16_t data_addr) {
- 386   1        if (data_addr < DATA_BODY_START) return;
- 387   1        EEPROM_SetAddress(IC_1_24CXX);
- 388   1        EEPROM_WriteByte((uint16_t)(data_addr + 0x01), KV_REC_STATE_DEL);
- 389   1      }
- 390          
- 391          static uint8_t CMD_UpdateKvRecordValue(uint16_t data_addr, const uint8_t *value, uint16_t val_len) {
- 392   1        uint16_t key_len, i;
- 393   1        if (data_addr < DATA_BODY_START) return 0;
- 394   1        EEPROM_SetAddress(IC_1_24CXX);
- 395   1        if (EEPROM_ReadByte(data_addr) != KV_REC_MAGIC) return 0;
- 396   1        key_len = CMD_ReadU16((uint16_t)(data_addr + KV_OFF_KEY_LEN));
- 397   1        for (i = 0; i < val_len; i++)
- 398   1          EEPROM_WriteByte((uint16_t)(data_addr + KV_OFF_KEY + key_len + i), value[i]);
- 399   1        return 1;
- 400   1      }
- 401          
- 402          /* 统一入口：block_flag=="0" 时按名字定位，否则按数字 id 定位。
- 403           * 找到返回槽位索引(0..BLOCK_TAB_MAX-1)，未找到返回 0xFFFF。 */
- 404          static uint16_t CMD_ResolveBlock(char *block_flag, char *block_identifier,
- 405                                           block_entry_t *out) {
- 406   1        if (CMD_Compare(block_flag, "0"))
- 407   1          return CMD_LoadBlockByName(block_identifier, out);
- 408   1        return CMD_LoadBlockById(CMD_AtoU16(block_identifier), out);
- 409   1      }
- 410          
- 411          /* 把 (key,value) 写入既有槽位 idx：长度相同就原地覆盖，
- 412           * 否则删除旧记录、追加新记录并回写索引。成功返回 1。 */
- 413          static uint8_t CMD_UpsertKeyValue(uint16_t idx, block_entry_t *blk,
- 414                                            const char *key,
- 415                                            const uint8_t *value, uint16_t val_len) {
- 416   1        kv_entry_t e;
- 417   1        CMD_ReadKvEntry(idx, &e);
- 418   1        if (e.data_len == val_len) {
- 419   2          CMD_UpdateKvRecordValue(e.data_addr, value, val_len);
- 420   2          return 1;
- 421   2        }
- 422   1        {
- 423   2          uint16_t new_addr;
- 424   2          CMD_DeleteKvRecord(e.data_addr);
- 425   2          EEPROM_SetAddress(IC_0_24C64);
- 426   2          new_addr = CMD_AppendKvRecord(blk->block_id, key, value, val_len,
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 8   
+ 365   1          EEPROM_WriteByte((uint16_t)(addr + KV_OFF_KEY + i), (uint8_t)key[i]);
+ 366   1        for (i = 0; i < val_len; i++)
+ 367   1          EEPROM_WriteByte((uint16_t)(addr + KV_OFF_KEY + key_len + i), value[i]);
+ 368   1        {
+ 369   2          uint16_t crc_addr = (uint16_t)(addr + KV_OFF_KEY + key_len + val_len);
+ 370   2          uint16_t crc = 0;
+ 371   2          for (i = 0; i < val_len; i++) crc = (uint16_t)(crc + (uint16_t)value[i] * (i + 1));
+ 372   2          CMD_WriteU16(crc_addr, crc);
+ 373   2          EEPROM_WriteByte((uint16_t)(crc_addr + 2), KV_REC_VER);
+ 374   2          EEPROM_WriteByte((uint16_t)(crc_addr + 3), KV_REC_ETX);
+ 375   2        }
+ 376   1        addr = (uint16_t)(addr + total);
+ 377   1        CMD_WriteU16(CFG_ADDR_DATA_NEXT, addr);
+ 378   1        {
+ 379   2          uint16_t used = CMD_ReadU16(CFG_ADDR_DATA_USED);
+ 380   2          uint16_t hwm  = CMD_ReadU16(CFG_ADDR_DATA_HWM);
+ 381   2          used = (uint16_t)(used + total);
+ 382   2          if (addr > hwm) hwm = addr;
+ 383   2          CMD_WriteU16(CFG_ADDR_DATA_USED, used);
+ 384   2          CMD_WriteU16(CFG_ADDR_DATA_HWM, hwm);
+ 385   2          if (total_cap > 0) {
+ 386   3            CMD_WriteU16(CFG_ADDR_DATA_FREE, (uint16_t)(total_cap - used));
+ 387   3            EEPROM_WriteByte(CFG_ADDR_DATA_USAGE, (uint8_t)(((uint32_t)used * 100u) / total_cap));
+ 388   3          }
+ 389   2        }
+ 390   1        return (uint16_t)(addr - total);
+ 391   1      }
+ 392          
+ 393          /* 读记录头部长度字段：val_len 经 *val_len 返回，key_len 作返回值。
+ 394           * 记录地址非法或魔数不符时返回 0xFFFF。集中处理、避免各站重复算偏移。 */
+ 395          static uint16_t CMD_ReadKvRecordLens(uint16_t data_addr, uint16_t *val_len) {
+ 396   1        if (data_addr < DATA_BODY_START) return 0xFFFF;
+ 397   1        EEPROM_SetAddress(IC_1_24CXX);
+ 398   1        if (EEPROM_ReadByte(data_addr) != KV_REC_MAGIC) return 0xFFFF;
+ 399   1        *val_len = CMD_ReadU16((uint16_t)(data_addr + KV_OFF_VAL_LEN));
+ 400   1        return CMD_ReadU16((uint16_t)(data_addr + KV_OFF_KEY_LEN));
+ 401   1      }
+ 402          
+ 403          static void CMD_DeleteKvRecord(uint16_t data_addr) {
+ 404   1        if (data_addr < DATA_BODY_START) return;
+ 405   1        EEPROM_SetAddress(IC_1_24CXX);
+ 406   1        EEPROM_WriteByte((uint16_t)(data_addr + 0x01), KV_REC_STATE_DEL);
+ 407   1      }
+ 408          
+ 409          /* 通用槽位释放：删数据记录(墓碑) + 清索引项(block_id 置 0xFFFF)。
+ 410           * 复用于 DELETE KEY / 块清理 / 块格式化，避免三处各写一遍。 */
+ 411          static void CMD_FreeKvSlot(uint16_t idx) {
+ 412   1        kv_entry_t e;
+ 413   1        CMD_ReadKvEntry(idx, &e);
+ 414   1        if (e.block_id == 0xFFFF) return;
+ 415   1        if (e.flags & KV_FLAG_VALID) CMD_DeleteKvRecord(e.data_addr);
+ 416   1        EEPROM_SetAddress(IC_0_24C64);
+ 417   1        CMD_WriteU16(CMD_KvEntryOff(idx), 0xFFFF);
+ 418   1      }
+ 419          
+ 420          static uint8_t CMD_UpdateKvRecordValue(uint16_t data_addr, const uint8_t *value, uint16_t val_len) {
+ 421   1        uint16_t key_len, i;
+ 422   1        if (data_addr < DATA_BODY_START) return 0;
+ 423   1        EEPROM_SetAddress(IC_1_24CXX);
+ 424   1        if (EEPROM_ReadByte(data_addr) != KV_REC_MAGIC) return 0;
+ 425   1        key_len = CMD_ReadU16((uint16_t)(data_addr + KV_OFF_KEY_LEN));
+ 426   1        for (i = 0; i < val_len; i++)
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 8   
 
- 427   2                                        e.enc_algo, KV_FLAG_VALID);
- 428   2          if (new_addr == 0xFFFF) return 0;
- 429   2          e.data_addr = new_addr;
- 430   2          e.data_len  = val_len;
- 431   2          e.slave     = IC_1_24CXX;
- 432   2          EEPROM_SetAddress(IC_0_24C64);
- 433   2          CMD_WriteKvEntry(idx, &e);
- 434   2        }
- 435   1        return 1;
- 436   1      }
- 437          
- 438          /* ---- Business: block/KV create helpers ---- */
+ 427   1          EEPROM_WriteByte((uint16_t)(data_addr + KV_OFF_KEY + key_len + i), value[i]);
+ 428   1        return 1;
+ 429   1      }
+ 430          
+ 431          /* 统一入口：block_flag=="0" 时按名字定位，否则按数字 id 定位。
+ 432           * 找到返回槽位索引(0..BLOCK_TAB_MAX-1)，未找到返回 0xFFFF。 */
+ 433          static uint16_t CMD_ResolveBlock(char *block_flag, char *block_identifier,
+ 434                                           block_entry_t *out) {
+ 435   1        if (CMD_Compare(block_flag, "0"))
+ 436   1          return CMD_LoadBlockByName(block_identifier, out);
+ 437   1        return CMD_LoadBlockById(CMD_AtoU16(block_identifier), out);
+ 438   1      }
  439          
- 440          static uint8_t CMD_DoCreateBlock(char *name) {
- 441   1        block_entry_t blk;
- 442   1        uint16_t slot;
- 443   1        if (name == 0 || strlen(name) == 0) { CMD_Reply("ERR", ERR_PARAM); return 0; }
- 444   1        if (CMD_BlockNameExists(name)) { CMD_Reply("ERR", ERR_BLOCK_EXIST); return 0; }
- 445   1        slot = CMD_FindFreeBlockSlot();
- 446   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BITMAP_FULL); return 0; }
- 447   1        blk.block_id     = CMD_NextBlockId();
- 448   1        CMD_SetBlockName(&blk, name);
- 449   1        blk.flags        = 0;
- 450   1        blk.kv_count     = 0;
- 451   1        blk.kv_index_off = FIRST_BLOCK_KVIDX;
- 452   1        blk.kv_index_len = 0;
- 453   1        CMD_WriteBlockSlot(slot, &blk);
- 454   1        Uart1_SendString("DATA+");
- 455   1        Uart1_SendNumber(blk.block_id);
- 456   1        Uart1_SendString("\r\n");
- 457   1        return 1;
- 458   1      }
- 459          
- 460          static uint8_t CMD_DoCreateKey(char *block_flag, char *block_identifier,
- 461                                         char *key, char *value) {
- 462   1        block_entry_t blk;
- 463   1        uint16_t slot, kv_slot, key_off, data_addr;
- 464   1        kv_entry_t e;
- 465   1        uint16_t key_len = (uint16_t)strlen(key);
- 466   1        uint16_t val_len = (uint16_t)strlen(value);
- 467   1      
- 468   1        slot = CMD_ResolveBlock(block_flag, block_identifier, &blk);
- 469   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); return 0; }
- 470   1        if (CMD_FindKeyIdx(blk.block_id, key) != 0xFFFF) { CMD_Reply("ERR", ERR_KEY_EXIST); return 0; }
- 471   1        if (key_len == 0) { CMD_Reply("ERR", ERR_PARAM); return 0; }
+ 440          /* 统一的 KV 写入：idx==0xFFFF 表示新建（分配槽位/键池，kv_count+1），
+ 441           * 否则更新既有槽位（等长原地覆写，否则删旧记录+追新记录+回写索引）。
+ 442           * 成功返回 ERR_OK；已回带 ERR 应答。 */
+ 443          static uint8_t CMD_PutKeyValue(block_entry_t *blk, uint16_t blk_slot,
+ 444                                         uint16_t idx, const char *key,
+ 445                                         const uint8_t *value, uint16_t val_len) {
+ 446   1        kv_entry_t e;
+ 447   1        uint16_t key_len = (uint16_t)strlen(key);
+ 448   1        uint16_t kv_slot = idx, key_off, data_addr;
+ 449   1      
+ 450   1        if (key_len == 0) { CMD_Reply("ERR", ERR_PARAM); return ERR_PARAM; }
+ 451   1      
+ 452   1        if (idx == 0xFFFF) {
+ 453   2          /* 新建：分配索引槽 + 键池空间 */
+ 454   2          kv_slot = CMD_AllocKvSlot();
+ 455   2          if (kv_slot == 0xFFFF) { CMD_Reply("ERR", ERR_BITMAP_FULL); return ERR_BITMAP_FULL; }
+ 456   2          EEPROM_SetAddress(IC_0_24C64);
+ 457   2          key_off = CMD_KeyPoolAlloc(key_len);
+ 458   2          if (key_off == 0xFFFF) { CMD_Reply("ERR", ERR_DATA_FULL); return ERR_DATA_FULL; }
+ 459   2          { uint16_t i; for (i = 0; i < key_len; i++)
+ 460   3              EEPROM_WriteByte((uint16_t)(key_off + i), (uint8_t)key[i]); }
+ 461   2          e.enc_algo = ENC_ALGO_NONE;
+ 462   2          e.flags    = KV_FLAG_VALID;
+ 463   2        } else {
+ 464   2          /* 更新：读旧索引项，等长就地覆写，否则删旧+追新 */
+ 465   2          CMD_ReadKvEntry(idx, &e);
+ 466   2          if (e.data_len == val_len && CMD_UpdateKvRecordValue(e.data_addr, value, val_len)) {
+ 467   3            return ERR_OK;
+ 468   3          }
+ 469   2          key_off = e.key_off;
+ 470   2          if (e.flags & KV_FLAG_VALID) CMD_DeleteKvRecord(e.data_addr);
+ 471   2        }
  472   1      
- 473   1        kv_slot = CMD_AllocKvSlot();
- 474   1        if (kv_slot == 0xFFFF) { CMD_Reply("ERR", ERR_BITMAP_FULL); return 0; }
- 475   1      
- 476   1        EEPROM_SetAddress(IC_0_24C64);
- 477   1        key_off = CMD_KeyPoolAlloc(key_len);
- 478   1        if (key_off == 0xFFFF) { CMD_Reply("ERR", ERR_DATA_FULL); return 0; }
- 479   1        { uint16_t i; for (i = 0; i < key_len; i++)
- 480   2            EEPROM_WriteByte((uint16_t)(key_off + i), (uint8_t)key[i]); }
- 481   1      
- 482   1        data_addr = CMD_AppendKvRecord(blk.block_id, key, (const uint8_t *)value,
- 483   1                                       val_len, ENC_ALGO_NONE, KV_FLAG_VALID);
- 484   1        if (data_addr == 0xFFFF) { CMD_Reply("ERR", ERR_DATA_FULL); return 0; }
- 485   1      
- 486   1        e.block_id  = blk.block_id;
- 487   1        e.key_len   = key_len;
- 488   1        e.key_off   = key_off;
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 9   
+ 473   1        data_addr = CMD_AppendKvRecord(blk->block_id, key, value, val_len,
+ 474   1                                       e.enc_algo, KV_FLAG_VALID);
+ 475   1        if (data_addr == 0xFFFF) { CMD_Reply("ERR", ERR_DATA_FULL); return ERR_DATA_FULL; }
+ 476   1      
+ 477   1        e.block_id  = blk->block_id;
+ 478   1        e.key_len   = key_len;
+ 479   1        e.key_off   = key_off;
+ 480   1        e.slave     = IC_1_24CXX;
+ 481   1        e.data_addr = data_addr;
+ 482   1        e.data_len  = val_len;
+ 483   1        EEPROM_SetAddress(IC_0_24C64);
+ 484   1        CMD_WriteKvEntry(kv_slot, &e);
+ 485   1        if (idx == 0xFFFF) {
+ 486   2          blk->kv_count = (uint16_t)(blk->kv_count + 1);
+ 487   2          CMD_WriteBlockSlot(blk_slot, blk);
+ 488   2        }
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 9   
 
- 489   1        e.slave     = IC_1_24CXX;
- 490   1        e.data_addr = data_addr;
- 491   1        e.data_len  = val_len;
- 492   1        e.enc_algo  = ENC_ALGO_NONE;
- 493   1        e.flags     = KV_FLAG_VALID;
- 494   1        EEPROM_SetAddress(IC_0_24C64);
- 495   1        CMD_WriteKvEntry(kv_slot, &e);
- 496   1        blk.kv_count = (uint16_t)(blk.kv_count + 1);
- 497   1        CMD_WriteBlockSlot(slot, &blk);
- 498   1        return 1;
- 499   1      }
- 500          
- 501          static void CMD_EmitBlockKv(uint16_t block_id) {
- 502   1        uint16_t i, count = 0;
- 503   1        for (i = 0; i < KVIDX_MAX; i++) {
- 504   2          kv_entry_t e;
- 505   2          uint16_t k, val_len;
- 506   2          CMD_ReadKvEntry(i, &e);
- 507   2          if (e.block_id != block_id) continue;
- 508   2          if (!(e.flags & KV_FLAG_VALID)) continue;
- 509   2          if (count > 0) Uart1_SendString(",");
- 510   2          for (k = 0; k < e.key_len; k++)
- 511   2            Uart1_SendByte(EEPROM_ReadByte((uint16_t)(e.key_off + k)));
- 512   2          Uart1_SendString("=");
- 513   2          EEPROM_SetAddress(e.slave);
- 514   2          val_len = CMD_ReadU16((uint16_t)(e.data_addr + KV_OFF_VAL_LEN));
- 515   2          {
- 516   3            uint16_t key_len = CMD_ReadU16((uint16_t)(e.data_addr + KV_OFF_KEY_LEN));
- 517   3            for (k = 0; k < val_len; k++)
- 518   3              Uart1_SendByte(EEPROM_ReadByte((uint16_t)(e.data_addr + KV_OFF_KEY + key_len + k)));
- 519   3          }
- 520   2          count++;
- 521   2        }
+ 489   1        return ERR_OK;
+ 490   1      }
+ 491          
+ 492          static uint8_t CMD_DoCreateBlock(char *name) {
+ 493   1        block_entry_t blk;
+ 494   1        uint16_t slot;
+ 495   1        if (name == 0 || strlen(name) == 0) { CMD_Reply("ERR", ERR_PARAM); return 0; }
+ 496   1        if (CMD_BlockNameExists(name)) { CMD_Reply("ERR", ERR_BLOCK_EXIST); return 0; }
+ 497   1        slot = CMD_FindFreeBlockSlot();
+ 498   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BITMAP_FULL); return 0; }
+ 499   1        blk.block_id     = CMD_NextBlockId();
+ 500   1        CMD_SetBlockName(&blk, name);
+ 501   1        blk.flags        = 0;
+ 502   1        blk.kv_count     = 0;
+ 503   1        blk.kv_index_off = FIRST_BLOCK_KVIDX;
+ 504   1        blk.kv_index_len = 0;
+ 505   1        CMD_WriteBlockSlot(slot, &blk);
+ 506   1        Uart1_SendString("DATA+");
+ 507   1        Uart1_SendNumber(blk.block_id);
+ 508   1        Uart1_SendString("\r\n");
+ 509   1        return 1;
+ 510   1      }
+ 511          
+ 512          static uint8_t CMD_DoCreateKey(char *block_flag, char *block_identifier,
+ 513                                         char *key, char *value) {
+ 514   1        block_entry_t blk;
+ 515   1        uint16_t slot;
+ 516   1        uint16_t val_len = (uint16_t)strlen(value);
+ 517   1      
+ 518   1        slot = CMD_ResolveBlock(block_flag, block_identifier, &blk);
+ 519   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); return 0; }
+ 520   1        if (CMD_FindKeyIdx(blk.block_id, key) != 0xFFFF) { CMD_Reply("ERR", ERR_KEY_EXIST); return 0; }
+ 521   1        return (CMD_PutKeyValue(&blk, slot, 0xFFFF, key, (const uint8_t *)value, val_len) == ERR_OK);
  522   1      }
  523          
- 524          static void CMD_EmitBlockEntry(block_entry_t *blk) {
- 525   1        char name[BLOCK_NAME_LEN + 1];
- 526   1        CMD_GetBlockName(blk, name);
- 527   1        Uart1_SendString("[");
- 528   1        Uart1_SendString(name);
- 529   1        Uart1_SendString(";");
- 530   1        Uart1_SendNumber(blk->block_id);
- 531   1        Uart1_SendString("](");
- 532   1        CMD_EmitBlockKv(blk->block_id);
- 533   1        Uart1_SendString(")");
- 534   1      }
- 535          
- 536          static void CMD_PurgeBlockKv(uint16_t block_id) {
- 537   1        uint16_t i;
- 538   1        for (i = 0; i < KVIDX_MAX; i++) {
- 539   2          kv_entry_t e;
- 540   2          CMD_ReadKvEntry(i, &e);
- 541   2          if (e.block_id != block_id) continue;
- 542   2          if (e.flags & KV_FLAG_VALID) CMD_DeleteKvRecord(e.data_addr);
- 543   2          EEPROM_SetAddress(IC_0_24C64);
- 544   2          CMD_WriteU16(CMD_KvEntryOff(i), 0xFFFF);
- 545   2        }
- 546   1      }
- 547          
- 548          static void CMD_EmitAllBlocks(void) {
- 549   1        block_entry_t blk;
- 550   1        uint16_t i, n = 0;
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 10  
+ 524          static void CMD_EmitBlockKv(uint16_t block_id) {
+ 525   1        uint16_t i, count = 0;
+ 526   1        for (i = 0; i < KVIDX_MAX; i++) {
+ 527   2          kv_entry_t e;
+ 528   2          uint16_t k, val_len, key_len;
+ 529   2          CMD_ReadKvEntry(i, &e);
+ 530   2          if (e.block_id != block_id) continue;
+ 531   2          if (!(e.flags & KV_FLAG_VALID)) continue;
+ 532   2          if (count > 0) Uart1_SendString(",");
+ 533   2          for (k = 0; k < e.key_len; k++)
+ 534   2            Uart1_SendByte(EEPROM_ReadByte((uint16_t)(e.key_off + k)));
+ 535   2          Uart1_SendString("=");
+ 536   2          key_len = CMD_ReadKvRecordLens(e.data_addr, &val_len);
+ 537   2          if (key_len == 0xFFFF) { count++; continue; }
+ 538   2          for (k = 0; k < val_len; k++)
+ 539   2            Uart1_SendByte(EEPROM_ReadByte((uint16_t)(e.data_addr + KV_OFF_KEY + key_len + k)));
+ 540   2          count++;
+ 541   2        }
+ 542   1      }
+ 543          
+ 544          static void CMD_EmitBlockEntry(block_entry_t *blk) {
+ 545   1        char name[BLOCK_NAME_LEN + 1];
+ 546   1        CMD_GetBlockName(blk, name);
+ 547   1        Uart1_SendString("[");
+ 548   1        Uart1_SendString(name);
+ 549   1        Uart1_SendString(";");
+ 550   1        Uart1_SendNumber(blk->block_id);
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 10  
 
- 551   1        Uart1_SendString("DATA+");
- 552   1        for (i = 0; i < BLOCK_TAB_MAX; i++) {
- 553   2          if (!CMD_ReadBlockSlot(i, &blk)) continue;
- 554   2          if (n > 0) Uart1_SendString("|");
- 555   2          CMD_EmitBlockEntry(&blk);
- 556   2          n++;
- 557   2        }
- 558   1        Uart1_SendString("\r\n");
- 559   1      }
- 560          
- 561          /* 删除一个已定位的块：清空其 KV 并释放块表槽位。block_flag=="0" 用名字定位。 *
+ 551   1        Uart1_SendString("](");
+ 552   1        CMD_EmitBlockKv(blk->block_id);
+ 553   1        Uart1_SendString(")");
+ 554   1      }
+ 555          
+ 556          static void CMD_PurgeBlockKv(uint16_t block_id) {
+ 557   1        uint16_t i;
+ 558   1        for (i = 0; i < KVIDX_MAX; i++) {
+ 559   2          kv_entry_t e;
+ 560   2          CMD_ReadKvEntry(i, &e);
+ 561   2          if (e.block_id != block_id) continue;
+ 562   2          CMD_FreeKvSlot(i);
+ 563   2        }
+ 564   1      }
+ 565          
+ 566          static void CMD_EmitAllBlocks(void) {
+ 567   1        block_entry_t blk;
+ 568   1        uint16_t i, n = 0;
+ 569   1        Uart1_SendString("DATA+");
+ 570   1        for (i = 0; i < BLOCK_TAB_MAX; i++) {
+ 571   2          if (!CMD_ReadBlockSlot(i, &blk)) continue;
+ 572   2          if (n > 0) Uart1_SendString("|");
+ 573   2          CMD_EmitBlockEntry(&blk);
+ 574   2          n++;
+ 575   2        }
+ 576   1        Uart1_SendString("\r\n");
+ 577   1      }
+ 578          
+ 579          /* 删除一个已定位的块：清空其 KV 并释放块表槽位。block_flag=="0" 用名字定位。 *
              -/
- 562          static void CMD_DoDeleteBlock(char *block_flag, char *block_identifier, uint8_t by_id) {
- 563   1        block_entry_t blk;
- 564   1        uint16_t slot;
- 565   1        if (by_id)
- 566   1          slot = CMD_LoadBlockById(CMD_AtoU16(block_identifier), &blk);
- 567   1        else
- 568   1          slot = CMD_ResolveBlock(block_flag, block_identifier, &blk);
- 569   1        if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); return; }
- 570   1        CMD_PurgeBlockKv(blk.block_id);
- 571   1        EEPROM_SetAddress(IC_0_24C64);
- 572   1        CMD_ClearBlockSlot(slot);
- 573   1        CMD_Reply("RESULT", ERR_OK);
- 574   1      }
- 575          
- 576          /* ---- Start commands ---- */
- 577          
- 578          void CMD_INIT(char *device_name, char *password,
- 579                        uint8_t encrypt_type, uint8_t data_size_code) {
- 580   1        cfg_t cfg;
- 581   1        if (device_name == 0 || strlen(device_name) == 0) { CMD_Reply("ERR", ERR_PARAM); return; }
- 582   1        if (data_size_code > DATA_SIZE_MAX) { CMD_Reply("ERR", ERR_SIZE_CODE_INVALID); return; }
- 583   1        if (data_size_code == 0) data_size_code = DATA_SIZE_24C64;
- 584   1      
- 585   1        EEPROM_SetAddress(IC_0_24C64);
- 586   1        EEPROM_Fill(0, DEV_EEPROM_SIZE, 0x00);
- 587   1      
- 588   1        ConfigMgr_Defaults(&cfg);
- 589   1        ConfigMgr_SetName(&cfg, device_name);
- 590   1        ConfigMgr_SetPassword(&cfg, password);
- 591   1        cfg.encrypt = encrypt_type;
- 592   1        cfg.flags |= FLAG_INITIALIZED;
- 593   1        ConfigMgr_Save(&cfg);
- 594   1      
- 595   1        StorageMgr_InitDevice(device_name, password, data_size_code);
- 596   1      
- 597   1        s_authed = 1;
- 598   1        s_auth_tick = SESSION_TIMEOUT_TICKS;
- 599   1        CMD_Reply("RESULT", ERR_OK);
- 600   1      }
- 601          
- 602          void CMD_ECHO(void) { CMD_Reply("RESULT", ERR_OK); }
- 603          
- 604          void CMD_INFO(void) {
- 605   1        uint8_t i;
- 606   1        uint8_t flags, enc_type, block_cnt = 0;
- 607   1        uint16_t key_cnt = 0;
- 608   1        char name[CFG_NAME_LEN + 1];
- 609   1      
- 610   1        flags = ConfigMgr_GetFlags();
- 611   1        if (!(flags & FLAG_INITIALIZED)) {
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 11  
+ 580          static void CMD_DoDeleteBlock(char *block_flag, char *block_identifier, uint8_t by_id) {
+ 581   1        block_entry_t blk;
+ 582   1        uint16_t slot;
+ 583   1        if (by_id)
+ 584   1          slot = CMD_LoadBlockById(CMD_AtoU16(block_identifier), &blk);
+ 585   1        else
+ 586   1          slot = CMD_ResolveBlock(block_flag, block_identifier, &blk);
+ 587   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); return; }
+ 588   1        CMD_PurgeBlockKv(blk.block_id);
+ 589   1        EEPROM_SetAddress(IC_0_24C64);
+ 590   1        CMD_ClearBlockSlot(slot);
+ 591   1        CMD_Reply("RESULT", ERR_OK);
+ 592   1      }
+ 593          
+ 594          /* ---- Start commands ---- */
+ 595          
+ 596          void CMD_INIT(char *device_name, char *password,
+ 597                        uint8_t encrypt_type, uint8_t data_size_code) {
+ 598   1        cfg_t cfg;
+ 599   1        if (device_name == 0 || strlen(device_name) == 0) { CMD_Reply("ERR", ERR_PARAM); return; }
+ 600   1        if (data_size_code > DATA_SIZE_MAX) { CMD_Reply("ERR", ERR_SIZE_CODE_INVALID); return; }
+ 601   1        if (data_size_code == 0) data_size_code = DATA_SIZE_24C64;
+ 602   1      
+ 603   1        EEPROM_SetAddress(IC_0_24C64);
+ 604   1        EEPROM_Fill(0, DEV_EEPROM_SIZE, 0x00);
+ 605   1      
+ 606   1        ConfigMgr_Defaults(&cfg);
+ 607   1        ConfigMgr_SetName(&cfg, device_name);
+ 608   1        ConfigMgr_SetPassword(&cfg, password);
+ 609   1        cfg.encrypt = encrypt_type;
+ 610   1        cfg.flags |= FLAG_INITIALIZED;
+ 611   1        ConfigMgr_Save(&cfg);
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 11  
 
- 612   2          Uart1_SendString("INIT=0+");
- 613   2          Uart1_SendString(FIRMWARE_VERSION);
- 614   2          Uart1_SendString("\r\n");
- 615   2          return;
- 616   2        }
- 617   1        for (i = 0; i < CFG_NAME_LEN; i++) name[i] = (char)EEPROM_ReadByte(CFG_ADDR_NAME + i);
- 618   1        name[CFG_NAME_LEN] = '\0';
- 619   1        {
- 620   2          block_entry_t blk;
- 621   2          uint16_t b, k;
- 622   2          for (b = 0; b < BLOCK_TAB_MAX; b++) {
- 623   3            if (!CMD_ReadBlockSlot(b, &blk)) continue;
- 624   3            block_cnt++;
- 625   3            for (k = 0; k < KVIDX_MAX; k++) {
- 626   4              kv_entry_t e;
- 627   4              CMD_ReadKvEntry(k, &e);
- 628   4              if (e.block_id == blk.block_id && (e.flags & KV_FLAG_VALID)) key_cnt++;
- 629   4            }
- 630   3          }
- 631   2        }
- 632   1        enc_type = EEPROM_ReadByte(CFG_ADDR_ENC_ALGO);
- 633   1        Uart1_SendString("INFO+");
- 634   1        Uart1_SendString(name);
- 635   1        Uart1_SendString("+");
- 636   1        Uart1_SendString(FIRMWARE_VERSION);
- 637   1        Uart1_SendString("+");
- 638   1        Uart1_SendString((flags & FLAG_PWD_AUTH) ? "ENABLED" : "DISABLED");
- 639   1        Uart1_SendString("+");
- 640   1        Uart1_SendNumber(ConfigMgr_GetAccessCount());
- 641   1        Uart1_SendString("+");
- 642   1        Uart1_SendNumber(block_cnt);
- 643   1        Uart1_SendString("+");
- 644   1        Uart1_SendNumber(key_cnt);
- 645   1        Uart1_SendString("+");
- 646   1        switch (enc_type) {
- 647   2          case ENC_ALGO_AES128_CBC: Uart1_SendString("AES");   break;
- 648   2          case ENC_ALGO_AES128_GCM: Uart1_SendString("AES");   break;
- 649   2          case ENC_ALGO_XOR:        Uart1_SendString("XOR");   break;
- 650   2          case ENC_ALGO_CAESAR:     Uart1_SendString("CESAR"); break;
- 651   2          case ENC_ALGO_RC4:        Uart1_SendString("RC4");   break;
- 652   2          default:                  Uart1_SendString("NON");   break;
- 653   2        }
- 654   1        Uart1_SendString("+");
- 655   1        Uart1_SendNumber((uint16_t)((uint16_t)EEPROM_ReadByte(CFG_ADDR_DEV_SIZE) * 2048));
- 656   1        Uart1_SendString("\r\n");
- 657   1      }
- 658          
- 659          void CMD_STATUS(void) {
- 660   1        Uart1_SendString("STATUS+");
- 661   1        Uart1_SendNumber(s_task);
- 662   1        Uart1_SendString("\r\n");
- 663   1      }
- 664          
- 665          void CMD_USAGE(void) {
- 666   1        Uart1_SendString("USAGE+");
- 667   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_TOTAL));
- 668   1        Uart1_SendString("+");
- 669   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_USED));
- 670   1        Uart1_SendString("+");
- 671   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_FREE));
+ 612   1      
+ 613   1        StorageMgr_InitDevice(device_name, password, data_size_code);
+ 614   1      
+ 615   1        s_authed = 1;
+ 616   1        s_auth_tick = SESSION_TIMEOUT_TICKS;
+ 617   1        CMD_Reply("RESULT", ERR_OK);
+ 618   1      }
+ 619          
+ 620          void CMD_ECHO(void) { CMD_Reply("RESULT", ERR_OK); }
+ 621          
+ 622          void CMD_INFO(void) {
+ 623   1        uint8_t i;
+ 624   1        uint8_t flags, enc_type, block_cnt = 0;
+ 625   1        uint16_t key_cnt = 0;
+ 626   1        char name[CFG_NAME_LEN + 1];
+ 627   1      
+ 628   1        flags = ConfigMgr_GetFlags();
+ 629   1        if (!(flags & FLAG_INITIALIZED)) {
+ 630   2          Uart1_SendString("INIT=0+");
+ 631   2          Uart1_SendString(FIRMWARE_VERSION);
+ 632   2          Uart1_SendString("\r\n");
+ 633   2          return;
+ 634   2        }
+ 635   1        for (i = 0; i < CFG_NAME_LEN; i++) name[i] = (char)EEPROM_ReadByte(CFG_ADDR_NAME + i);
+ 636   1        name[CFG_NAME_LEN] = '\0';
+ 637   1        {
+ 638   2          block_entry_t blk;
+ 639   2          uint16_t b, k;
+ 640   2          for (b = 0; b < BLOCK_TAB_MAX; b++) {
+ 641   3            if (!CMD_ReadBlockSlot(b, &blk)) continue;
+ 642   3            block_cnt++;
+ 643   3            for (k = 0; k < KVIDX_MAX; k++) {
+ 644   4              kv_entry_t e;
+ 645   4              CMD_ReadKvEntry(k, &e);
+ 646   4              if (e.block_id == blk.block_id && (e.flags & KV_FLAG_VALID)) key_cnt++;
+ 647   4            }
+ 648   3          }
+ 649   2        }
+ 650   1        enc_type = EEPROM_ReadByte(CFG_ADDR_ENC_ALGO);
+ 651   1        Uart1_SendString("INFO+");
+ 652   1        Uart1_SendString(name);
+ 653   1        Uart1_SendString("+");
+ 654   1        Uart1_SendString(FIRMWARE_VERSION);
+ 655   1        Uart1_SendString("+");
+ 656   1        Uart1_SendString((flags & FLAG_PWD_AUTH) ? "ENABLED" : "DISABLED");
+ 657   1        Uart1_SendString("+");
+ 658   1        Uart1_SendNumber(ConfigMgr_GetAccessCount());
+ 659   1        Uart1_SendString("+");
+ 660   1        Uart1_SendNumber(block_cnt);
+ 661   1        Uart1_SendString("+");
+ 662   1        Uart1_SendNumber(key_cnt);
+ 663   1        Uart1_SendString("+");
+ 664   1        switch (enc_type) {
+ 665   2          case ENC_ALGO_AES128_CBC: Uart1_SendString("AES");   break;
+ 666   2          case ENC_ALGO_AES128_GCM: Uart1_SendString("AES");   break;
+ 667   2          case ENC_ALGO_XOR:        Uart1_SendString("XOR");   break;
+ 668   2          case ENC_ALGO_CAESAR:     Uart1_SendString("CESAR"); break;
+ 669   2          case ENC_ALGO_RC4:        Uart1_SendString("RC4");   break;
+ 670   2          default:                  Uart1_SendString("NON");   break;
+ 671   2        }
  672   1        Uart1_SendString("+");
- 673   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_HWM));
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 12  
+ 673   1        Uart1_SendNumber((uint16_t)((uint16_t)EEPROM_ReadByte(CFG_ADDR_DEV_SIZE) * 2048));
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 12  
 
- 674   1        Uart1_SendString("+");
- 675   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_NEXT));
- 676   1        Uart1_SendString("+");
- 677   1        Uart1_SendNumber(EEPROM_ReadByte(CFG_ADDR_DATA_USAGE));
- 678   1        Uart1_SendString("\r\n");
- 679   1      }
- 680          
- 681          void CMD_ENCINFO(void) {
- 682   1        uint8_t algo = EEPROM_ReadByte(CFG_ADDR_ENC_ALGO);
- 683   1        Uart1_SendString("ENCINFO+");
- 684   1        switch (algo) {
- 685   2          case ENC_ALGO_AES128_CBC: Uart1_SendString("AES128_CBC+BLOCK"); break;
- 686   2          case ENC_ALGO_AES128_GCM: Uart1_SendString("AES128_GCM+AEAD");   break;
- 687   2          case ENC_ALGO_XOR:        Uart1_SendString("XOR+STREAM");        break;
- 688   2          case ENC_ALGO_CAESAR:     Uart1_SendString("CAESAR+STREAM");     break;
- 689   2          case ENC_ALGO_RC4:        Uart1_SendString("RC4+STREAM");        break;
- 690   2          default:                  Uart1_SendString("NONE+STREAM");       break;
- 691   2        }
+ 674   1        Uart1_SendString("\r\n");
+ 675   1      }
+ 676          
+ 677          void CMD_STATUS(void) {
+ 678   1        Uart1_SendString("STATUS+");
+ 679   1        Uart1_SendNumber(s_task);
+ 680   1        Uart1_SendString("\r\n");
+ 681   1      }
+ 682          
+ 683          void CMD_USAGE(void) {
+ 684   1        Uart1_SendString("USAGE+");
+ 685   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_TOTAL));
+ 686   1        Uart1_SendString("+");
+ 687   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_USED));
+ 688   1        Uart1_SendString("+");
+ 689   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_FREE));
+ 690   1        Uart1_SendString("+");
+ 691   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_HWM));
  692   1        Uart1_SendString("+");
- 693   1        Uart1_SendString((algo == ENC_ALGO_AES128_CBC) ? "16" : "1");
+ 693   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_NEXT));
  694   1        Uart1_SendString("+");
- 695   1        Uart1_SendString((algo == ENC_ALGO_AES128_GCM) ? "12" :
- 696   1                         (algo == ENC_ALGO_AES128_CBC) ? "16" : "0");
- 697   1        Uart1_SendString("+");
- 698   1        Uart1_SendString((algo == ENC_ALGO_AES128_GCM) ? "16" : "0");
- 699   1        Uart1_SendString("\r\n");
- 700   1      }
- 701          
- 702          void CMD_VERSION(void) {
- 703   1        Uart1_SendString("VERSION+");
- 704   1        Uart1_SendString(FIRMWARE_VERSION);
- 705   1        Uart1_SendString("+");
- 706   1        Uart1_SendString(PROTOCOL_VERSION);
- 707   1        Uart1_SendString("+");
- 708   1        Uart1_SendString(STORAGE_FMT_VER);
- 709   1        Uart1_SendString("\r\n");
- 710   1      }
- 711          
- 712          /* ---- AUTH ---- */
- 713          
- 714          void CMD_AUTH_CREATE(char *password) {
- 715   1        cfg_t cfg;
- 716   1        ConfigMgr_Load(&cfg);
- 717   1        ConfigMgr_SetPassword(&cfg, password);
- 718   1        cfg.flags |= (FLAG_PWD_AUTH | FLAG_INITIALIZED);
- 719   1        ConfigMgr_Save(&cfg);
- 720   1        s_authed = 1;
- 721   1        s_auth_tick = SESSION_TIMEOUT_TICKS;
- 722   1        Uart1_SendString("AUTH+0\r\n");
- 723   1      }
- 724          
- 725          void CMD_AUTH_VERIFY(char *password) {
- 726   1        cfg_t cfg;
- 727   1        uint8_t hash[16];
- 728   1        uint8_t i, match = 1, allzero = 1;
- 729   1        ConfigMgr_Load(&cfg);
- 730   1        for (i = 0; i < 16; i++) { if (cfg.pwd_hash[i] != 0) { allzero = 0; break; } }
- 731   1        if (allzero) { Uart1_SendString("AUTH+2\r\n"); s_authed = 1; return; }
- 732   1        FeatTag_Checksum(password, (uint8_t)strlen(password), hash);
- 733   1        for (i = 0; i < 16; i++) { if (cfg.pwd_hash[i] != hash[i]) { match = 0; break; } }
- 734   1        if (match) {
- 735   2          s_authed = 1;
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 13  
+ 695   1        Uart1_SendNumber(EEPROM_ReadByte(CFG_ADDR_DATA_USAGE));
+ 696   1        Uart1_SendString("\r\n");
+ 697   1      }
+ 698          
+ 699          void CMD_VERSION(void) {
+ 700   1        Uart1_SendString("VERSION+");
+ 701   1        Uart1_SendString(FIRMWARE_VERSION);
+ 702   1        Uart1_SendString("+");
+ 703   1        Uart1_SendString(PROTOCOL_VERSION);
+ 704   1        Uart1_SendString("+");
+ 705   1        Uart1_SendString(STORAGE_FMT_VER);
+ 706   1        Uart1_SendString("\r\n");
+ 707   1      }
+ 708          
+ 709          /* ---- AUTH ---- */
+ 710          
+ 711          void CMD_AUTH_CREATE(char *password) {
+ 712   1        cfg_t cfg;
+ 713   1        ConfigMgr_Load(&cfg);
+ 714   1        ConfigMgr_SetPassword(&cfg, password);
+ 715   1        cfg.flags |= (FLAG_PWD_AUTH | FLAG_INITIALIZED);
+ 716   1        ConfigMgr_Save(&cfg);
+ 717   1        s_authed = 1;
+ 718   1        s_auth_tick = SESSION_TIMEOUT_TICKS;
+ 719   1        Uart1_SendString("AUTH+0\r\n");
+ 720   1      }
+ 721          
+ 722          void CMD_AUTH_VERIFY(char *password) {
+ 723   1        cfg_t cfg;
+ 724   1        uint8_t r;
+ 725   1        ConfigMgr_Load(&cfg);
+ 726   1        r = CMD_PwdMatches(&cfg, password);
+ 727   1        if (r == 2) { Uart1_SendString("AUTH+2\r\n"); s_authed = 1; return; }
+ 728   1        if (r) {
+ 729   2          s_authed = 1;
+ 730   2          s_auth_tick = SESSION_TIMEOUT_TICKS;
+ 731   2          Uart1_SendString("AUTH+0\r\n");
+ 732   2        } else {
+ 733   2          s_authed = 0;
+ 734   2          Uart1_SendString("AUTH+1\r\n");
+ 735   2        }
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 13  
 
- 736   2          s_auth_tick = SESSION_TIMEOUT_TICKS;
- 737   2          Uart1_SendString("AUTH+0\r\n");
- 738   2        } else {
- 739   2          s_authed = 0;
- 740   2          Uart1_SendString("AUTH+1\r\n");
- 741   2        }
- 742   1      }
- 743          
- 744          void CMD_AUTH_ENABLE(void) {
- 745   1        cfg_t cfg;
- 746   1        ConfigMgr_Load(&cfg);
- 747   1        cfg.flags |= FLAG_PWD_AUTH;
- 748   1        ConfigMgr_Save(&cfg);
- 749   1        Uart1_SendString("AUTH+0\r\n");
- 750   1      }
- 751          
- 752          void CMD_AUTH_DISABLE(void) {
- 753   1        cfg_t cfg;
- 754   1        ConfigMgr_Load(&cfg);
- 755   1        cfg.flags &= (uint8_t)~FLAG_PWD_AUTH;
- 756   1        ConfigMgr_Save(&cfg);
- 757   1        s_authed = 1;
+ 736   1      }
+ 737          
+ 738          void CMD_AUTH_ENABLE(void) {
+ 739   1        cfg_t cfg;
+ 740   1        ConfigMgr_Load(&cfg);
+ 741   1        cfg.flags |= FLAG_PWD_AUTH;
+ 742   1        ConfigMgr_Save(&cfg);
+ 743   1        Uart1_SendString("AUTH+0\r\n");
+ 744   1      }
+ 745          
+ 746          void CMD_AUTH_DISABLE(void) {
+ 747   1        cfg_t cfg;
+ 748   1        ConfigMgr_Load(&cfg);
+ 749   1        cfg.flags &= (uint8_t)~FLAG_PWD_AUTH;
+ 750   1        ConfigMgr_Save(&cfg);
+ 751   1        s_authed = 1;
+ 752   1        Uart1_SendString("AUTH+0\r\n");
+ 753   1      }
+ 754          
+ 755          void CMD_AUTH_VERIFYOUT(void) {
+ 756   1        s_authed = 0;
+ 757   1        s_auth_tick = 0;
  758   1        Uart1_SendString("AUTH+0\r\n");
  759   1      }
  760          
- 761          void CMD_AUTH_VERIFYOUT(void) {
- 762   1        s_authed = 0;
- 763   1        s_auth_tick = 0;
- 764   1        Uart1_SendString("AUTH+0\r\n");
- 765   1      }
- 766          
- 767          void CMD_AUTH_CHANGE(char *old_pass, char *new_pass) {
- 768   1        cfg_t cfg;
- 769   1        uint8_t hash[16];
- 770   1        uint8_t i, match = 1, allzero = 1;
- 771   1        ConfigMgr_Load(&cfg);
- 772   1        for (i = 0; i < 16; i++) { if (cfg.pwd_hash[i] != 0) { allzero = 0; break; } }
- 773   1        if (!allzero) {
- 774   2          FeatTag_Checksum(old_pass, (uint8_t)strlen(old_pass), hash);
- 775   2          for (i = 0; i < 16; i++) { if (cfg.pwd_hash[i] != hash[i]) { match = 0; break; } }
- 776   2          if (!match) { Uart1_SendString("AUTH+1\r\n"); return; }
- 777   2        }
- 778   1        ConfigMgr_SetPassword(&cfg, new_pass);
- 779   1        cfg.flags |= FLAG_PWD_AUTH;
- 780   1        ConfigMgr_Save(&cfg);
- 781   1        Uart1_SendString("AUTH+0\r\n");
- 782   1      }
- 783          
- 784          void CMD_AUTH_RESET(char *recovery_key) {
- 785   1        if (CMD_Compare(recovery_key, "ARCHIVUM")) {
- 786   2          cfg_t cfg;
- 787   2          uint8_t i;
- 788   2          ConfigMgr_Load(&cfg);
- 789   2          cfg.flags &= (uint8_t)~FLAG_PWD_AUTH;
- 790   2          for (i = 0; i < 16; i++) cfg.pwd_hash[i] = 0;
- 791   2          ConfigMgr_Save(&cfg);
- 792   2          Uart1_SendString("AUTH+0\r\n");
- 793   2        } else {
- 794   2          Uart1_SendString("AUTH+1\r\n");
- 795   2        }
- 796   1      }
- 797          
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 14  
+ 761          void CMD_AUTH_CHANGE(char *old_pass, char *new_pass) {
+ 762   1        cfg_t cfg;
+ 763   1        ConfigMgr_Load(&cfg);
+ 764   1        /* 已设密码则必须校验旧密码；未设密码直接改 */
+ 765   1        if (CMD_PwdMatches(&cfg, old_pass) == 0) { Uart1_SendString("AUTH+1\r\n"); return; }
+ 766   1        ConfigMgr_SetPassword(&cfg, new_pass);
+ 767   1        cfg.flags |= FLAG_PWD_AUTH;
+ 768   1        ConfigMgr_Save(&cfg);
+ 769   1        Uart1_SendString("AUTH+0\r\n");
+ 770   1      }
+ 771          
+ 772          void CMD_AUTH_RESET(char *recovery_key) {
+ 773   1        if (CMD_Compare(recovery_key, "ARCHIVUM")) {
+ 774   2          cfg_t cfg;
+ 775   2          uint8_t i;
+ 776   2          ConfigMgr_Load(&cfg);
+ 777   2          cfg.flags &= (uint8_t)~FLAG_PWD_AUTH;
+ 778   2          for (i = 0; i < 16; i++) cfg.pwd_hash[i] = 0;
+ 779   2          ConfigMgr_Save(&cfg);
+ 780   2          Uart1_SendString("AUTH+0\r\n");
+ 781   2        } else {
+ 782   2          Uart1_SendString("AUTH+1\r\n");
+ 783   2        }
+ 784   1      }
+ 785          
+ 786          /* ---- READ ---- */
+ 787          
+ 788          void CMD_READ(char *unit) {
+ 789   1        s_task = TASK_READ;
+ 790   1        if (CMD_Compare(unit, "BLOCK")) CMD_READ_ALL_BLOCK();
+ 791   1        else CMD_Reply("ERR", ERR_PARAM);
+ 792   1        s_task = TASK_IDLE;
+ 793   1      }
+ 794          
+ 795          void CMD_READ_ALL_BLOCK(void) {
+ 796   1        if (!CMD_Begin(TASK_READ, 0)) return;
+ 797   1        CMD_EmitAllBlocks();
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 14  
 
- 798          /* ---- READ ---- */
- 799          
- 800          void CMD_READ(char *unit) {
- 801   1        s_task = TASK_READ;
- 802   1        if (CMD_Compare(unit, "BLOCK")) CMD_READ_ALL_BLOCK();
- 803   1        else CMD_Reply("ERR", ERR_PARAM);
- 804   1        s_task = TASK_IDLE;
- 805   1      }
- 806          
- 807          void CMD_READ_ALL_BLOCK(void) {
- 808   1        s_task = TASK_READ;
- 809   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
- 810   1        CMD_EmitAllBlocks();
- 811   1        s_task = TASK_IDLE;
- 812   1      }
- 813          
- 814          void CMD_READ_BLOCK(char *block_id) {
- 815   1        block_entry_t blk;
- 816   1        uint16_t slot;
- 817   1        char name[BLOCK_NAME_LEN + 1];
- 818   1        uint16_t i, n = 0;
- 819   1        s_task = TASK_READ;
- 820   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
- 821   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
- 822   1        if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
- 823   1        CMD_GetBlockName(&blk, name);
- 824   1        Uart1_SendString("DATA+");
- 825   1        Uart1_SendNumber(blk.block_id);
- 826   1        Uart1_SendString(";");
- 827   1        Uart1_SendString(name);
- 828   1        Uart1_SendString("|");
- 829   1        for (i = 0; i < KVIDX_MAX; i++) {
- 830   2          kv_entry_t e;
- 831   2          uint16_t k;
- 832   2          CMD_ReadKvEntry(i, &e);
- 833   2          if (e.block_id != blk.block_id) continue;
- 834   2          if (!(e.flags & KV_FLAG_VALID)) continue;
- 835   2          if (n > 0) Uart1_SendString("|");
- 836   2          for (k = 0; k < e.key_len; k++)
- 837   2            Uart1_SendByte(EEPROM_ReadByte((uint16_t)(e.key_off + k)));
- 838   2          n++;
- 839   2        }
- 840   1        Uart1_SendString("\r\n");
- 841   1        s_task = TASK_IDLE;
- 842   1      }
- 843          
- 844          void CMD_READ_BLOCK_NAME(char *block_name) {
- 845   1        block_entry_t blk;
- 846   1        uint16_t slot;
- 847   1        char name[BLOCK_NAME_LEN + 1];
- 848   1        s_task = TASK_READ;
- 849   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
- 850   1        slot = CMD_LoadBlockByName(block_name, &blk);
- 851   1        if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
- 852   1        CMD_GetBlockName(&blk, name);
- 853   1        Uart1_SendString("DATA+");
- 854   1        Uart1_SendString(name);
- 855   1        Uart1_SendString("?id=");
- 856   1        Uart1_SendNumber(blk.block_id);
- 857   1        Uart1_SendString("\r\n");
- 858   1        s_task = TASK_IDLE;
- 859   1      }
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 15  
+ 798   1        s_task = TASK_IDLE;
+ 799   1      }
+ 800          
+ 801          void CMD_READ_BLOCK(char *block_id) {
+ 802   1        block_entry_t blk;
+ 803   1        uint16_t slot;
+ 804   1        char name[BLOCK_NAME_LEN + 1];
+ 805   1        uint16_t i, n = 0;
+ 806   1        if (!CMD_Begin(TASK_READ, 0)) return;
+ 807   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
+ 808   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 809   1        CMD_GetBlockName(&blk, name);
+ 810   1        Uart1_SendString("DATA+");
+ 811   1        Uart1_SendNumber(blk.block_id);
+ 812   1        Uart1_SendString(";");
+ 813   1        Uart1_SendString(name);
+ 814   1        Uart1_SendString("|");
+ 815   1        for (i = 0; i < KVIDX_MAX; i++) {
+ 816   2          kv_entry_t e;
+ 817   2          uint16_t k;
+ 818   2          CMD_ReadKvEntry(i, &e);
+ 819   2          if (e.block_id != blk.block_id) continue;
+ 820   2          if (!(e.flags & KV_FLAG_VALID)) continue;
+ 821   2          if (n > 0) Uart1_SendString("|");
+ 822   2          for (k = 0; k < e.key_len; k++)
+ 823   2            Uart1_SendByte(EEPROM_ReadByte((uint16_t)(e.key_off + k)));
+ 824   2          n++;
+ 825   2        }
+ 826   1        Uart1_SendString("\r\n");
+ 827   1        s_task = TASK_IDLE;
+ 828   1      }
+ 829          
+ 830          void CMD_READ_BLOCK_NAME(char *block_name) {
+ 831   1        block_entry_t blk;
+ 832   1        uint16_t slot;
+ 833   1        char name[BLOCK_NAME_LEN + 1];
+ 834   1        if (!CMD_Begin(TASK_READ, 0)) return;
+ 835   1        slot = CMD_LoadBlockByName(block_name, &blk);
+ 836   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 837   1        CMD_GetBlockName(&blk, name);
+ 838   1        Uart1_SendString("DATA+");
+ 839   1        Uart1_SendString(name);
+ 840   1        Uart1_SendString("?id=");
+ 841   1        Uart1_SendNumber(blk.block_id);
+ 842   1        Uart1_SendString("\r\n");
+ 843   1        s_task = TASK_IDLE;
+ 844   1      }
+ 845          
+ 846          void CMD_READ_KEY(char *block_id, char *key) {
+ 847   1        block_entry_t blk;
+ 848   1        uint16_t slot, idx;
+ 849   1        kv_entry_t e;
+ 850   1        uint16_t i, val_len, key_len;
+ 851   1        if (!CMD_Begin(TASK_READ, 0)) return;
+ 852   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
+ 853   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 854   1        idx = CMD_FindKeyIdx(blk.block_id, key);
+ 855   1        if (idx == 0xFFFF) { CMD_Reply("ERR", ERR_KEY_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 856   1        CMD_ReadKvEntry(idx, &e);
+ 857   1        key_len = CMD_ReadKvRecordLens(e.data_addr, &val_len);
+ 858   1        if (key_len == 0xFFFF) { CMD_Reply("ERR", ERR_KEY_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 859   1        Uart1_SendString("DATA+");
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 15  
 
- 860          
- 861          void CMD_READ_KEY(char *block_id, char *key) {
- 862   1        block_entry_t blk;
- 863   1        uint16_t slot, idx;
- 864   1        kv_entry_t e;
- 865   1        uint16_t i, val_len, key_len;
- 866   1        s_task = TASK_READ;
- 867   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
- 868   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
- 869   1        if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
- 870   1        idx = CMD_FindKeyIdx(blk.block_id, key);
- 871   1        if (idx == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
- 872   1        CMD_ReadKvEntry(idx, &e);
- 873   1        EEPROM_SetAddress(e.slave);
- 874   1        val_len = CMD_ReadU16((uint16_t)(e.data_addr + KV_OFF_VAL_LEN));
- 875   1        key_len = CMD_ReadU16((uint16_t)(e.data_addr + KV_OFF_KEY_LEN));
- 876   1        Uart1_SendString("DATA+");
- 877   1        for (i = 0; i < val_len; i++)
- 878   1          Uart1_SendByte(EEPROM_ReadByte((uint16_t)(e.data_addr + KV_OFF_KEY + key_len + i)));
- 879   1        Uart1_SendString("\r\n");
+ 860   1        for (i = 0; i < val_len; i++)
+ 861   1          Uart1_SendByte(EEPROM_ReadByte((uint16_t)(e.data_addr + KV_OFF_KEY + key_len + i)));
+ 862   1        Uart1_SendString("\r\n");
+ 863   1        s_task = TASK_IDLE;
+ 864   1      }
+ 865          
+ 866          /* ---- WRITE ---- */
+ 867          
+ 868          void CMD_WRITE(char *block_id, char *key, char *key_value) {
+ 869   1        block_entry_t blk;
+ 870   1        uint16_t slot, idx;
+ 871   1        uint16_t val_len;
+ 872   1        if (!CMD_Begin(TASK_WRITE, 1)) return;
+ 873   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
+ 874   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 875   1        val_len = (uint16_t)strlen(key_value);
+ 876   1        idx = CMD_FindKeyIdx(blk.block_id, key);
+ 877   1        /* idx==0xFFFF 时 CMD_PutKeyValue 内部走新建路径 */
+ 878   1        if (CMD_PutKeyValue(&blk, slot, idx, key, (const uint8_t *)key_value, val_len) == ERR_OK)
+ 879   1          CMD_Reply("RESULT", ERR_OK);
  880   1        s_task = TASK_IDLE;
  881   1      }
  882          
- 883          /* ---- WRITE ---- */
- 884          
- 885          void CMD_WRITE(char *block_id, char *key, char *key_value) {
+ 883          void CMD_WRITE_RAW(char *block_id, char *key, char *hex) {
+ 884   1        uint8_t bin[64];
+ 885   1        uint8_t n;
  886   1        block_entry_t blk;
  887   1        uint16_t slot, idx;
- 888   1        uint16_t val_len;
- 889   1        s_task = TASK_WRITE;
- 890   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
- 891   1        if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
- 892   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
- 893   1        if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
- 894   1        val_len = (uint16_t)strlen(key_value);
- 895   1        idx = CMD_FindKeyIdx(blk.block_id, key);
- 896   1        if (idx != 0xFFFF) {
- 897   2          if (!CMD_UpsertKeyValue(idx, &blk, key, (const uint8_t *)key_value, val_len)) {
- 898   3            Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return;
- 899   3          }
- 900   2          CMD_Reply("RESULT", ERR_OK);
- 901   2          s_task = TASK_IDLE;
- 902   2          return;
- 903   2        }
- 904   1        if (CMD_DoCreateKey("1", block_id, key, key_value)) CMD_Reply("RESULT", ERR_OK);
- 905   1        s_task = TASK_IDLE;
- 906   1      }
- 907          
- 908          void CMD_WRITE_RAW(char *block_id, char *key, char *hex) {
- 909   1        uint8_t bin[64];
- 910   1        uint8_t n;
- 911   1        block_entry_t blk;
- 912   1        uint16_t slot, idx;
- 913   1        kv_entry_t e;
- 914   1        uint16_t key_len;
- 915   1        s_task = TASK_WRITE;
- 916   1        /* 注意：新增记录分支仍使用 e */
- 917   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
- 918   1        if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
- 919   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
- 920   1        if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
- 921   1        n = CMD_HexToBytes(hex, bin, sizeof(bin));
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 16  
+ 888   1        if (!CMD_Begin(TASK_WRITE, 1)) return;
+ 889   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
+ 890   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 891   1        n = CMD_HexToBytes(hex, bin, sizeof(bin));
+ 892   1        idx = CMD_FindKeyIdx(blk.block_id, key);
+ 893   1        if (CMD_PutKeyValue(&blk, slot, idx, key, bin, n) == ERR_OK)
+ 894   1          CMD_Reply("RESULT", ERR_OK);
+ 895   1        s_task = TASK_IDLE;
+ 896   1      }
+ 897          
+ 898          /* ---- CREATE ---- */
+ 899          
+ 900          void CMD_CREATE_BLOCK(char *block_name, char *block_size) {
+ 901   1        /* 第二形参 block_size（USIZE/容量数值）当前按统一容量处理，仅接口兼容；
+ 902   1         * 用(void)标记意图（C275 已在文件头屏蔽） */
+ 903   1        (void)block_size;
+*** WARNING C275 IN LINE 903 OF CommandParser.c: expression with possibly no effect
+ 904   1        if (!CMD_Begin(TASK_CREATE, 1)) return;
+ 905   1        CMD_DoCreateBlock(block_name);
+ 906   1        s_task = TASK_IDLE;
+ 907   1      }
+ 908          
+ 909          void CMD_CREATE_KEY(char *block_flag, char *block_identifier, char *key, char *value) {
+ 910   1        if (!CMD_Begin(TASK_CREATE, 1)) return;
+ 911   1        if (CMD_DoCreateKey(block_flag, block_identifier, key, value)) CMD_Reply("RESULT", ERR_OK);
+ 912   1        s_task = TASK_IDLE;
+ 913   1      }
+ 914          
+ 915          /* ---- DELETE ---- */
+ 916          
+ 917          void CMD_DELETE_BLOCK(char *block_id) {
+ 918   1        if (!CMD_Begin(TASK_DELETE, 1)) return;
+ 919   1        CMD_DoDeleteBlock(0, block_id, 1);
+ 920   1        s_task = TASK_IDLE;
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 16  
 
- 922   1        key_len = (uint16_t)strlen(key);
- 923   1        idx = CMD_FindKeyIdx(blk.block_id, key);
- 924   1        if (idx != 0xFFFF) {
- 925   2          if (!CMD_UpsertKeyValue(idx, &blk, key, bin, n)) {
- 926   3            Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return;
- 927   3          }
- 928   2          CMD_Reply("RESULT", ERR_OK);
- 929   2          s_task = TASK_IDLE;
- 930   2          return;
- 931   2        }
- 932   1        {
- 933   2          uint16_t kv_slot, key_off, data_addr;
- 934   2          kv_slot = CMD_AllocKvSlot();
- 935   2          if (kv_slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
- 936   2          EEPROM_SetAddress(IC_0_24C64);
- 937   2          key_off = CMD_KeyPoolAlloc(key_len);
- 938   2          if (key_off == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
- 939   2          { uint16_t i; for (i = 0; i < key_len; i++)
- 940   3              EEPROM_WriteByte((uint16_t)(key_off + i), (uint8_t)key[i]); }
- 941   2          data_addr = CMD_AppendKvRecord(blk.block_id, key, bin, n, ENC_ALGO_NONE, KV_FLAG_VALID);
- 942   2          if (data_addr == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
- 943   2          e.block_id  = blk.block_id;
- 944   2          e.key_len   = key_len;
- 945   2          e.key_off   = key_off;
- 946   2          e.slave     = IC_1_24CXX;
- 947   2          e.data_addr = data_addr;
- 948   2          e.data_len  = n;
- 949   2          e.enc_algo  = ENC_ALGO_NONE;
- 950   2          e.flags     = KV_FLAG_VALID;
- 951   2          EEPROM_SetAddress(IC_0_24C64);
- 952   2          CMD_WriteKvEntry(kv_slot, &e);
- 953   2          blk.kv_count = (uint16_t)(blk.kv_count + 1);
- 954   2          CMD_WriteBlockSlot(slot, &blk);
- 955   2          CMD_Reply("RESULT", ERR_OK);
+ 921   1      }
+ 922          
+ 923          void CMD_DELETE_BLOCK_NAME(char *block_name) {
+ 924   1        if (!CMD_Begin(TASK_DELETE, 1)) return;
+ 925   1        CMD_DoDeleteBlock("0", block_name, 0);
+ 926   1        s_task = TASK_IDLE;
+ 927   1      }
+ 928          
+ 929          void CMD_DELETE_KEY(char *block_flag, char *block_identifier, char *key) {
+ 930   1        block_entry_t blk;
+ 931   1        uint16_t slot, idx;
+ 932   1        if (!CMD_Begin(TASK_DELETE, 1)) return;
+ 933   1        slot = CMD_ResolveBlock(block_flag, block_identifier, &blk);
+ 934   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 935   1        idx = CMD_FindKeyIdx(blk.block_id, key);
+ 936   1        if (idx == 0xFFFF) { CMD_Reply("ERR", ERR_KEY_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 937   1        CMD_FreeKvSlot(idx);
+ 938   1        if (blk.kv_count > 0) blk.kv_count--;
+ 939   1        CMD_WriteBlockSlot(slot, &blk);
+ 940   1        CMD_Reply("RESULT", ERR_OK);
+ 941   1        s_task = TASK_IDLE;
+ 942   1      }
+ 943          
+ 944          /* ---- UPDATE ---- */
+ 945          
+ 946          void CMD_UPDATE_BLOCK(char *block_id, char *new_name) {
+ 947   1        block_entry_t blk;
+ 948   1        uint16_t slot;
+ 949   1        if (!CMD_Begin(TASK_UPDATE, 1)) return;
+ 950   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
+ 951   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 952   1        if (new_name && strlen(new_name) > 0) {
+ 953   2          CMD_SetBlockName(&blk, new_name);
+ 954   2          EEPROM_SetAddress(IC_0_24C64);
+ 955   2          CMD_WriteBlockSlot(slot, &blk);
  956   2        }
- 957   1        s_task = TASK_IDLE;
- 958   1      }
- 959          
- 960          /* ---- CREATE ---- */
- 961          
- 962          void CMD_CREATE_BLOCK(char *block_name, char *block_size) {
- 963   1        (void)block_size;  /* USIZE 或容量数值，当前按统一容量处理 */
-*** WARNING C275 IN LINE 963 OF CommandParser.c: expression with possibly no effect
- 964   1        s_task = TASK_CREATE;
- 965   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
- 966   1        if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
- 967   1        CMD_DoCreateBlock(block_name);
- 968   1        s_task = TASK_IDLE;
- 969   1      }
- 970          
- 971          void CMD_CREATE_KEY(char *block_flag, char *block_identifier, char *key, char *value) {
- 972   1        s_task = TASK_CREATE;
- 973   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
- 974   1        if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
- 975   1        if (CMD_DoCreateKey(block_flag, block_identifier, key, value)) CMD_Reply("RESULT", ERR_OK);
- 976   1        s_task = TASK_IDLE;
- 977   1      }
- 978          
- 979          /* ---- DELETE ---- */
- 980          
- 981          void CMD_DELETE_BLOCK(char *block_id) {
- 982   1        s_task = TASK_DELETE;
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 17  
+ 957   1        CMD_Reply("RESULT", ERR_OK);
+ 958   1        s_task = TASK_IDLE;
+ 959   1      }
+ 960          
+ 961          void CMD_UPDATE_KEY(char *block_id, char *key, char *key_value) {
+ 962   1        block_entry_t blk;
+ 963   1        uint16_t slot, idx;
+ 964   1        uint16_t val_len;
+ 965   1        if (!CMD_Begin(TASK_UPDATE, 1)) return;
+ 966   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
+ 967   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 968   1        idx = CMD_FindKeyIdx(blk.block_id, key);
+ 969   1        if (idx == 0xFFFF) { CMD_Reply("ERR", ERR_KEY_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 970   1        val_len = (uint16_t)strlen(key_value);
+ 971   1        if (CMD_PutKeyValue(&blk, slot, idx, key, (const uint8_t *)key_value, val_len) != ERR_OK) {
+ 972   2          s_task = TASK_IDLE; return;
+ 973   2        }
+ 974   1        CMD_Reply("RESULT", ERR_OK);
+ 975   1        s_task = TASK_IDLE;
+ 976   1      }
+ 977          
+ 978          /* ---- GET ALL ---- */
+ 979          
+ 980          void CMD_GET_ALL_BLOCK(void) {
+ 981   1        if (!CMD_Begin(TASK_GET_ALL, 0)) return;
+ 982   1        CMD_EmitAllBlocks();
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 17  
 
- 983   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
- 984   1        if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
- 985   1        CMD_DoDeleteBlock(0, block_id, 1);
- 986   1        s_task = TASK_IDLE;
- 987   1      }
- 988          
- 989          void CMD_DELETE_BLOCK_NAME(char *block_name) {
- 990   1        s_task = TASK_DELETE;
- 991   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
- 992   1        if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
- 993   1        CMD_DoDeleteBlock("0", block_name, 0);
- 994   1        s_task = TASK_IDLE;
- 995   1      }
- 996          
- 997          void CMD_DELETE_KEY(char *block_flag, char *block_identifier, char *key) {
- 998   1        block_entry_t blk;
- 999   1        uint16_t slot, idx;
-1000   1        kv_entry_t e;
-1001   1        s_task = TASK_DELETE;
-1002   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-1003   1        if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
-1004   1        slot = CMD_ResolveBlock(block_flag, block_identifier, &blk);
-1005   1        if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
-1006   1        idx = CMD_FindKeyIdx(blk.block_id, key);
-1007   1        if (idx == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
-1008   1        CMD_ReadKvEntry(idx, &e);
-1009   1        CMD_DeleteKvRecord(e.data_addr);
-1010   1        EEPROM_SetAddress(IC_0_24C64);
-1011   1        CMD_WriteU16(CMD_KvEntryOff(idx), 0xFFFF);
-1012   1        if (blk.kv_count > 0) blk.kv_count--;
-1013   1        CMD_WriteBlockSlot(slot, &blk);
-1014   1        CMD_Reply("RESULT", ERR_OK);
+ 983   1        s_task = TASK_IDLE;
+ 984   1      }
+ 985          
+ 986          void CMD_GET_ALL_KEY(char *block_id) {
+ 987   1        block_entry_t blk;
+ 988   1        uint16_t slot;
+ 989   1        char name[BLOCK_NAME_LEN + 1];
+ 990   1        if (!CMD_Begin(TASK_GET_ALL, 0)) return;
+ 991   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
+ 992   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
+ 993   1        CMD_GetBlockName(&blk, name);
+ 994   1        Uart1_SendString("DATA+[");
+ 995   1        Uart1_SendString(name);
+ 996   1        Uart1_SendString(";");
+ 997   1        Uart1_SendNumber(blk.block_id);
+ 998   1        Uart1_SendString("](");
+ 999   1        CMD_EmitBlockKv(blk.block_id);
+1000   1        Uart1_SendString(")\r\n");
+1001   1        s_task = TASK_IDLE;
+1002   1      }
+1003          
+1004          void CMD_GET_SIZE(void) {
+1005   1        s_task = TASK_GET_ALL;
+1006   1        Uart1_SendString("DATA+");
+1007   1        Uart1_SendNumber(DEV_EEPROM_SIZE);
+1008   1        Uart1_SendString("+");
+1009   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_TOTAL));
+1010   1        Uart1_SendString("+");
+1011   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_USED));
+1012   1        Uart1_SendString("+");
+1013   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_FREE));
+1014   1        Uart1_SendString("\r\n");
 1015   1        s_task = TASK_IDLE;
 1016   1      }
 1017          
-1018          /* ---- UPDATE ---- */
+1018          /* ---- FORMAT / maintenance ---- */
 1019          
-1020          void CMD_UPDATE_BLOCK(char *block_id, char *new_name) {
-1021   1        block_entry_t blk;
-1022   1        uint16_t slot;
-1023   1        s_task = TASK_UPDATE;
-1024   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-1025   1        if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
-1026   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
-1027   1        if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
-1028   1        if (new_name && strlen(new_name) > 0) {
-1029   2          CMD_SetBlockName(&blk, new_name);
-1030   2          EEPROM_SetAddress(IC_0_24C64);
-1031   2          CMD_WriteBlockSlot(slot, &blk);
-1032   2        }
-1033   1        CMD_Reply("RESULT", ERR_OK);
-1034   1        s_task = TASK_IDLE;
-1035   1      }
-1036          
-1037          void CMD_UPDATE_KEY(char *block_id, char *key, char *key_value) {
-1038   1        block_entry_t blk;
-1039   1        uint16_t slot, idx;
-1040   1        uint16_t val_len;
-1041   1        s_task = TASK_UPDATE;
-1042   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-1043   1        if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
-1044   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 18  
+1020          void CMD_FORMAT_DEV(void) {
+1021   1        if (!CMD_Begin(TASK_FORMAT, 1)) return;
+1022   1        StorageMgr_Format_BlockZone();
+1023   1        StorageMgr_Format_EEPROMZone();
+1024   1        CMD_Reply("RESULT", ERR_OK);
+1025   1        s_task = TASK_IDLE;
+1026   1      }
+1027          
+1028          void CMD_FORMAT_BLOCK(char *block_flag, char *block_identifier) {
+1029   1        block_entry_t blk;
+1030   1        uint16_t slot;
+1031   1        if (!CMD_Begin(TASK_FORMAT, 1)) return;
+1032   1        slot = CMD_ResolveBlock(block_flag, block_identifier, &blk);
+1033   1        if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
+1034   1        CMD_PurgeBlockKv(blk.block_id);
+1035   1        EEPROM_SetAddress(IC_0_24C64);
+1036   1        blk.kv_count = 0;
+1037   1        CMD_WriteBlockSlot(slot, &blk);
+1038   1        CMD_Reply("RESULT", ERR_OK);
+1039   1        s_task = TASK_IDLE;
+1040   1      }
+1041          
+1042          /* ---- Main AT dispatcher ---- */
+1043          
+1044          void CMD_Parser(char *cmd) {
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 18  
 
-1045   1        if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
-1046   1        idx = CMD_FindKeyIdx(blk.block_id, key);
-1047   1        if (idx == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
-1048   1        val_len = (uint16_t)strlen(key_value);
-1049   1        if (!CMD_UpsertKeyValue(idx, &blk, key, (const uint8_t *)key_value, val_len)) {
-1050   2          Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return;
-1051   2        }
-1052   1        CMD_Reply("RESULT", ERR_OK);
-1053   1        s_task = TASK_IDLE;
-1054   1      }
-1055          
-1056          /* ---- GET ALL ---- */
-1057          
-1058          void CMD_GET_ALL_BLOCK(void) {
-1059   1        s_task = TASK_GET_ALL;
-1060   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-1061   1        CMD_EmitAllBlocks();
-1062   1        s_task = TASK_IDLE;
-1063   1      }
-1064          
-1065          void CMD_GET_ALL_KEY(char *block_id) {
-1066   1        block_entry_t blk;
-1067   1        uint16_t slot;
-1068   1        char name[BLOCK_NAME_LEN + 1];
-1069   1        s_task = TASK_GET_ALL;
-1070   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-1071   1        slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
-1072   1        if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
-1073   1        CMD_GetBlockName(&blk, name);
-1074   1        Uart1_SendString("DATA+[");
-1075   1        Uart1_SendString(name);
-1076   1        Uart1_SendString(";");
-1077   1        Uart1_SendNumber(blk.block_id);
-1078   1        Uart1_SendString("](");
-1079   1        CMD_EmitBlockKv(blk.block_id);
-1080   1        Uart1_SendString(")\r\n");
-1081   1        s_task = TASK_IDLE;
-1082   1      }
-1083          
-1084          void CMD_GET_SIZE(void) {
-1085   1        s_task = TASK_GET_ALL;
-1086   1        Uart1_SendString("DATA+");
-1087   1        Uart1_SendNumber(DEV_EEPROM_SIZE);
-1088   1        Uart1_SendString("+");
-1089   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_TOTAL));
-1090   1        Uart1_SendString("+");
-1091   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_USED));
-1092   1        Uart1_SendString("+");
-1093   1        Uart1_SendNumber(CMD_ReadU16(CFG_ADDR_DATA_FREE));
-1094   1        Uart1_SendString("\r\n");
-1095   1        s_task = TASK_IDLE;
-1096   1      }
-1097          
-1098          /* ---- FORMAT / maintenance ---- */
-1099          
-1100          void CMD_FORMAT_DEV(void) {
-1101   1        s_task = TASK_FORMAT;
-1102   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-1103   1        if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
-1104   1        StorageMgr_Format_BlockZone();
-1105   1        StorageMgr_Format_EEPROMZone();
-1106   1        CMD_Reply("RESULT", ERR_OK);
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 19  
+1045   1        char *tokens[10];
+1046   1        int tc = CMD_Split(cmd, '+', tokens, 10);
+1047   1        int i;
+1048   1        char *a2, *a3, *a4, *a5, *a6;
+1049   1      
+1050   1        if (tc < 2) return;
+1051   1        if (!CMD_Compare(tokens[0], "AT")) return;
+1052   1      
+1053   1        for (i = 2; i < tc; i++) tokens[i] = CMD_StripQuote(tokens[i]);
+1054   1        a2 = (tc >= 3) ? tokens[2] : 0;
+1055   1        a3 = (tc >= 4) ? tokens[3] : 0;
+1056   1        a4 = (tc >= 5) ? tokens[4] : 0;
+1057   1        a5 = (tc >= 6) ? tokens[5] : 0;
+1058   1        a6 = (tc >= 7) ? tokens[6] : 0;
+1059   1      
+1060   1        if (CMD_Compare(tokens[1], "INIT")) {
+1061   2          if (tc >= 5)
+1062   2            CMD_INIT(a2, a3, CMD_Atoi(a4), (tc >= 6) ? CMD_Atoi(a5) : DATA_SIZE_24C64);
+1063   2          else
+1064   2            CMD_Reply("ERR", ERR_PARAM);
+1065   2          return;
+1066   2        }
+1067   1        if (CMD_Compare(tokens[1], "ECHO")) { CMD_ECHO(); return; }
+1068   1        if (CMD_Compare(tokens[1], "INFO")) { CMD_INFO(); return; }
+1069   1        if (CMD_Compare(tokens[1], "STATUS")) { CMD_STATUS(); return; }
+1070   1        if (CMD_Compare(tokens[1], "USAGE")) { CMD_USAGE(); return; }
+1071   1      
+1072   1        if (CMD_Compare(tokens[1], "VERSION")) { CMD_VERSION(); return; }
+1073   1      
+1074   1        if (CMD_Compare(tokens[1], "AUTH")) {
+1075   2          if (a2 && a3 && CMD_Compare(a2, "PASSWORD")) {
+1076   3            if (CMD_Compare(a3, "CREATE") && a4) { CMD_AUTH_CREATE(a4); return; }
+1077   3            if (CMD_Compare(a3, "VERIFY") && a4) { CMD_AUTH_VERIFY(a4); return; }
+1078   3            if (CMD_Compare(a3, "ENABLE")) { CMD_AUTH_ENABLE(); return; }
+1079   3            if (CMD_Compare(a3, "DISABLE")) { CMD_AUTH_DISABLE(); return; }
+1080   3            if (CMD_Compare(a3, "VERIFYOUT")) { CMD_AUTH_VERIFYOUT(); return; }
+1081   3            if (CMD_Compare(a3, "CHANGE") && a4) { CMD_AUTH_CHANGE(a4, a5); return; }
+1082   3            if (CMD_Compare(a3, "RESET") && a4) { CMD_AUTH_RESET(a4); return; }
+1083   3          }
+1084   2          CMD_Reply("ERR", ERR_PARAM);
+1085   2          return;
+1086   2        }
+1087   1      
+1088   1        if (CMD_Compare(tokens[1], "READ")) {
+1089   2          if (a2 && CMD_Compare(a2, "BLOCK")) {
+1090   3            if (a3 && CMD_Compare(a3, "NAME") && a4) { CMD_READ_BLOCK_NAME(a4); return; }
+1091   3            if (a3) { CMD_READ_BLOCK(a3); return; }
+1092   3            CMD_READ_ALL_BLOCK(); return;
+1093   3          }
+1094   2          if (a2 && CMD_Compare(a2, "KEY") && a3 && a4) { CMD_READ_KEY(a3, a4); return; }
+1095   2          CMD_READ(a2);
+1096   2          return;
+1097   2        }
+1098   1      
+1099   1        if (CMD_Compare(tokens[1], "WRITE")) {
+1100   2          if (a2 && CMD_Compare(a2, "RAW") && a3 && a4 && a5) { CMD_WRITE_RAW(a3, a4, a5); return; }
+1101   2          if (a2 && a3 && a4) { CMD_WRITE(a2, a3, a4); return; }
+1102   2          CMD_Reply("ERR", ERR_PARAM);
+1103   2          return;
+1104   2        }
+1105   1      
+1106   1        if (CMD_Compare(tokens[1], "CREATE")) {
+C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/30/2026 23:25:46 PAGE 19  
 
-1107   1        s_task = TASK_IDLE;
-1108   1      }
-1109          
-1110          void CMD_FORMAT_BLOCK(char *block_flag, char *block_identifier) {
-1111   1        block_entry_t blk;
-1112   1        uint16_t slot;
-1113   1        s_task = TASK_FORMAT;
-1114   1        if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-1115   1        if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
-1116   1        slot = CMD_ResolveBlock(block_flag, block_identifier, &blk);
-1117   1        if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
-1118   1        CMD_PurgeBlockKv(blk.block_id);
-1119   1        EEPROM_SetAddress(IC_0_24C64);
-1120   1        blk.kv_count = 0;
-1121   1        CMD_WriteBlockSlot(slot, &blk);
-1122   1        CMD_Reply("RESULT", ERR_OK);
-1123   1        s_task = TASK_IDLE;
-1124   1      }
-1125          
-1126          void CMD_DEFRAG(void) {
-1127   1        s_task = TASK_DEFRAG;
-1128   1        CMD_Reply("RESULT", ERR_OK);
-1129   1        s_task = TASK_IDLE;
-1130   1      }
-1131          
-1132          void CMD_REFRESH(void) {
-1133   1        s_task = TASK_REFRESH;
-1134   1        {
-1135   2          uint16_t total = CMD_ReadU16(CFG_ADDR_DATA_TOTAL);
-1136   2          uint16_t used  = CMD_ReadU16(CFG_ADDR_DATA_USED);
-1137   2          if (total >= used) {
-1138   3            CMD_WriteU16(CFG_ADDR_DATA_FREE, (uint16_t)(total - used));
-1139   3            if (total > 0)
-1140   3              EEPROM_WriteByte(CFG_ADDR_DATA_USAGE, (uint8_t)(((uint32_t)used * 100u) / total));
-1141   3          }
-1142   2        }
-1143   1        CMD_Reply("RESULT", ERR_OK);
-1144   1        s_task = TASK_IDLE;
-1145   1      }
-1146          
-1147          /* ---- ENC ---- */
-1148          
-1149          void CMD_ENC_SET(char *algo) {
-1150   1        uint8_t a = CMD_Atoi(algo);
-1151   1        if (a > ENC_ALGO_RC4) { CMD_Reply("ERR", ERR_PARAM); return; }
-1152   1        EEPROM_SetAddress(IC_0_24C64);
-1153   1        EEPROM_WriteByte(CFG_ADDR_ENC_ALGO, a);
-1154   1        CMD_Reply("RESULT", ERR_OK);
-1155   1      }
-1156          
-1157          void CMD_ENC_KEY(char *key_hex) {
-1158   1        uint8_t bin[16];
-1159   1        uint8_t n, i;
-1160   1        n = CMD_HexToBytes(key_hex, bin, sizeof(bin));
-1161   1        if (n == 0) { CMD_Reply("ERR", ERR_PARAM); return; }
-1162   1        EEPROM_SetAddress(IC_0_24C64);
-1163   1        for (i = 0; i < 16; i++) {
-1164   2          uint8_t b = (i < n) ? bin[i] : 0x00;
-1165   2          EEPROM_WriteByte((uint16_t)(CFG_ADDR_EXT + i), b);
-1166   2        }
-1167   1        CMD_Reply("RESULT", ERR_OK);
-1168   1      }
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 20  
-
-1169          
-1170          void CMD_ENC_SALT(char *salt_hex) {
-1171   1        uint8_t bin[16];
-1172   1        uint8_t n, i;
-1173   1        n = CMD_HexToBytes(salt_hex, bin, sizeof(bin));
-1174   1        if (n == 0) { CMD_Reply("ERR", ERR_PARAM); return; }
-1175   1        EEPROM_SetAddress(IC_0_24C64);
-1176   1        for (i = 0; i < 16; i++) {
-1177   2          uint8_t b = (i < n) ? bin[i] : 0x00;
-1178   2          EEPROM_WriteByte((uint16_t)(CFG_ADDR_SALT + i), b);
-1179   2        }
-1180   1        CMD_Reply("RESULT", ERR_OK);
-1181   1      }
-1182          
-1183          void CMD_ENC_KDF(char *kdf_algo) {
-1184   1        uint8_t k = CMD_Atoi(kdf_algo);
-1185   1        if (k > KDF_PBKDF2_SHA256) { CMD_Reply("ERR", ERR_PARAM); return; }
-1186   1        EEPROM_SetAddress(IC_0_24C64);
-1187   1        EEPROM_WriteByte(CFG_ADDR_KDF_ALGO, k);
-1188   1        CMD_Reply("RESULT", ERR_OK);
-1189   1      }
-1190          
-1191          /* ---- BATCH ---- */
-1192          
-1193          void CMD_BATCH_WRITE(char *block_id, char *count) {
-1194   1        (void)block_id; (void)count;
-*** WARNING C275 IN LINE 1194 OF CommandParser.c: expression with possibly no effect
-*** WARNING C275 IN LINE 1194 OF CommandParser.c: expression with possibly no effect
-1195   1        s_task = TASK_BATCH;
-1196   1        CMD_Reply("RESULT", ERR_OK);
-1197   1        s_task = TASK_IDLE;
-1198   1      }
-1199          
-1200          void CMD_BATCH_DELETE(char *block_id, char *count) {
-1201   1        (void)block_id; (void)count;
-*** WARNING C275 IN LINE 1201 OF CommandParser.c: expression with possibly no effect
-*** WARNING C275 IN LINE 1201 OF CommandParser.c: expression with possibly no effect
-1202   1        s_task = TASK_BATCH;
-1203   1        CMD_Reply("RESULT", ERR_OK);
-1204   1        s_task = TASK_IDLE;
-1205   1      }
-1206          
-1207          /* ---- Main AT dispatcher ---- */
-1208          
-1209          void CMD_Parser(char *cmd) {
-1210   1        char *tokens[12];
-1211   1        int tc = CMD_Split(cmd, '+', tokens, 12);
-1212   1        int i;
-1213   1        char *a2, *a3, *a4, *a5, *a6;
-1214   1      
-1215   1        if (tc < 2) return;
-1216   1        if (!CMD_Compare(tokens[0], "AT")) return;
-1217   1      
-1218   1        for (i = 2; i < tc; i++) tokens[i] = CMD_StripQuote(tokens[i]);
-1219   1        a2 = (tc >= 3) ? tokens[2] : 0;
-1220   1        a3 = (tc >= 4) ? tokens[3] : 0;
-1221   1        a4 = (tc >= 5) ? tokens[4] : 0;
-1222   1        a5 = (tc >= 6) ? tokens[5] : 0;
-1223   1        a6 = (tc >= 7) ? tokens[6] : 0;
-1224   1      
-1225   1        if (CMD_Compare(tokens[1], "INIT")) {
-1226   2          if (tc >= 5)
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 21  
-
-1227   2            CMD_INIT(a2, a3, CMD_Atoi(a4), (tc >= 6) ? CMD_Atoi(a5) : DATA_SIZE_24C64);
-1228   2          else
-1229   2            CMD_Reply("ERR", ERR_PARAM);
-1230   2          return;
-1231   2        }
-1232   1        if (CMD_Compare(tokens[1], "ECHO")) { CMD_ECHO(); return; }
-1233   1        if (CMD_Compare(tokens[1], "INFO")) { CMD_INFO(); return; }
-1234   1        if (CMD_Compare(tokens[1], "STATUS")) { CMD_STATUS(); return; }
-1235   1        if (CMD_Compare(tokens[1], "USAGE")) { CMD_USAGE(); return; }
-1236   1        if (CMD_Compare(tokens[1], "ENCINFO")) { CMD_ENCINFO(); return; }
-1237   1        if (CMD_Compare(tokens[1], "VERSION")) { CMD_VERSION(); return; }
-1238   1      
-1239   1        if (CMD_Compare(tokens[1], "AUTH")) {
-1240   2          if (a2 && a3 && CMD_Compare(a2, "PASSWORD")) {
-1241   3            if (CMD_Compare(a3, "CREATE") && a4) { CMD_AUTH_CREATE(a4); return; }
-1242   3            if (CMD_Compare(a3, "VERIFY") && a4) { CMD_AUTH_VERIFY(a4); return; }
-1243   3            if (CMD_Compare(a3, "ENABLE")) { CMD_AUTH_ENABLE(); return; }
-1244   3            if (CMD_Compare(a3, "DISABLE")) { CMD_AUTH_DISABLE(); return; }
-1245   3            if (CMD_Compare(a3, "VERIFYOUT")) { CMD_AUTH_VERIFYOUT(); return; }
-1246   3            if (CMD_Compare(a3, "CHANGE") && a4) { CMD_AUTH_CHANGE(a4, a5); return; }
-1247   3            if (CMD_Compare(a3, "RESET") && a4) { CMD_AUTH_RESET(a4); return; }
-1248   3          }
-1249   2          CMD_Reply("ERR", ERR_PARAM);
-1250   2          return;
-1251   2        }
-1252   1      
-1253   1        if (CMD_Compare(tokens[1], "READ")) {
-1254   2          if (a2 && CMD_Compare(a2, "BLOCK")) {
-1255   3            if (a3 && CMD_Compare(a3, "NAME") && a4) { CMD_READ_BLOCK_NAME(a4); return; }
-1256   3            if (a3) { CMD_READ_BLOCK(a3); return; }
-1257   3            CMD_READ_ALL_BLOCK(); return;
-1258   3          }
-1259   2          if (a2 && CMD_Compare(a2, "KEY") && a3 && a4) { CMD_READ_KEY(a3, a4); return; }
-1260   2          CMD_READ(a2);
-1261   2          return;
-1262   2        }
-1263   1      
-1264   1        if (CMD_Compare(tokens[1], "WRITE")) {
-1265   2          if (a2 && CMD_Compare(a2, "RAW") && a3 && a4 && a5) { CMD_WRITE_RAW(a3, a4, a5); return; }
-1266   2          if (a2 && a3 && a4) { CMD_WRITE(a2, a3, a4); return; }
-1267   2          CMD_Reply("ERR", ERR_PARAM);
-1268   2          return;
-1269   2        }
-1270   1      
-1271   1        if (CMD_Compare(tokens[1], "CREATE")) {
-1272   2          if (a2 && CMD_Compare(a2, "BLOCK") && a3 && a4) { CMD_CREATE_BLOCK(a3, a4); return; }
-1273   2          if (a2 && CMD_Compare(a2, "KEY") && a3 && a4 && a5 && a6) { CMD_CREATE_KEY(a3, a4, a5, a6); return; }
-1274   2          CMD_Reply("ERR", ERR_PARAM);
-1275   2          return;
-1276   2        }
-1277   1      
-1278   1        if (CMD_Compare(tokens[1], "DELETE")) {
-1279   2          if (a2 && CMD_Compare(a2, "BLOCK")) {
-1280   3            if (a3 && CMD_Compare(a3, "NAME") && a4) { CMD_DELETE_BLOCK_NAME(a4); return; }
-1281   3            if (a3) { CMD_DELETE_BLOCK(a3); return; }
-1282   3          }
-1283   2          if (a2 && CMD_Compare(a2, "KEY") && a3 && a4 && a5) { CMD_DELETE_KEY(a3, a4, a5); return; }
-1284   2          CMD_Reply("ERR", ERR_PARAM);
-1285   2          return;
-1286   2        }
-1287   1      
-1288   1        if (CMD_Compare(tokens[1], "UPDATE")) {
-C51 COMPILER V9.59.0.0   COMMANDPARSER                                                     09/26/2026 13:07:36 PAGE 22  
-
-1289   2          if (a2 && CMD_Compare(a2, "BLOCK") && a3) { CMD_UPDATE_BLOCK(a3, a4); return; }
-1290   2          if (a2 && CMD_Compare(a2, "KEY") && a3 && a4 && a5) { CMD_UPDATE_KEY(a3, a4, a5); return; }
-1291   2          CMD_Reply("ERR", ERR_PARAM);
-1292   2          return;
-1293   2        }
-1294   1      
-1295   1        if (CMD_Compare(tokens[1], "GET")) {
-1296   2          if (a2 && CMD_Compare(a2, "ALL") && a3) {
-1297   3            if (CMD_Compare(a3, "BLOCK")) { CMD_GET_ALL_BLOCK(); return; }
-1298   3            if (CMD_Compare(a3, "KEY") && a4) { CMD_GET_ALL_KEY(a4); return; }
-1299   3          }
-1300   2          if (a2 && CMD_Compare(a2, "SIZE")) { CMD_GET_SIZE(); return; }
-1301   2          CMD_Reply("ERR", ERR_PARAM);
-1302   2          return;
-1303   2        }
-1304   1      
-1305   1        if (CMD_Compare(tokens[1], "FORMAT")) {
-1306   2          if (a2 && CMD_Compare(a2, "DEV")) { CMD_FORMAT_DEV(); return; }
-1307   2          if (a2 && CMD_Compare(a2, "BLOCK") && a3 && a4) { CMD_FORMAT_BLOCK(a3, a4); return; }
-1308   2          CMD_Reply("ERR", ERR_PARAM);
-1309   2          return;
-1310   2        }
-1311   1      
-1312   1        if (CMD_Compare(tokens[1], "DEFRAG")) { CMD_DEFRAG(); return; }
-1313   1        if (CMD_Compare(tokens[1], "REFRESH")) { CMD_REFRESH(); return; }
-1314   1      
-1315   1        if (CMD_Compare(tokens[1], "ENC")) {
-1316   2          if (a2 && CMD_Compare(a2, "SET") && a3) { CMD_ENC_SET(a3); return; }
-1317   2          if (a2 && CMD_Compare(a2, "KEY") && a3) { CMD_ENC_KEY(a3); return; }
-1318   2          if (a2 && CMD_Compare(a2, "SALT") && a3) { CMD_ENC_SALT(a3); return; }
-1319   2          if (a2 && CMD_Compare(a2, "KDF") && a3) { CMD_ENC_KDF(a3); return; }
-1320   2          CMD_Reply("ERR", ERR_PARAM);
-1321   2          return;
-1322   2        }
-1323   1      
-1324   1        if (CMD_Compare(tokens[1], "BATCH")) {
-1325   2          if (a2 && CMD_Compare(a2, "WRITE") && a3 && a4) { CMD_BATCH_WRITE(a3, a4); return; }
-1326   2          if (a2 && CMD_Compare(a2, "DELETE") && a3 && a4) { CMD_BATCH_DELETE(a3, a4); return; }
-1327   2          CMD_Reply("ERR", ERR_PARAM);
-1328   2          return;
-1329   2        }
-1330   1      
-1331   1        CMD_Reply("ERR", ERR_PARAM);
-1332   1      }
+1107   2          if (a2 && CMD_Compare(a2, "BLOCK") && a3 && a4) { CMD_CREATE_BLOCK(a3, a4); return; }
+1108   2          if (a2 && CMD_Compare(a2, "KEY") && a3 && a4 && a5 && a6) { CMD_CREATE_KEY(a3, a4, a5, a6); return; }
+1109   2          CMD_Reply("ERR", ERR_PARAM);
+1110   2          return;
+1111   2        }
+1112   1      
+1113   1        if (CMD_Compare(tokens[1], "DELETE")) {
+1114   2          if (a2 && CMD_Compare(a2, "BLOCK")) {
+1115   3            if (a3 && CMD_Compare(a3, "NAME") && a4) { CMD_DELETE_BLOCK_NAME(a4); return; }
+1116   3            if (a3) { CMD_DELETE_BLOCK(a3); return; }
+1117   3          }
+1118   2          if (a2 && CMD_Compare(a2, "KEY") && a3 && a4 && a5) { CMD_DELETE_KEY(a3, a4, a5); return; }
+1119   2          CMD_Reply("ERR", ERR_PARAM);
+1120   2          return;
+1121   2        }
+1122   1      
+1123   1        if (CMD_Compare(tokens[1], "UPDATE")) {
+1124   2          if (a2 && CMD_Compare(a2, "BLOCK") && a3) { CMD_UPDATE_BLOCK(a3, a4); return; }
+1125   2          if (a2 && CMD_Compare(a2, "KEY") && a3 && a4 && a5) { CMD_UPDATE_KEY(a3, a4, a5); return; }
+1126   2          CMD_Reply("ERR", ERR_PARAM);
+1127   2          return;
+1128   2        }
+1129   1      
+1130   1        if (CMD_Compare(tokens[1], "GET")) {
+1131   2          if (a2 && CMD_Compare(a2, "ALL") && a3) {
+1132   3            if (CMD_Compare(a3, "BLOCK")) { CMD_GET_ALL_BLOCK(); return; }
+1133   3            if (CMD_Compare(a3, "KEY") && a4) { CMD_GET_ALL_KEY(a4); return; }
+1134   3          }
+1135   2          if (a2 && CMD_Compare(a2, "SIZE")) { CMD_GET_SIZE(); return; }
+1136   2          CMD_Reply("ERR", ERR_PARAM);
+1137   2          return;
+1138   2        }
+1139   1      
+1140   1        if (CMD_Compare(tokens[1], "FORMAT")) {
+1141   2          if (a2 && CMD_Compare(a2, "DEV")) { CMD_FORMAT_DEV(); return; }
+1142   2          if (a2 && CMD_Compare(a2, "BLOCK") && a3 && a4) { CMD_FORMAT_BLOCK(a3, a4); return; }
+1143   2          CMD_Reply("ERR", ERR_PARAM);
+1144   2          return;
+1145   2        }
+1146   1      
+1147   1        CMD_Reply("ERR", ERR_PARAM);
+1148   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =  14871    ----
-   CONSTANT SIZE    =    508    ----
+   CODE SIZE        =  11568    ----
+   CONSTANT SIZE    =    358    ----
    XDATA SIZE       =   ----    ----
-   PDATA SIZE       =      6    1866
+   PDATA SIZE       =      6    1753
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
 
 
-C51 COMPILATION COMPLETE.  5 WARNING(S),  0 ERROR(S)
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

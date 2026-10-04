@@ -6,5 +6,5 @@
 ".\Objects\Auth.obj",
 ".\Objects\FeatTag.obj",
 ".\Objects\CommandParser.obj" 
-TO ".\Objects\archu" RTX51 
+TO ".\Objects\archu" 
 PRINT(".\Listings\archu.m51") RAMSIZE(256) 

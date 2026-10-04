@@ -38,8 +38,19 @@
 #define IC_0_24C64          0x50    /* 第一块：元数据片 */
 #define IC_1_24CXX          0x51    /* 第二块：数据片，容量可变 */
 
+/* ============================================================
+ * 片上设备容量配置（编译期可配）
+ * ------------------------------------------------------------
+ * 0x50 元数据片容量（Byte），默认 24C64 = 8KB
+ * 0x51 数据片容量（Byte），默认 24C64 = 8KB
+ * 存储块大小随二者变动，改这里即可整体调整。
+ * 若需在运行期改 0x51，用 CFG_ADDR_DATA_SIZE_CODE（DATA_SIZE_*）。
+ * ============================================================ */
+#define EEPROM0_CAPACITY_BYTES  0x2000  /* 0x50：24C64 = 8KB */
+#define EEPROM1_CAPACITY_BYTES  0x2000  /* 0x51：24C64 = 8KB（可改） */
+
 #define CFG_ZONE_SIZE       0x100   /* 配置区总长 256B */
-#define DEV_EEPROM_SIZE     0x2000  /* 单片 24C64 容量 8KB，地址 0x0000~0x1FFF */
+#define DEV_EEPROM_SIZE     EEPROM0_CAPACITY_BYTES  /* 第一片容量（原 0x2000） */
 
 /* 第二块容量代码 (0x52) */
 #define DATA_SIZE_NONE      0x00    /* 未指定 */
@@ -107,7 +118,7 @@
 #define FLAG_PWD_AUTH      (1 << 3)  /* bit3：密码鉴权功能启用 */
 #define FLAG_FILE_ENCRYPT  (1 << 4)  /* bit4：文件加密功能启用 */
 
-/* ---- 加密算法枚举 (0x4E)，取代原 bit0~bit3 ---- */
+/* 加密算法枚举（下位机不加密，仅记录主机所用算法供 INFO 展示） */
 #define ENC_ALGO_NONE           0x00
 #define ENC_ALGO_AES128_CBC     0x01
 #define ENC_ALGO_AES128_GCM     0x02
@@ -127,38 +138,6 @@
 #define KEY_VOL_MAX         64
 #define DEV_SIZE_DEFAULT    8       /* 8 * 1024 = 8KB(24C64) */
 #define PASS_NONE_STR       "UPASS"
-
-/* ============================================================
- * 加密描述符（放在块头或键值对头中）
- * 统一描述所有算法的密文长度、IV、TAG、槽大小
- * ============================================================ */
-#define ENC_MODE_STREAM     0x00    /* 流密码：密文长度 == 明文长度 */
-#define ENC_MODE_BLOCK_PAD  0x01    /* 分组 + PKCS7 填充 */
-#define ENC_MODE_AEAD       0x02    /* 认证加密：密文 = 明文 + TAG */
-
-typedef struct {
-    uint8_t  algo;          /* ENC_ALGO_* */
-    uint8_t  mode;          /* ENC_MODE_* */
-    uint16_t slot_size;     /* 加密负载物理槽大小：0/128/256/512，0=紧贴 */
-    uint16_t enc_offset;    /* 密文相对块首偏移 */
-    uint16_t enc_len;       /* 实际密文长度（含 TAG，不含 IV） */
-    uint16_t plain_len;     /* 解密后明文长度（压缩场景为压缩后长度） */
-    uint8_t  iv_len;        /* IV / Nonce 长度 */
-    uint8_t  iv[16];        /* IV / Nonce */
-    uint8_t  tag_len;       /* TAG / HMAC 长度 */
-    uint8_t  tag[16];       /* TAG / HMAC */
-    uint8_t  reserved[16];  /* 预留，凑齐 60 Byte */
-} enc_desc_t;               /* 物理 60 Byte */
-
-/* 算法属性表：驱动加解密与长度计算 */
-typedef struct {
-    uint8_t  algo;
-    uint8_t  mode;
-    uint8_t  iv_len;
-    uint8_t  tag_len;
-    uint8_t  block_size;    /* 流密码为 1 */
-    uint8_t  keep_length;   /* 1=密文长度等于明文长度 */
-} enc_algo_info_t;
 
 /* ============================================================
  * 块目录项（第一块内部块目录区）
@@ -330,7 +309,10 @@ typedef struct {
 #define ERR_TIMEOUT             17  /* 超时 */
 
 /* ============================================================
- * 函数声明
+ * 函数声明（存储层对外接口）
+ * ------------------------------------------------------------
+ * 本层只操作 EEPROM 布局，不做串口应答、不做鉴权。
+ * 返回值为 ERR_* 或具体序号；缓冲类接口由调用方提供内存。
  * ============================================================ */
 void     StorageMgr_Init(void);
 int      StorageMgr_InitDevice(const char *name, const char *pass,
@@ -338,7 +320,5 @@ int      StorageMgr_InitDevice(const char *name, const char *pass,
 void     StorageMgr_InitDataHead(uint16_t total, uint8_t size_code);
 void     StorageMgr_Format_BlockZone(void);
 void     StorageMgr_Format_EEPROMZone(void);
-uint16_t enc_calc_cipher_len(uint8_t algo, uint16_t plain_len);
-uint16_t enc_calc_plain_len(uint8_t algo, uint16_t enc_len);
 
 #endif /* __STORAGE_MGR_H__ */

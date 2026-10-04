@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   HW_24C64                                                          09/26/2026 13:00:09 PAGE 1   
+C51 COMPILER V9.59.0.0   HW_24C64                                                          09/30/2026 23:25:45 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE HW_24C64
 OBJECT MODULE PLACED IN .\Objects\HW_24c64.obj
-COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE EEPROM\HW_24c64.c COMPACT RTX51 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\EEPROM
-                    -;.\Serial;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\HW_24c64.lst) TABS(2) OBJECT(.\Objects\HW_24c64.obj)
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE EEPROM\HW_24c64.c COMPACT OPTIMIZE(8,SIZE) BROWSE INCDIR(.\EEPROM;.\Seri
+                    -al;.\Security) DEBUG OBJECTEXTEND PRINT(.\Listings\HW_24c64.lst) TABS(2) OBJECT(.\Objects\HW_24c64.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   51          void I2C_SendByte(uint8_t byte) { I2CTXD = byte; I2CMSCR = 0x02; I2C_Wait(); }   // CMD2: SEND
   52          uint8_t I2C_ReceiveByte(void)   { I2CMSCR = 0x04; I2C_Wait(); return I2CRXD; }        // CMD4: RECV
   53          
-C51 COMPILER V9.59.0.0   HW_24C64                                                          09/26/2026 13:00:09 PAGE 2   
+C51 COMPILER V9.59.0.0   HW_24C64                                                          09/30/2026 23:25:45 PAGE 2   
 
   54          bit I2C_WaitAck(void)
   55          {
@@ -126,7 +126,7 @@ line level    source
  113   1          EEPROM_WriteByte(addr, 0x00);   // 写结束符，便于ReadString判断终止
  114   1      }
  115          
-C51 COMPILER V9.59.0.0   HW_24C64                                                          09/26/2026 13:00:09 PAGE 3   
+C51 COMPILER V9.59.0.0   HW_24C64                                                          09/30/2026 23:25:45 PAGE 3   
 
  116          /* 从addr起始读取字符串到buf，最多写入maxLen-1个字符，返回实际字符数(不含'\0') 
              -*/
@@ -158,7 +158,7 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    646    ----
+   CODE SIZE        =    613    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =      2      22

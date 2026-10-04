@@ -135,6 +135,27 @@ static uint8_t CMD_CheckWriteProtect(void) {
   return 1;
 }
 
+/* 密码比对：返回 1 匹配、0 不匹配、2 未设置密码。
+ * 复用调用方已有的 cfg 缓存，不额外占用持久变量。 */
+static uint8_t CMD_PwdMatches(cfg_t *cfg, char *pass) {
+  uint8_t hash[16];
+  uint8_t i, match = 1, allzero = 1;
+  for (i = 0; i < 16; i++) { if (cfg->pwd_hash[i] != 0) { allzero = 0; break; } }
+  if (allzero) return 2;
+  FeatTag_Checksum(pass, (uint8_t)strlen(pass), hash);
+  for (i = 0; i < 16; i++) { if (cfg->pwd_hash[i] != hash[i]) { match = 0; break; } }
+  return match;
+}
+
+/* 命令统一前置：置任务态 + 鉴权 (+ 只读锁)。
+ * need_write=1 时同时检查写保护。返回 0 表示已被拒绝（已回 ERR）。 */
+static uint8_t CMD_Begin(uint8_t task, uint8_t need_write) {
+  s_task = task;
+  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return 0; }
+  if (need_write && !CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return 0; }
+  return 1;
+}
+
 uint8_t CMD_IsAuthorized(void) { return s_authed; }
 
 void CMD_SessionTick(void) {
@@ -369,23 +390,31 @@ static uint16_t CMD_AppendKvRecord(uint16_t block_id, const char *key,
   return (uint16_t)(addr - total);
 }
 
-static uint16_t CMD_ReadKvRecordValue(uint16_t data_addr, uint8_t *buf, uint16_t max) {
-  uint16_t key_len, val_len, i;
+/* 读记录头部长度字段：val_len 经 *val_len 返回，key_len 作返回值。
+ * 记录地址非法或魔数不符时返回 0xFFFF。集中处理、避免各站重复算偏移。 */
+static uint16_t CMD_ReadKvRecordLens(uint16_t data_addr, uint16_t *val_len) {
   if (data_addr < DATA_BODY_START) return 0xFFFF;
   EEPROM_SetAddress(IC_1_24CXX);
   if (EEPROM_ReadByte(data_addr) != KV_REC_MAGIC) return 0xFFFF;
-  key_len = CMD_ReadU16((uint16_t)(data_addr + KV_OFF_KEY_LEN));
-  val_len = CMD_ReadU16((uint16_t)(data_addr + KV_OFF_VAL_LEN));
-  if (val_len > max) return 0xFFFF;
-  for (i = 0; i < val_len; i++)
-    buf[i] = EEPROM_ReadByte((uint16_t)(data_addr + KV_OFF_KEY + key_len + i));
-  return val_len;
+  *val_len = CMD_ReadU16((uint16_t)(data_addr + KV_OFF_VAL_LEN));
+  return CMD_ReadU16((uint16_t)(data_addr + KV_OFF_KEY_LEN));
 }
 
 static void CMD_DeleteKvRecord(uint16_t data_addr) {
   if (data_addr < DATA_BODY_START) return;
   EEPROM_SetAddress(IC_1_24CXX);
   EEPROM_WriteByte((uint16_t)(data_addr + 0x01), KV_REC_STATE_DEL);
+}
+
+/* 通用槽位释放：删数据记录(墓碑) + 清索引项(block_id 置 0xFFFF)。
+ * 复用于 DELETE KEY / 块清理 / 块格式化，避免三处各写一遍。 */
+static void CMD_FreeKvSlot(uint16_t idx) {
+  kv_entry_t e;
+  CMD_ReadKvEntry(idx, &e);
+  if (e.block_id == 0xFFFF) return;
+  if (e.flags & KV_FLAG_VALID) CMD_DeleteKvRecord(e.data_addr);
+  EEPROM_SetAddress(IC_0_24C64);
+  CMD_WriteU16(CMD_KvEntryOff(idx), 0xFFFF);
 }
 
 static uint8_t CMD_UpdateKvRecordValue(uint16_t data_addr, const uint8_t *value, uint16_t val_len) {
@@ -408,34 +437,57 @@ static uint16_t CMD_ResolveBlock(char *block_flag, char *block_identifier,
   return CMD_LoadBlockById(CMD_AtoU16(block_identifier), out);
 }
 
-/* 把 (key,value) 写入既有槽位 idx：长度相同就原地覆盖，
- * 否则删除旧记录、追加新记录并回写索引。成功返回 1。 */
-static uint8_t CMD_UpsertKeyValue(uint16_t idx, block_entry_t *blk,
-                                  const char *key,
-                                  const uint8_t *value, uint16_t val_len) {
+/* 统一的 KV 写入：idx==0xFFFF 表示新建（分配槽位/键池，kv_count+1），
+ * 否则更新既有槽位（等长原地覆写，否则删旧记录+追新记录+回写索引）。
+ * 成功返回 ERR_OK；已回带 ERR 应答。 */
+static uint8_t CMD_PutKeyValue(block_entry_t *blk, uint16_t blk_slot,
+                               uint16_t idx, const char *key,
+                               const uint8_t *value, uint16_t val_len) {
   kv_entry_t e;
-  CMD_ReadKvEntry(idx, &e);
-  if (e.data_len == val_len) {
-    CMD_UpdateKvRecordValue(e.data_addr, value, val_len);
-    return 1;
-  }
-  {
-    uint16_t new_addr;
-    CMD_DeleteKvRecord(e.data_addr);
-    EEPROM_SetAddress(IC_0_24C64);
-    new_addr = CMD_AppendKvRecord(blk->block_id, key, value, val_len,
-                                  e.enc_algo, KV_FLAG_VALID);
-    if (new_addr == 0xFFFF) return 0;
-    e.data_addr = new_addr;
-    e.data_len  = val_len;
-    e.slave     = IC_1_24CXX;
-    EEPROM_SetAddress(IC_0_24C64);
-    CMD_WriteKvEntry(idx, &e);
-  }
-  return 1;
-}
+  uint16_t key_len = (uint16_t)strlen(key);
+  uint16_t kv_slot = idx, key_off, data_addr;
 
-/* ---- Business: block/KV create helpers ---- */
+  if (key_len == 0) { CMD_Reply("ERR", ERR_PARAM); return ERR_PARAM; }
+
+  if (idx == 0xFFFF) {
+    /* 新建：分配索引槽 + 键池空间 */
+    kv_slot = CMD_AllocKvSlot();
+    if (kv_slot == 0xFFFF) { CMD_Reply("ERR", ERR_BITMAP_FULL); return ERR_BITMAP_FULL; }
+    EEPROM_SetAddress(IC_0_24C64);
+    key_off = CMD_KeyPoolAlloc(key_len);
+    if (key_off == 0xFFFF) { CMD_Reply("ERR", ERR_DATA_FULL); return ERR_DATA_FULL; }
+    { uint16_t i; for (i = 0; i < key_len; i++)
+        EEPROM_WriteByte((uint16_t)(key_off + i), (uint8_t)key[i]); }
+    e.enc_algo = ENC_ALGO_NONE;
+    e.flags    = KV_FLAG_VALID;
+  } else {
+    /* 更新：读旧索引项，等长就地覆写，否则删旧+追新 */
+    CMD_ReadKvEntry(idx, &e);
+    if (e.data_len == val_len && CMD_UpdateKvRecordValue(e.data_addr, value, val_len)) {
+      return ERR_OK;
+    }
+    key_off = e.key_off;
+    if (e.flags & KV_FLAG_VALID) CMD_DeleteKvRecord(e.data_addr);
+  }
+
+  data_addr = CMD_AppendKvRecord(blk->block_id, key, value, val_len,
+                                 e.enc_algo, KV_FLAG_VALID);
+  if (data_addr == 0xFFFF) { CMD_Reply("ERR", ERR_DATA_FULL); return ERR_DATA_FULL; }
+
+  e.block_id  = blk->block_id;
+  e.key_len   = key_len;
+  e.key_off   = key_off;
+  e.slave     = IC_1_24CXX;
+  e.data_addr = data_addr;
+  e.data_len  = val_len;
+  EEPROM_SetAddress(IC_0_24C64);
+  CMD_WriteKvEntry(kv_slot, &e);
+  if (idx == 0xFFFF) {
+    blk->kv_count = (uint16_t)(blk->kv_count + 1);
+    CMD_WriteBlockSlot(blk_slot, blk);
+  }
+  return ERR_OK;
+}
 
 static uint8_t CMD_DoCreateBlock(char *name) {
   block_entry_t blk;
@@ -460,49 +512,20 @@ static uint8_t CMD_DoCreateBlock(char *name) {
 static uint8_t CMD_DoCreateKey(char *block_flag, char *block_identifier,
                                char *key, char *value) {
   block_entry_t blk;
-  uint16_t slot, kv_slot, key_off, data_addr;
-  kv_entry_t e;
-  uint16_t key_len = (uint16_t)strlen(key);
+  uint16_t slot;
   uint16_t val_len = (uint16_t)strlen(value);
 
   slot = CMD_ResolveBlock(block_flag, block_identifier, &blk);
   if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); return 0; }
   if (CMD_FindKeyIdx(blk.block_id, key) != 0xFFFF) { CMD_Reply("ERR", ERR_KEY_EXIST); return 0; }
-  if (key_len == 0) { CMD_Reply("ERR", ERR_PARAM); return 0; }
-
-  kv_slot = CMD_AllocKvSlot();
-  if (kv_slot == 0xFFFF) { CMD_Reply("ERR", ERR_BITMAP_FULL); return 0; }
-
-  EEPROM_SetAddress(IC_0_24C64);
-  key_off = CMD_KeyPoolAlloc(key_len);
-  if (key_off == 0xFFFF) { CMD_Reply("ERR", ERR_DATA_FULL); return 0; }
-  { uint16_t i; for (i = 0; i < key_len; i++)
-      EEPROM_WriteByte((uint16_t)(key_off + i), (uint8_t)key[i]); }
-
-  data_addr = CMD_AppendKvRecord(blk.block_id, key, (const uint8_t *)value,
-                                 val_len, ENC_ALGO_NONE, KV_FLAG_VALID);
-  if (data_addr == 0xFFFF) { CMD_Reply("ERR", ERR_DATA_FULL); return 0; }
-
-  e.block_id  = blk.block_id;
-  e.key_len   = key_len;
-  e.key_off   = key_off;
-  e.slave     = IC_1_24CXX;
-  e.data_addr = data_addr;
-  e.data_len  = val_len;
-  e.enc_algo  = ENC_ALGO_NONE;
-  e.flags     = KV_FLAG_VALID;
-  EEPROM_SetAddress(IC_0_24C64);
-  CMD_WriteKvEntry(kv_slot, &e);
-  blk.kv_count = (uint16_t)(blk.kv_count + 1);
-  CMD_WriteBlockSlot(slot, &blk);
-  return 1;
+  return (CMD_PutKeyValue(&blk, slot, 0xFFFF, key, (const uint8_t *)value, val_len) == ERR_OK);
 }
 
 static void CMD_EmitBlockKv(uint16_t block_id) {
   uint16_t i, count = 0;
   for (i = 0; i < KVIDX_MAX; i++) {
     kv_entry_t e;
-    uint16_t k, val_len;
+    uint16_t k, val_len, key_len;
     CMD_ReadKvEntry(i, &e);
     if (e.block_id != block_id) continue;
     if (!(e.flags & KV_FLAG_VALID)) continue;
@@ -510,13 +533,10 @@ static void CMD_EmitBlockKv(uint16_t block_id) {
     for (k = 0; k < e.key_len; k++)
       Uart1_SendByte(EEPROM_ReadByte((uint16_t)(e.key_off + k)));
     Uart1_SendString("=");
-    EEPROM_SetAddress(e.slave);
-    val_len = CMD_ReadU16((uint16_t)(e.data_addr + KV_OFF_VAL_LEN));
-    {
-      uint16_t key_len = CMD_ReadU16((uint16_t)(e.data_addr + KV_OFF_KEY_LEN));
-      for (k = 0; k < val_len; k++)
-        Uart1_SendByte(EEPROM_ReadByte((uint16_t)(e.data_addr + KV_OFF_KEY + key_len + k)));
-    }
+    key_len = CMD_ReadKvRecordLens(e.data_addr, &val_len);
+    if (key_len == 0xFFFF) { count++; continue; }
+    for (k = 0; k < val_len; k++)
+      Uart1_SendByte(EEPROM_ReadByte((uint16_t)(e.data_addr + KV_OFF_KEY + key_len + k)));
     count++;
   }
 }
@@ -539,9 +559,7 @@ static void CMD_PurgeBlockKv(uint16_t block_id) {
     kv_entry_t e;
     CMD_ReadKvEntry(i, &e);
     if (e.block_id != block_id) continue;
-    if (e.flags & KV_FLAG_VALID) CMD_DeleteKvRecord(e.data_addr);
-    EEPROM_SetAddress(IC_0_24C64);
-    CMD_WriteU16(CMD_KvEntryOff(i), 0xFFFF);
+    CMD_FreeKvSlot(i);
   }
 }
 
@@ -566,7 +584,7 @@ static void CMD_DoDeleteBlock(char *block_flag, char *block_identifier, uint8_t 
     slot = CMD_LoadBlockById(CMD_AtoU16(block_identifier), &blk);
   else
     slot = CMD_ResolveBlock(block_flag, block_identifier, &blk);
-  if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); return; }
+  if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); return; }
   CMD_PurgeBlockKv(blk.block_id);
   EEPROM_SetAddress(IC_0_24C64);
   CMD_ClearBlockSlot(slot);
@@ -678,27 +696,6 @@ void CMD_USAGE(void) {
   Uart1_SendString("\r\n");
 }
 
-void CMD_ENCINFO(void) {
-  uint8_t algo = EEPROM_ReadByte(CFG_ADDR_ENC_ALGO);
-  Uart1_SendString("ENCINFO+");
-  switch (algo) {
-    case ENC_ALGO_AES128_CBC: Uart1_SendString("AES128_CBC+BLOCK"); break;
-    case ENC_ALGO_AES128_GCM: Uart1_SendString("AES128_GCM+AEAD");   break;
-    case ENC_ALGO_XOR:        Uart1_SendString("XOR+STREAM");        break;
-    case ENC_ALGO_CAESAR:     Uart1_SendString("CAESAR+STREAM");     break;
-    case ENC_ALGO_RC4:        Uart1_SendString("RC4+STREAM");        break;
-    default:                  Uart1_SendString("NONE+STREAM");       break;
-  }
-  Uart1_SendString("+");
-  Uart1_SendString((algo == ENC_ALGO_AES128_CBC) ? "16" : "1");
-  Uart1_SendString("+");
-  Uart1_SendString((algo == ENC_ALGO_AES128_GCM) ? "12" :
-                   (algo == ENC_ALGO_AES128_CBC) ? "16" : "0");
-  Uart1_SendString("+");
-  Uart1_SendString((algo == ENC_ALGO_AES128_GCM) ? "16" : "0");
-  Uart1_SendString("\r\n");
-}
-
 void CMD_VERSION(void) {
   Uart1_SendString("VERSION+");
   Uart1_SendString(FIRMWARE_VERSION);
@@ -724,14 +721,11 @@ void CMD_AUTH_CREATE(char *password) {
 
 void CMD_AUTH_VERIFY(char *password) {
   cfg_t cfg;
-  uint8_t hash[16];
-  uint8_t i, match = 1, allzero = 1;
+  uint8_t r;
   ConfigMgr_Load(&cfg);
-  for (i = 0; i < 16; i++) { if (cfg.pwd_hash[i] != 0) { allzero = 0; break; } }
-  if (allzero) { Uart1_SendString("AUTH+2\r\n"); s_authed = 1; return; }
-  FeatTag_Checksum(password, (uint8_t)strlen(password), hash);
-  for (i = 0; i < 16; i++) { if (cfg.pwd_hash[i] != hash[i]) { match = 0; break; } }
-  if (match) {
+  r = CMD_PwdMatches(&cfg, password);
+  if (r == 2) { Uart1_SendString("AUTH+2\r\n"); s_authed = 1; return; }
+  if (r) {
     s_authed = 1;
     s_auth_tick = SESSION_TIMEOUT_TICKS;
     Uart1_SendString("AUTH+0\r\n");
@@ -766,15 +760,9 @@ void CMD_AUTH_VERIFYOUT(void) {
 
 void CMD_AUTH_CHANGE(char *old_pass, char *new_pass) {
   cfg_t cfg;
-  uint8_t hash[16];
-  uint8_t i, match = 1, allzero = 1;
   ConfigMgr_Load(&cfg);
-  for (i = 0; i < 16; i++) { if (cfg.pwd_hash[i] != 0) { allzero = 0; break; } }
-  if (!allzero) {
-    FeatTag_Checksum(old_pass, (uint8_t)strlen(old_pass), hash);
-    for (i = 0; i < 16; i++) { if (cfg.pwd_hash[i] != hash[i]) { match = 0; break; } }
-    if (!match) { Uart1_SendString("AUTH+1\r\n"); return; }
-  }
+  /* 已设密码则必须校验旧密码；未设密码直接改 */
+  if (CMD_PwdMatches(&cfg, old_pass) == 0) { Uart1_SendString("AUTH+1\r\n"); return; }
   ConfigMgr_SetPassword(&cfg, new_pass);
   cfg.flags |= FLAG_PWD_AUTH;
   ConfigMgr_Save(&cfg);
@@ -805,8 +793,7 @@ void CMD_READ(char *unit) {
 }
 
 void CMD_READ_ALL_BLOCK(void) {
-  s_task = TASK_READ;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_READ, 0)) return;
   CMD_EmitAllBlocks();
   s_task = TASK_IDLE;
 }
@@ -816,10 +803,9 @@ void CMD_READ_BLOCK(char *block_id) {
   uint16_t slot;
   char name[BLOCK_NAME_LEN + 1];
   uint16_t i, n = 0;
-  s_task = TASK_READ;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_READ, 0)) return;
   slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
-  if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
+  if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
   CMD_GetBlockName(&blk, name);
   Uart1_SendString("DATA+");
   Uart1_SendNumber(blk.block_id);
@@ -845,10 +831,9 @@ void CMD_READ_BLOCK_NAME(char *block_name) {
   block_entry_t blk;
   uint16_t slot;
   char name[BLOCK_NAME_LEN + 1];
-  s_task = TASK_READ;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_READ, 0)) return;
   slot = CMD_LoadBlockByName(block_name, &blk);
-  if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
+  if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
   CMD_GetBlockName(&blk, name);
   Uart1_SendString("DATA+");
   Uart1_SendString(name);
@@ -863,16 +848,14 @@ void CMD_READ_KEY(char *block_id, char *key) {
   uint16_t slot, idx;
   kv_entry_t e;
   uint16_t i, val_len, key_len;
-  s_task = TASK_READ;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_READ, 0)) return;
   slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
-  if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
+  if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
   idx = CMD_FindKeyIdx(blk.block_id, key);
-  if (idx == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
+  if (idx == 0xFFFF) { CMD_Reply("ERR", ERR_KEY_NOT_FOUND); s_task = TASK_IDLE; return; }
   CMD_ReadKvEntry(idx, &e);
-  EEPROM_SetAddress(e.slave);
-  val_len = CMD_ReadU16((uint16_t)(e.data_addr + KV_OFF_VAL_LEN));
-  key_len = CMD_ReadU16((uint16_t)(e.data_addr + KV_OFF_KEY_LEN));
+  key_len = CMD_ReadKvRecordLens(e.data_addr, &val_len);
+  if (key_len == 0xFFFF) { CMD_Reply("ERR", ERR_KEY_NOT_FOUND); s_task = TASK_IDLE; return; }
   Uart1_SendString("DATA+");
   for (i = 0; i < val_len; i++)
     Uart1_SendByte(EEPROM_ReadByte((uint16_t)(e.data_addr + KV_OFF_KEY + key_len + i)));
@@ -886,22 +869,14 @@ void CMD_WRITE(char *block_id, char *key, char *key_value) {
   block_entry_t blk;
   uint16_t slot, idx;
   uint16_t val_len;
-  s_task = TASK_WRITE;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-  if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_WRITE, 1)) return;
   slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
-  if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
+  if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
   val_len = (uint16_t)strlen(key_value);
   idx = CMD_FindKeyIdx(blk.block_id, key);
-  if (idx != 0xFFFF) {
-    if (!CMD_UpsertKeyValue(idx, &blk, key, (const uint8_t *)key_value, val_len)) {
-      Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return;
-    }
+  /* idx==0xFFFF 时 CMD_PutKeyValue 内部走新建路径 */
+  if (CMD_PutKeyValue(&blk, slot, idx, key, (const uint8_t *)key_value, val_len) == ERR_OK)
     CMD_Reply("RESULT", ERR_OK);
-    s_task = TASK_IDLE;
-    return;
-  }
-  if (CMD_DoCreateKey("1", block_id, key, key_value)) CMD_Reply("RESULT", ERR_OK);
   s_task = TASK_IDLE;
 }
 
@@ -910,68 +885,29 @@ void CMD_WRITE_RAW(char *block_id, char *key, char *hex) {
   uint8_t n;
   block_entry_t blk;
   uint16_t slot, idx;
-  kv_entry_t e;
-  uint16_t key_len;
-  s_task = TASK_WRITE;
-  /* 注意：新增记录分支仍使用 e */
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-  if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_WRITE, 1)) return;
   slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
-  if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
+  if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
   n = CMD_HexToBytes(hex, bin, sizeof(bin));
-  key_len = (uint16_t)strlen(key);
   idx = CMD_FindKeyIdx(blk.block_id, key);
-  if (idx != 0xFFFF) {
-    if (!CMD_UpsertKeyValue(idx, &blk, key, bin, n)) {
-      Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return;
-    }
+  if (CMD_PutKeyValue(&blk, slot, idx, key, bin, n) == ERR_OK)
     CMD_Reply("RESULT", ERR_OK);
-    s_task = TASK_IDLE;
-    return;
-  }
-  {
-    uint16_t kv_slot, key_off, data_addr;
-    kv_slot = CMD_AllocKvSlot();
-    if (kv_slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
-    EEPROM_SetAddress(IC_0_24C64);
-    key_off = CMD_KeyPoolAlloc(key_len);
-    if (key_off == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
-    { uint16_t i; for (i = 0; i < key_len; i++)
-        EEPROM_WriteByte((uint16_t)(key_off + i), (uint8_t)key[i]); }
-    data_addr = CMD_AppendKvRecord(blk.block_id, key, bin, n, ENC_ALGO_NONE, KV_FLAG_VALID);
-    if (data_addr == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
-    e.block_id  = blk.block_id;
-    e.key_len   = key_len;
-    e.key_off   = key_off;
-    e.slave     = IC_1_24CXX;
-    e.data_addr = data_addr;
-    e.data_len  = n;
-    e.enc_algo  = ENC_ALGO_NONE;
-    e.flags     = KV_FLAG_VALID;
-    EEPROM_SetAddress(IC_0_24C64);
-    CMD_WriteKvEntry(kv_slot, &e);
-    blk.kv_count = (uint16_t)(blk.kv_count + 1);
-    CMD_WriteBlockSlot(slot, &blk);
-    CMD_Reply("RESULT", ERR_OK);
-  }
   s_task = TASK_IDLE;
 }
 
 /* ---- CREATE ---- */
 
 void CMD_CREATE_BLOCK(char *block_name, char *block_size) {
-  (void)block_size;  /* USIZE 或容量数值，当前按统一容量处理 */
-  s_task = TASK_CREATE;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-  if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
+  /* 第二形参 block_size（USIZE/容量数值）当前按统一容量处理，仅接口兼容；
+   * 用(void)标记意图（C275 已在文件头屏蔽） */
+  (void)block_size;
+  if (!CMD_Begin(TASK_CREATE, 1)) return;
   CMD_DoCreateBlock(block_name);
   s_task = TASK_IDLE;
 }
 
 void CMD_CREATE_KEY(char *block_flag, char *block_identifier, char *key, char *value) {
-  s_task = TASK_CREATE;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-  if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_CREATE, 1)) return;
   if (CMD_DoCreateKey(block_flag, block_identifier, key, value)) CMD_Reply("RESULT", ERR_OK);
   s_task = TASK_IDLE;
 }
@@ -979,17 +915,13 @@ void CMD_CREATE_KEY(char *block_flag, char *block_identifier, char *key, char *v
 /* ---- DELETE ---- */
 
 void CMD_DELETE_BLOCK(char *block_id) {
-  s_task = TASK_DELETE;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-  if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_DELETE, 1)) return;
   CMD_DoDeleteBlock(0, block_id, 1);
   s_task = TASK_IDLE;
 }
 
 void CMD_DELETE_BLOCK_NAME(char *block_name) {
-  s_task = TASK_DELETE;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-  if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_DELETE, 1)) return;
   CMD_DoDeleteBlock("0", block_name, 0);
   s_task = TASK_IDLE;
 }
@@ -997,18 +929,12 @@ void CMD_DELETE_BLOCK_NAME(char *block_name) {
 void CMD_DELETE_KEY(char *block_flag, char *block_identifier, char *key) {
   block_entry_t blk;
   uint16_t slot, idx;
-  kv_entry_t e;
-  s_task = TASK_DELETE;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-  if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_DELETE, 1)) return;
   slot = CMD_ResolveBlock(block_flag, block_identifier, &blk);
-  if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
+  if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
   idx = CMD_FindKeyIdx(blk.block_id, key);
-  if (idx == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
-  CMD_ReadKvEntry(idx, &e);
-  CMD_DeleteKvRecord(e.data_addr);
-  EEPROM_SetAddress(IC_0_24C64);
-  CMD_WriteU16(CMD_KvEntryOff(idx), 0xFFFF);
+  if (idx == 0xFFFF) { CMD_Reply("ERR", ERR_KEY_NOT_FOUND); s_task = TASK_IDLE; return; }
+  CMD_FreeKvSlot(idx);
   if (blk.kv_count > 0) blk.kv_count--;
   CMD_WriteBlockSlot(slot, &blk);
   CMD_Reply("RESULT", ERR_OK);
@@ -1020,11 +946,9 @@ void CMD_DELETE_KEY(char *block_flag, char *block_identifier, char *key) {
 void CMD_UPDATE_BLOCK(char *block_id, char *new_name) {
   block_entry_t blk;
   uint16_t slot;
-  s_task = TASK_UPDATE;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-  if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_UPDATE, 1)) return;
   slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
-  if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
+  if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
   if (new_name && strlen(new_name) > 0) {
     CMD_SetBlockName(&blk, new_name);
     EEPROM_SetAddress(IC_0_24C64);
@@ -1038,16 +962,14 @@ void CMD_UPDATE_KEY(char *block_id, char *key, char *key_value) {
   block_entry_t blk;
   uint16_t slot, idx;
   uint16_t val_len;
-  s_task = TASK_UPDATE;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-  if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_UPDATE, 1)) return;
   slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
-  if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
+  if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
   idx = CMD_FindKeyIdx(blk.block_id, key);
-  if (idx == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
+  if (idx == 0xFFFF) { CMD_Reply("ERR", ERR_KEY_NOT_FOUND); s_task = TASK_IDLE; return; }
   val_len = (uint16_t)strlen(key_value);
-  if (!CMD_UpsertKeyValue(idx, &blk, key, (const uint8_t *)key_value, val_len)) {
-    Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return;
+  if (CMD_PutKeyValue(&blk, slot, idx, key, (const uint8_t *)key_value, val_len) != ERR_OK) {
+    s_task = TASK_IDLE; return;
   }
   CMD_Reply("RESULT", ERR_OK);
   s_task = TASK_IDLE;
@@ -1056,8 +978,7 @@ void CMD_UPDATE_KEY(char *block_id, char *key, char *key_value) {
 /* ---- GET ALL ---- */
 
 void CMD_GET_ALL_BLOCK(void) {
-  s_task = TASK_GET_ALL;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_GET_ALL, 0)) return;
   CMD_EmitAllBlocks();
   s_task = TASK_IDLE;
 }
@@ -1066,10 +987,9 @@ void CMD_GET_ALL_KEY(char *block_id) {
   block_entry_t blk;
   uint16_t slot;
   char name[BLOCK_NAME_LEN + 1];
-  s_task = TASK_GET_ALL;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_GET_ALL, 0)) return;
   slot = CMD_LoadBlockById(CMD_AtoU16(block_id), &blk);
-  if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
+  if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
   CMD_GetBlockName(&blk, name);
   Uart1_SendString("DATA+[");
   Uart1_SendString(name);
@@ -1098,9 +1018,7 @@ void CMD_GET_SIZE(void) {
 /* ---- FORMAT / maintenance ---- */
 
 void CMD_FORMAT_DEV(void) {
-  s_task = TASK_FORMAT;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-  if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_FORMAT, 1)) return;
   StorageMgr_Format_BlockZone();
   StorageMgr_Format_EEPROMZone();
   CMD_Reply("RESULT", ERR_OK);
@@ -1110,11 +1028,9 @@ void CMD_FORMAT_DEV(void) {
 void CMD_FORMAT_BLOCK(char *block_flag, char *block_identifier) {
   block_entry_t blk;
   uint16_t slot;
-  s_task = TASK_FORMAT;
-  if (!CMD_CheckAuth()) { s_task = TASK_IDLE; return; }
-  if (!CMD_CheckWriteProtect()) { s_task = TASK_IDLE; return; }
+  if (!CMD_Begin(TASK_FORMAT, 1)) return;
   slot = CMD_ResolveBlock(block_flag, block_identifier, &blk);
-  if (slot == 0xFFFF) { Uart1_SendString("\EOF\r\n"); s_task = TASK_IDLE; return; }
+  if (slot == 0xFFFF) { CMD_Reply("ERR", ERR_BLOCK_NOT_FOUND); s_task = TASK_IDLE; return; }
   CMD_PurgeBlockKv(blk.block_id);
   EEPROM_SetAddress(IC_0_24C64);
   blk.kv_count = 0;
@@ -1123,92 +1039,11 @@ void CMD_FORMAT_BLOCK(char *block_flag, char *block_identifier) {
   s_task = TASK_IDLE;
 }
 
-void CMD_DEFRAG(void) {
-  s_task = TASK_DEFRAG;
-  CMD_Reply("RESULT", ERR_OK);
-  s_task = TASK_IDLE;
-}
-
-void CMD_REFRESH(void) {
-  s_task = TASK_REFRESH;
-  {
-    uint16_t total = CMD_ReadU16(CFG_ADDR_DATA_TOTAL);
-    uint16_t used  = CMD_ReadU16(CFG_ADDR_DATA_USED);
-    if (total >= used) {
-      CMD_WriteU16(CFG_ADDR_DATA_FREE, (uint16_t)(total - used));
-      if (total > 0)
-        EEPROM_WriteByte(CFG_ADDR_DATA_USAGE, (uint8_t)(((uint32_t)used * 100u) / total));
-    }
-  }
-  CMD_Reply("RESULT", ERR_OK);
-  s_task = TASK_IDLE;
-}
-
-/* ---- ENC ---- */
-
-void CMD_ENC_SET(char *algo) {
-  uint8_t a = CMD_Atoi(algo);
-  if (a > ENC_ALGO_RC4) { CMD_Reply("ERR", ERR_PARAM); return; }
-  EEPROM_SetAddress(IC_0_24C64);
-  EEPROM_WriteByte(CFG_ADDR_ENC_ALGO, a);
-  CMD_Reply("RESULT", ERR_OK);
-}
-
-void CMD_ENC_KEY(char *key_hex) {
-  uint8_t bin[16];
-  uint8_t n, i;
-  n = CMD_HexToBytes(key_hex, bin, sizeof(bin));
-  if (n == 0) { CMD_Reply("ERR", ERR_PARAM); return; }
-  EEPROM_SetAddress(IC_0_24C64);
-  for (i = 0; i < 16; i++) {
-    uint8_t b = (i < n) ? bin[i] : 0x00;
-    EEPROM_WriteByte((uint16_t)(CFG_ADDR_EXT + i), b);
-  }
-  CMD_Reply("RESULT", ERR_OK);
-}
-
-void CMD_ENC_SALT(char *salt_hex) {
-  uint8_t bin[16];
-  uint8_t n, i;
-  n = CMD_HexToBytes(salt_hex, bin, sizeof(bin));
-  if (n == 0) { CMD_Reply("ERR", ERR_PARAM); return; }
-  EEPROM_SetAddress(IC_0_24C64);
-  for (i = 0; i < 16; i++) {
-    uint8_t b = (i < n) ? bin[i] : 0x00;
-    EEPROM_WriteByte((uint16_t)(CFG_ADDR_SALT + i), b);
-  }
-  CMD_Reply("RESULT", ERR_OK);
-}
-
-void CMD_ENC_KDF(char *kdf_algo) {
-  uint8_t k = CMD_Atoi(kdf_algo);
-  if (k > KDF_PBKDF2_SHA256) { CMD_Reply("ERR", ERR_PARAM); return; }
-  EEPROM_SetAddress(IC_0_24C64);
-  EEPROM_WriteByte(CFG_ADDR_KDF_ALGO, k);
-  CMD_Reply("RESULT", ERR_OK);
-}
-
-/* ---- BATCH ---- */
-
-void CMD_BATCH_WRITE(char *block_id, char *count) {
-  (void)block_id; (void)count;
-  s_task = TASK_BATCH;
-  CMD_Reply("RESULT", ERR_OK);
-  s_task = TASK_IDLE;
-}
-
-void CMD_BATCH_DELETE(char *block_id, char *count) {
-  (void)block_id; (void)count;
-  s_task = TASK_BATCH;
-  CMD_Reply("RESULT", ERR_OK);
-  s_task = TASK_IDLE;
-}
-
 /* ---- Main AT dispatcher ---- */
 
 void CMD_Parser(char *cmd) {
-  char *tokens[12];
-  int tc = CMD_Split(cmd, '+', tokens, 12);
+  char *tokens[10];
+  int tc = CMD_Split(cmd, '+', tokens, 10);
   int i;
   char *a2, *a3, *a4, *a5, *a6;
 
@@ -1233,7 +1068,7 @@ void CMD_Parser(char *cmd) {
   if (CMD_Compare(tokens[1], "INFO")) { CMD_INFO(); return; }
   if (CMD_Compare(tokens[1], "STATUS")) { CMD_STATUS(); return; }
   if (CMD_Compare(tokens[1], "USAGE")) { CMD_USAGE(); return; }
-  if (CMD_Compare(tokens[1], "ENCINFO")) { CMD_ENCINFO(); return; }
+
   if (CMD_Compare(tokens[1], "VERSION")) { CMD_VERSION(); return; }
 
   if (CMD_Compare(tokens[1], "AUTH")) {
@@ -1305,25 +1140,6 @@ void CMD_Parser(char *cmd) {
   if (CMD_Compare(tokens[1], "FORMAT")) {
     if (a2 && CMD_Compare(a2, "DEV")) { CMD_FORMAT_DEV(); return; }
     if (a2 && CMD_Compare(a2, "BLOCK") && a3 && a4) { CMD_FORMAT_BLOCK(a3, a4); return; }
-    CMD_Reply("ERR", ERR_PARAM);
-    return;
-  }
-
-  if (CMD_Compare(tokens[1], "DEFRAG")) { CMD_DEFRAG(); return; }
-  if (CMD_Compare(tokens[1], "REFRESH")) { CMD_REFRESH(); return; }
-
-  if (CMD_Compare(tokens[1], "ENC")) {
-    if (a2 && CMD_Compare(a2, "SET") && a3) { CMD_ENC_SET(a3); return; }
-    if (a2 && CMD_Compare(a2, "KEY") && a3) { CMD_ENC_KEY(a3); return; }
-    if (a2 && CMD_Compare(a2, "SALT") && a3) { CMD_ENC_SALT(a3); return; }
-    if (a2 && CMD_Compare(a2, "KDF") && a3) { CMD_ENC_KDF(a3); return; }
-    CMD_Reply("ERR", ERR_PARAM);
-    return;
-  }
-
-  if (CMD_Compare(tokens[1], "BATCH")) {
-    if (a2 && CMD_Compare(a2, "WRITE") && a3 && a4) { CMD_BATCH_WRITE(a3, a4); return; }
-    if (a2 && CMD_Compare(a2, "DELETE") && a3 && a4) { CMD_BATCH_DELETE(a3, a4); return; }
     CMD_Reply("ERR", ERR_PARAM);
     return;
   }
