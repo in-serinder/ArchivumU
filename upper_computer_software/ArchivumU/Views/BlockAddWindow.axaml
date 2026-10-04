@@ -1,0 +1,93 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:ArchivumU.ViewModels"
+        mc:Ignorable="d"
+        d:DesignWidth="420"
+        d:DesignHeight="260"
+        Width="420"
+        Height="260"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        x:Class="ArchivumU.Views.BlockAddWindow"
+        x:DataType="viewModels:BlockAddViewModel"
+        Icon="../Assets/archu.ico"
+        Title="{Binding Title}">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.Label">
+            <Setter Property="Width" Value="140" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Width" Value="200" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#D1D5DB" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Width" Value="90" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#D1D5DB" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.Primary">
+            <Setter Property="Background" Value="#3B82F6" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#3B82F6" />
+        </Style>
+    </Window.Styles>
+
+    <Grid Margin="24" RowDefinitions="Auto,10,Auto,10,Auto,*,Auto">
+
+        <!-- 标题 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="{Binding I18n.BlockCreate}" FontSize="16" FontWeight="Bold" />
+        </StackPanel>
+
+        <!-- 块名 -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12">
+            <TextBlock Classes="Label" Text="{Binding I18n.Name, StringFormat='{}{0}:'}" />
+            <TextBox Name="TBBlockName"
+                     Watermark="{Binding I18n.Name}"
+                     MaxLength="{Binding NameMaxLength}"
+                     Text="{Binding BlockName, Mode=TwoWay}" />
+        </StackPanel>
+
+        <!-- 块大小 -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="12">
+            <TextBlock Classes="Label" Text="{Binding I18n.Size, StringFormat='{}{0} (Byte):'}" />
+            <NumericUpDown Name="NUBlockSize"
+                           Width="200"
+                           Height="28"
+                           FontSize="13"
+                           Minimum="1"
+                           Maximum="{Binding SizeMax}"
+                           Increment="16"
+                           FormatString="0"
+                           IsEnabled="False"
+                           Value="{Binding BlockSize, Mode=TwoWay}" />
+        </StackPanel>
+
+        <!-- 按钮区域 -->
+        <StackPanel Grid.Row="6" Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
+            <Button Content="{Binding I18n.Cancel}" Name="BTNBlockAddCancel"
+                    Click="BTNBlockAddCancel_OnClick" />
+            <Button Content="{Binding I18n.Confirm}" Name="BTNBlockAddConfirm"
+                    Width="100" Classes="Primary"
+                    IsEnabled="{Binding CanConfirm}"
+                    Click="BTNBlockAddConfirm_OnClick" />
+        </StackPanel>
+    </Grid>
+</Window>

@@ -165,9 +165,9 @@ class CommandParser:
         """处理AUTH命令"""
         if len(parts) < 3:
             return 'ERR+4'
-        
+
         sub_cmd = parts[2]
-        
+
         if sub_cmd == 'CREATE':
             if len(parts) < 4:
                 return 'ERR+4'
@@ -176,37 +176,37 @@ class CommandParser:
             self.config_area.set_password_hash(pwd_hash)
             self.config_area.set_pwd_auth_enabled(True)
             return 'AUTH+0'
-        
+
         elif sub_cmd == 'VERIFY':
             if len(parts) < 4:
                 return 'ERR+4'
             password = parts[3]
             stored_hash = self.config_area.get_password_hash()
-            
+
             if stored_hash == b'\x00' * 32:
                 return 'AUTH+2'  # 未设置密码
-            
+
             computed_hash = hashlib.sha256(password.encode()).digest()
             if computed_hash == stored_hash:
                 self.is_authenticated = True
                 return 'AUTH+0'  # 验证成功
             else:
                 return 'AUTH+1'  # 验证失败
-        
+
         elif sub_cmd == 'ENABLE':
             self.config_area.set_pwd_auth_enabled(True)
             return 'AUTH+0'
-        
+
         elif sub_cmd == 'DISABLE':
             self.config_area.set_pwd_auth_enabled(False)
             return 'AUTH+0'
-        
+
         elif sub_cmd == 'VERIFYOUT':
             self.is_authenticated = False
             return 'AUTH+0'
-        
+
         return 'ERR+4'  # 参数错误
-    
+
     def _handle_read(self, parts):
         """处理READ命令"""
         if len(parts) < 2:
@@ -215,8 +215,9 @@ class CommandParser:
         read_type = parts[1]
         
         if read_type == 'BLOCK':
+            # AT+READ+BLOCK（无参数）→ 返回全部块清单，格式与 GET+ALL+BLOCK 相同
             if len(parts) < 3:
-                return 'ERR+4'
+                return self._build_all_blocks_response()
             block_id = int(parts[2])
             block = self.block_manager.get_block_by_id(block_id)
             if not block:
@@ -375,47 +376,55 @@ class CommandParser:
         
         return 'ERR+4'
     
+    def _build_all_blocks_response(self):
+        """构造「全部块及其键值对」的 DATA 回包（供 READ+BLOCK / GET+ALL+BLOCK 复用）。
+
+        返回格式：DATA+[块名;块ID](键=值|键=值|...)|[块名;块ID](...)
+        键值对之间以 '|' 分隔，块之间也以 '|' 分隔（块内被括号包裹，见 CMD.md 4.1/5）。
+        """
+        blocks = self.block_manager.get_all_blocks()
+        result = []
+
+        for block in blocks:
+            # 读取块内所有键值对（从BLOCK_ARR中读取）
+            key_values = []
+            block_arr = block['block_arr']
+            for i in range(self.block_manager.max_keys_per_block):
+                # 从BLOCK_ARR中读取5字节地址
+                offset = i * 5
+                if offset + 5 > len(block_arr):
+                    continue
+                chip = block_arr[offset]
+                addr_11bit = int.from_bytes(bytes(block_arr[offset + 1:offset + 3]), 'big')
+                # 检查是否为未使用状态（0xFF）
+                if chip == 0xFF and addr_11bit == 0x7FF:
+                    continue
+                # 组合成12位地址
+                addr = (chip << 11) | addr_11bit
+
+                data = self.key_value_manager.eeprom_manager.read(addr, 256)
+                start = 1  # 跳过BLOCK_SLAVE
+                sep_pos = data.find(bytes([0x1F]), start)
+                etx_pos = data.find(bytes([0x03]), sep_pos + 1)
+                if sep_pos > 0 and etx_pos > 0:
+                    key = bytes(data[start:sep_pos]).decode('utf-8', errors='replace')
+                    value = bytes(data[sep_pos + 1:etx_pos - 1]).decode('utf-8', errors='replace')
+                    key_values.append(f'{key}={value}')
+
+            # 格式: [块名;块id](键值对|键值对|...)
+            kv_str = '|'.join(key_values)
+            result.append(f'[{block["name"]};{block["id"]}]({kv_str})')
+
+        # 多个块之间用|分隔
+        return 'DATA+' + '|'.join(result)
+
     def _handle_get(self, parts):
         """处理GET命令"""
         if len(parts) < 3:
             return 'ERR+4'
         
         if parts[1] == 'ALL' and parts[2] == 'BLOCK':
-            blocks = self.block_manager.get_all_blocks()
-            result = []
-            
-            for block in blocks:
-                # 读取块内所有键值对（从BLOCK_ARR中读取）
-                key_values = []
-                block_arr = block['block_arr']
-                for i in range(self.block_manager.max_keys_per_block):
-                    # 从BLOCK_ARR中读取5字节地址
-                    offset = i * 5
-                    if offset + 5 > len(block_arr):
-                        continue
-                    chip = block_arr[offset]
-                    addr_11bit = int.from_bytes(bytes(block_arr[offset + 1:offset + 3]), 'big')
-                    # 检查是否为未使用状态（0xFF）
-                    if chip == 0xFF and addr_11bit == 0x7FF:
-                        continue
-                    # 组合成12位地址
-                    addr = (chip << 11) | addr_11bit
-                    
-                    data = self.key_value_manager.eeprom_manager.read(addr, 256)
-                    start = 1  # 跳过BLOCK_SLAVE
-                    sep_pos = data.find(bytes([0x1F]), start)
-                    etx_pos = data.find(bytes([0x03]), sep_pos + 1)
-                    if sep_pos > 0 and etx_pos > 0:
-                        key = bytes(data[start:sep_pos]).decode('utf-8', errors='replace')
-                        value = bytes(data[sep_pos + 1:etx_pos - 1]).decode('utf-8', errors='replace')
-                        key_values.append(f'{key}={value}')
-                
-                # 格式: [块名;块id](键值对,键值对,...)
-                kv_str = ','.join(key_values)
-                result.append(f'[{block["name"]};{block["id"]}]({kv_str})')
-            
-            # 多个块之间用|分隔
-            return 'DATA+' + '|'.join(result)
+            return self._build_all_blocks_response()
         
         return 'ERR+4'
     

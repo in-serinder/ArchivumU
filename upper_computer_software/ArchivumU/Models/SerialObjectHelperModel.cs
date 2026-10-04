@@ -40,7 +40,7 @@ namespace ArchivumU.Models
         {
             return SerialPort.GetPortNames();
         }
-        
+
         public List<string> GetAllPortNames()
         {
             return SerialPort.GetPortNames().ToList();
@@ -62,7 +62,7 @@ namespace ArchivumU.Models
         /// <param name="parity">校验位</param>
         /// <param name="stopBits">停止位</param>
         /// <returns>是否创建成功</returns>
-        public bool CreateSerialPort(string portName, int baudRate = 9600, int dataBits = 8, 
+        public bool CreateSerialPort(string portName, int baudRate = 9600, int dataBits = 8,
                                      Parity parity = Parity.None, StopBits stopBits = StopBits.One)
         {
             try
@@ -75,7 +75,7 @@ namespace ArchivumU.Models
                 var serialPort = new SerialPort(portName, baudRate, parity, dataBits, stopBits);
                 serialPort.DataReceived += SerialPort_DataReceived;
                 serialPort.ErrorReceived += SerialPort_ErrorReceived;
-                
+
                 _serialPorts.Add(portName, serialPort);
                 OnStatusChanged(new SerialStatusChangedEventArgs(portName, PortStatus.Created, null));
                 return true;
@@ -192,7 +192,7 @@ namespace ArchivumU.Models
                 // 移除事件订阅
                 serialPort.DataReceived -= SerialPort_DataReceived;
                 serialPort.ErrorReceived -= SerialPort_ErrorReceived;
-                
+
                 // 释放资源
                 serialPort.Dispose();
                 _serialPorts.Remove(portName);
@@ -275,7 +275,7 @@ namespace ArchivumU.Models
             {
                 // 移除所有空格和非十六进制字符
                 string cleanedHex = new string(hexString.Where(c => !char.IsWhiteSpace(c)).ToArray());
-                
+
                 if (cleanedHex.Length % 2 != 0)
                 {
                     throw new ArgumentException("十六进制字符串长度必须为偶数");
@@ -318,7 +318,7 @@ namespace ArchivumU.Models
 
                 byte[] data = new byte[length];
                 int bytesRead = serialPort.Read(data, 0, length);
-                
+
                 if (bytesRead < length)
                 {
                     Array.Resize(ref data, bytesRead);
@@ -475,7 +475,7 @@ namespace ArchivumU.Models
         private void SerialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
             var serialPort = (SerialPort)sender;
-            OnStatusChanged(new SerialStatusChangedEventArgs(serialPort.PortName, PortStatus.Error, 
+            OnStatusChanged(new SerialStatusChangedEventArgs(serialPort.PortName, PortStatus.Error,
                 $"串口错误: {e.EventType}"));
         }
 
@@ -493,17 +493,17 @@ namespace ArchivumU.Models
         public void Dispose()
         {
             CloseAllPorts();
-            
+
             foreach (var serialPort in _serialPorts.Values)
             {
                 serialPort.DataReceived -= SerialPort_DataReceived;
                 serialPort.ErrorReceived -= SerialPort_ErrorReceived;
                 serialPort.Dispose();
             }
-            
+
             _serialPorts.Clear();
         }
-        
+
         public async Task<(bool Success, string Result)> QuickSendCommand(string portName, string command, int timeoutMs = 5000)
         {
             // 检查串口是否已被占用
@@ -526,27 +526,56 @@ namespace ArchivumU.Models
                 // 打开串口
                 tempPort.Open();
 
+                // 先清空发送前可能残留的旧数据，避免读到上一条命令的响应（如 ECHO）
+                try
+                {
+                    tempPort.DiscardInBuffer();
+                }
+                catch { }
+
                 // 发送指令
                 tempPort.WriteLine(command);
 
-                // 等待接收响应
+                // 等待接收响应：持续累积直到出现明确的结束标记或短暂静默
                 var startTime = DateTime.Now;
-                while (!received && (DateTime.Now - startTime).TotalMilliseconds < timeoutMs)
+                int lastLength = 0;
+                int idleCount = 0;
+                while ((DateTime.Now - startTime).TotalMilliseconds < timeoutMs)
                 {
+                    string chunk = string.Empty;
                     try
                     {
-                        response += tempPort.ReadExisting();
-                        if (!string.IsNullOrEmpty(response))
-                        {
-                            received = true;
-                        }
+                        chunk = tempPort.ReadExisting();
                     }
                     catch { }
-            
+
+                    if (!string.IsNullOrEmpty(chunk))
+                    {
+                        response += chunk;
+                        idleCount = 0;
+                    }
+                    else if (response.Length > 0)
+                    {
+                        // 已收到内容后，若连续多次无新数据（约 250ms 静默）则视为接收完成
+                        idleCount++;
+                        if (idleCount >= 5)
+                        {
+                            break;
+                        }
+                    }
+
+                    // 收到明确的结果标记后，再多等一小会儿把尾部数据收完
+                    if (response.Length > 0 && IsTerminal(response))
+                    {
+                        // 继续循环，由上面的静默检测收尾
+                        received = true;
+                    }
+
+                    lastLength = response.Length;
                     await Task.Delay(50);
                 }
 
-                return (true, response.Trim());
+                return (received || response.Length > 0, response.Trim());
             }
             catch (Exception ex)
             {
@@ -558,6 +587,27 @@ namespace ArchivumU.Models
                 tempPort?.Close();
                 tempPort?.Dispose();
             }
+        }
+
+        /// <summary>
+        /// 判断已接收内容是否包含「结果性」结束标记，
+        /// 用于判定一条命令的响应是否已经收完。
+        /// </summary>
+        private static bool IsTerminal(string response)
+        {
+            if (string.IsNullOrEmpty(response))
+            {
+                return false;
+            }
+
+            string s = response;
+            return s.Contains("RESULT+")   // RESULT+0 / RESULT+1
+                || s.Contains("DATA+")     // DATA+...
+                || s.Contains("ERR+")      // ERR+<code>
+                || s.Contains("AUTH+")     // AUTH+...
+                || s.Contains("INFO+")     // INFO+...
+                || s.Contains("STATUS+")   // STATUS+...
+                || s.Contains("EOF");      // \EOF 结束标记
         }
     }
 

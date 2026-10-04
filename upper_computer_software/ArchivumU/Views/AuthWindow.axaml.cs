@@ -1,15 +1,14 @@
 ﻿using ArchivumU.Models;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+using ArchivumU.Services;
 using ArchivumU.ViewModels;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 
 namespace ArchivumU.Views;
 
 public partial class AuthWindow : Window
 {
-    
+
     public string Device { get; set; }
     public string PortName { get; set; }
 
@@ -19,10 +18,10 @@ public partial class AuthWindow : Window
         DataContext = new MainWindowViewModel();
         TBAuthOBJ.Text = $"{Device}@{PortName}";
     }
-    
-    
-    
-    
+
+
+
+
 
 
 
@@ -40,6 +39,32 @@ public partial class AuthWindow : Window
 
     private void BTNAuthWinClose_OnClick(object? sender, RoutedEventArgs e)
     {
-        Close();
+        // 取消认证：返回 false
+        Close(false);
+    }
+
+    private async void BTNAuthWinConfirm_OnClick(object? sender, RoutedEventArgs e)
+    {
+        string password = PasswordInput.Text ?? string.Empty;
+        if (string.IsNullOrEmpty(password))
+        {
+            InfoDialogViewModel.Show(InfoDialogViewModel.InfoType.Warning,
+                I18nViewModel.Instance.Warn, I18nViewModel.Instance.Password);
+            return;
+        }
+
+        // 联动串口进行密码校验
+        bool ok = await DeviceConnectionService.VerifyPasswordAsync(PortName, password);
+
+        if (ok)
+        {
+            Close(true);
+        }
+        else
+        {
+            InfoDialogViewModel.Show(InfoDialogViewModel.InfoType.Error,
+                I18nViewModel.Instance.AuthenticationFailed,
+                I18nViewModel.Instance.AuthenticationFailed);
+        }
     }
 }

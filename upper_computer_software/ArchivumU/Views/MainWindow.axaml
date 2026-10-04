@@ -16,18 +16,18 @@
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel />
     </Design.DataContext>
-    
+
     <Window.Resources>
         <i18n:Strings x:Key="Strings"></i18n:Strings>
     </Window.Resources>
 
     <DockPanel>
         <!-- 顶部栏目 菜单 -->
-        <Menu DockPanel.Dock="Top" 
-              Background="#ffffff" 
+        <Menu DockPanel.Dock="Top"
+              Background="#ffffff"
               BorderThickness="0 0 1 0"
               BorderBrush="#e9ecef">
             <Menu.Styles>
@@ -64,7 +64,7 @@
                     <Setter Property="Height" Value="1" />
                 </Style>
             </Menu.Styles>
-            
+
             <MenuItem Header="{ Binding I18n.File}">
                 <MenuItem Header="{Binding I18n.Save}" />
                 <MenuItem Header="{Binding I18n.SaveAs}" />
@@ -83,10 +83,12 @@
             <MenuItem Header="{Binding I18n.Device}">
                 <MenuItem Header="{Binding I18n.Refresh}"  Name="MIRefresh" Click="MIRefresh_OnClick" />
                 <MenuItem Header="{Binding I18n.Add}"  Name="MIADDDEV" Click="MIADDDEV_OnClick" />
-                <MenuItem Header="{Binding I18n.Remove}" />
-                <MenuItem Header="{Binding I18n.Rename}" />
-                <MenuItem Header="{Binding I18n.BackupToLocal}" />
+                <MenuItem Header="{Binding I18n.Remove}" Name="MIRemoveDev" Click="MIRemoveDev_OnClick" />
+                <MenuItem Header="{Binding I18n.Rename}" Name="MIRenameDev" Click="MIRenameDev_OnClick" />
+                <MenuItem Header="{Binding I18n.BackupToLocal}" Name="MIDevBackup" Click="MIDevBackup_OnClick" />
                 <MenuItem Header="{Binding I18n.DeviceClone}"  Name="MIDevClone" Click="MIDevClone_OnClick"/>
+                <Separator />
+                <MenuItem Header="{Binding I18n.DeviceFormat}" Name="MIDevFormat" Click="MIDevFormat_OnClick" />
                 <Separator />
                 <MenuItem Header="{Binding I18n.Config}">
                     <CheckBox Content="{Binding I18n.AutoConnect}" Margin="4 0" />
@@ -94,17 +96,17 @@
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="{Binding I18n.Block}">
-                <MenuItem Header="{Binding I18n.BlockRefresh}" />
-                <MenuItem Header="{Binding I18n.BlockCreate}" />
-                <MenuItem Header="{Binding I18n.BlockRename}" />
-                <MenuItem Header="{Binding I18n.Del}" />
-                <MenuItem Header="{Binding I18n.BackupToLocal}" />
-                <MenuItem Header="{Binding I18n.BlockLformat}" />
-
+                <MenuItem Header="{Binding I18n.BlockRefresh}" Name="MIBlockRefresh" Click="MIBlockRefresh_OnClick" />
+                <MenuItem Header="{Binding I18n.BlockCreate}" Name="MIBlockCreate" Click="MIBlockCreate_OnClick" />
+                <MenuItem Header="{Binding I18n.BlockRename}" Name="MIBlockRename" Click="MIBlockRename_OnClick" />
+                <MenuItem Header="{Binding I18n.Del}" Name="MIBlockDelete" Click="MIBlockDelete_OnClick" />
+                <MenuItem Header="{Binding I18n.BackupToLocal}" Name="MIBlockBackup" Click="MIBlockBackup_OnClick" />
+                <Separator />
+                <MenuItem Header="{Binding I18n.BlockLformat}" Name="MIBlockLformat" Click="MIBlockLformat_OnClick" />
             </MenuItem>
             <MenuItem Header="{Binding I18n.KeyValue}">
-                <MenuItem Header="{Binding I18n.KeyCreate}" />
-                <MenuItem Header="{Binding I18n.KeyRemove}" />
+                <MenuItem Header="{Binding I18n.KeyCreate}" Name="MIKeyCreate" Click="MIKeyCreate_OnClick" />
+                <MenuItem Header="{Binding I18n.KeyRemove}" Name="MIKeyRemove" Click="MIKeyRemove_OnClick" />
             </MenuItem>
         </Menu>
         <!-- 应用区 -->
@@ -119,8 +121,8 @@
             </Grid.ColumnDefinitions>
             <!-- 设备列表 -->
             <components:DeviceList Grid.Column="0" />
-            
-         
+
+
 
             <!-- 可拖动分界线 -->
             <GridSplitter Grid.Column="1"
@@ -135,8 +137,8 @@
             <!-- 设备列表子集 - 使用DockPanel填充剩余空间 -->
             <DockPanel Grid.Column="2" Background="#f8f9fa" LastChildFill="True">
                 <!-- 空间占用信息 - 停靠在顶部 -->
-                <Border DockPanel.Dock="Top" 
-                        Margin="8 8 8 4" 
+                <Border DockPanel.Dock="Top"
+                        Margin="8 8 8 4"
                         Padding="12"
                         Background="White"
                         CornerRadius="8"
@@ -154,57 +156,57 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        
+
                         <!-- 存储信息标签组 -->
                         <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Spacing="4" Margin="0 0 16 0">
                             <TextBlock Text="{Binding I18n.TotalStorage, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
-                            <TextBlock Text="100 GB" FontSize="12" FontWeight="500" Foreground="#212529" />
+                            <TextBlock Text="{Binding DeviceData.TotalStorageText}" FontSize="12" FontWeight="500" Foreground="#212529" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" Spacing="4" Margin="0 0 16 0">
                             <TextBlock Text="{Binding I18n.UsedStorage, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
-                            <TextBlock Text="79 GB" FontSize="12" FontWeight="500" Foreground="#495057" />
+                            <TextBlock Text="{Binding DeviceData.UsedStorageText}" FontSize="12" FontWeight="500" Foreground="#495057" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal" Spacing="4" Margin="0 0 16 0">
                             <TextBlock Text="{Binding I18n.AvailableStorage, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
-                            <TextBlock Text="21 GB" FontSize="12" FontWeight="500" Foreground="#28a745" />
+                            <TextBlock Text="{Binding DeviceData.AvailableStorageText}" FontSize="12" FontWeight="500" Foreground="#28a745" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="3" Grid.Row="0" Orientation="Horizontal" Spacing="4">
                             <TextBlock Text="{Binding I18n.Prop, StringFormat='{}{0}:'}" FontSize="12" Foreground="#6c757d" />
-                            <TextBlock Text="79%" FontSize="12" FontWeight="600" Foreground="#007bff" />
+                            <TextBlock Text="{Binding DeviceData.UsagePercent, StringFormat='{}{0:0}%'}" FontSize="12" FontWeight="600" Foreground="#007bff" />
                         </StackPanel>
-                        
+
                         <!-- 进度条 -->
-                        <ProgressBar Grid.Column="0" Grid.ColumnSpan="5" Grid.Row="1" 
+                        <ProgressBar Grid.Column="0" Grid.ColumnSpan="5" Grid.Row="1"
                                      Margin="0 8 0 0"
                                      Height="6"
                                      Minimum="0"
                                      Maximum="100"
-                                     Value="79"
+                                     Value="{Binding DeviceData.UsagePercent}"
                                      Foreground="#007bff"
                                      Background="#e9ecef"
                                      CornerRadius="3" />
                     </Grid>
                 </Border>
-                
+
                 <!-- 块列表 - 停靠在左侧 -->
-                <Border DockPanel.Dock="Left" Width="175" Margin="8 4 4 8" 
+                <Border DockPanel.Dock="Left" Width="240" MinWidth="240" MaxWidth="240" Margin="8 4 4 8"
                         Background="White"
                         CornerRadius="8"
                         BorderThickness="1"
                         BorderBrush="#e9ecef">
-                    <components:BlockList />
+                    <components:BlockList Name="BLKList" HorizontalAlignment="Stretch" />
                 </Border>
-                
+
                 <!-- 块列表子集 - 占用剩余空间（LastChildFill） -->
-                <Border Margin="4 4 8 8" 
+                <Border Margin="4 4 8 8"
                         Background="White"
                         CornerRadius="8"
                         BorderThickness="1"
                         BorderBrush="#e9ecef">
-                    <components:KeyValueMgr />
+                    <components:KeyValueMgr Name="KVMgr" />
                 </Border>
             </DockPanel>
         </Grid>

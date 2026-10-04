@@ -327,7 +327,67 @@
     <data name="_done" xml:space="preserve">
         <value>Done</value>
     </data>
-    <data name="_init_A_add" xml:space="preserve">
+            <data name="_init_A_add" xml:space="preserve">
         <value>Initialize/Add</value>
+    </data>
+    <data name="_block_size" xml:space="preserve">
+        <value>Block Size</value>
+    </data>
+    <data name="_connect" xml:space="preserve">
+        <value>Connect</value>
+    </data>
+        <data name="_device_connected" xml:space="preserve">
+        <value>Device Connected</value>
+    </data>
+    <data name="_device_disconnect" xml:space="preserve">
+        <value>Disconnect</value>
+    </data>
+    <data name="_device_disconnected" xml:space="preserve">
+        <value>Device Disconnected</value>
+    </data>
+    <data name="_copy_to_clipboard" xml:space="preserve">
+        <value>Copied to clipboard</value>
+    </data>
+    <data name="_not_archivumu_device" xml:space="preserve">
+        <value>Not an ArchivumU device or port is busy</value>
+    </data>
+    <data name="_port_busy" xml:space="preserve">
+        <value>Serial port is busy</value>
+    </data>
+    <data name="_auth_required" xml:space="preserve">
+        <value>This device requires authentication</value>
+    </data>
+    <data name="_auth_success" xml:space="preserve">
+        <value>Authenticated</value>
+    </data>
+    <data name="_block_add_failed" xml:space="preserve">
+        <value>Failed to create block</value>
+    </data>
+    <data name="_block_add_success" xml:space="preserve">
+        <value>Block created</value>
+    </data>
+    <data name="_block_del_success" xml:space="preserve">
+        <value>Block deleted</value>
+    </data>
+    <data name="_block_del_failed" xml:space="preserve">
+        <value>Failed to delete block</value>
+    </data>
+    <data name="_key_add_success" xml:space="preserve">
+        <value>Key created</value>
+    </data>
+    <data name="_key_add_failed" xml:space="preserve">
+        <value>Failed to create key</value>
+    </data>
+    <data name="_key_del_success" xml:space="preserve">
+        <value>Key deleted</value>
+    </data>
+    <data name="_key_del_failed" xml:space="preserve">
+        <value>Failed to delete key</value>
+    </data>
+    <data name="_please_select_block" xml:space="preserve">
+        <value>Please select a block first</value>
+    </data>
+    <data name="_confirm_del_block" xml:space="preserve">
+        <value>Confirm to delete the selected block?</value>
     </data>
 </root>
