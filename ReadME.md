@@ -1,22 +1,22 @@
-**ArchivumU — Customized Offline Key Storage Solution Based on TC8G1K08A**
+**ArchivumU — A Customized Offline Key Storage Solution Based on TC8G1K08A**
 
 [English](ReadME.md)/[中文](ReadME_CN.md)
 
 ### Project Overview
 
-- **MCU**: TC8G1K08A microcontroller
-- **Storage**: Two 24C64 EEPROMs via I²C bus, total capacity 16 KB
-- **Interface Protocol**: Uses non-standard USB protocol, different from regular mass storage devices, not recognized by OS native file managers
-- **Security Features**: Supports user-defined encryption algorithms, requires dedicated host software and authorized access key for data read/write
+- **Main Control Chip**: STC8G1K17A microcontroller
+- **Storage Medium**: Two 24Cxx EEPROMs communicating via the I²C bus. The 0x50 chip stores index blocks, and the 0x51 chip stores data key-value pairs. The specific capacity depends on the combination of the two EEPROMs.
+- **Interface Protocol**: Uses a non-standard USB communication protocol, unlike conventional mass storage devices; the operating system's native file manager cannot recognize or access it.
+- **Security Features**: Supports user-defined encryption algorithms (AES128, RC4, Caesar, XOR, etc., but the current architecture's encryption reduces the actual storage size). Data read/write requires dedicated host software and an authorized access key.
 
-### Application Scenarios
+### Applicable Scenarios
 
-Designed for personal text privacy data, covering two typical use cases:
+Designed specifically for personal text-based private data, covering the following two typical use cases:
 
-- **Lightweight Credentials**: Passwords, authorization keys, private passphrases and other short texts
-- **Dense Documents**: Classified documents, encrypted notes, private text files and other longer content
+- **Lightweight Credentials**: Passwords, authorization keys, private passcodes, and other short texts
+- **Dense Materials**: Classified documents, encrypted notes, private text files, and other longer content
 
-> Note: Maximum single storage size is 16 KB, suitable for offline storage scenarios where security requirements exceed capacity needs.
+> Note: The maximum total size of a single storage operation is 16 KB, making it suitable for offline storage scenarios where security requirements outweigh capacity needs.
 
 > [!WARNING]
-> **Security Risk Warning**: The device architecture is relatively simple, mainly targeting unconventional offline storage scenarios, and does not have built-in anti-tampering or physical attack protection mechanisms. If an attacker obtains the device and has the ability to modify the MCU firmware or directly read the EEPROM, there is a potential risk of bypassing the access key and directly extracting raw data. Users are advised to store the device in a physically controlled secure environment and use external encryption measures (such as double encryption of stored content) to enhance overall security.
+> **Security Risk Notice**: The device architecture is relatively simple, primarily targeting unconventional offline storage scenarios, and does not include built-in anti-tampering or physical attack protection mechanisms. If an attacker obtains the device and has the ability to modify the main control firmware or directly read the EEPROM, there is a potential risk of bypassing the access key and directly extracting the original data. It is recommended that users store the device in a physically controllable secure environment and combine it with external encryption measures (such as secondary encryption of stored content) to improve overall security.
